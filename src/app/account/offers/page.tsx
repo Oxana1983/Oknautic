@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { FileText, Package, ChevronRight, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
+import { MarkAcceptedRead } from "@/components/seller/mark-accepted-read";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,7 @@ export default async function MyOffersPage() {
 
   return (
     <div>
+      <MarkAcceptedRead />
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-xl font-bold text-navy-900">Мои предложения</h1>
         {offers && offers.length > 0 && (
