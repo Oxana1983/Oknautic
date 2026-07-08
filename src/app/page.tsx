@@ -127,6 +127,7 @@ export default function HomePage() {
                 width={90}
                 height={36}
                 className="h-7 w-auto brightness-0 invert opacity-70"
+                loading="eager"
               />
             </div>
             <h3 className="font-display text-xl font-bold text-white mb-1">

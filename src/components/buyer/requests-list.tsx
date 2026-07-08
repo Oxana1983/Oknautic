@@ -4,13 +4,18 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Package, ChevronRight, Trash2, Archive, ArchiveRestore,
-  CheckSquare, Square, MinusSquare, AlertTriangle
+  FileText, Package, ChevronRight, MessageSquare,
+  Trash2, Archive, ArchiveRestore,
+  CheckSquare, Square, MinusSquare, AlertTriangle,
 } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
-import { archiveRequests, deleteRequestsPermanently, restoreRequests } from "@/lib/incoming-actions";
+import {
+  archiveBuyerRequests,
+  deleteBuyerRequestsPermanently,
+  restoreBuyerRequests,
+} from "@/lib/buyer-request-actions";
 
-export type IncomingItem = {
+export type BuyerRequestItem = {
   id: string;
   sku: string;
   product_name: string;
@@ -18,19 +23,18 @@ export type IncomingItem = {
   quantity: number;
   status: string;
   created_at: string;
-  buyer_name?: string | null;
-  hasOffer: boolean;
+  offerCount: number;
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  in_progress: "Активный",
+  in_progress: "В обработке",
   completed:   "Завершён",
   closed:      "Закрыт",
 };
 const STATUS_STYLE: Record<string, string> = {
   in_progress: "bg-blue-50 text-blue-600",
-  completed:   "bg-navy-100 text-navy-500",
-  closed:      "bg-navy-100 text-navy-400",
+  completed:   "bg-teal-50 text-teal-700",
+  closed:      "bg-navy-100 text-navy-500",
 };
 
 function fmt(iso: string) {
@@ -38,15 +42,14 @@ function fmt(iso: string) {
 }
 
 type Props = {
-  activeItems: IncomingItem[];
-  archiveItems: IncomingItem[];
-  defaultIsArchive?: boolean;
+  activeItems: BuyerRequestItem[];
+  archiveItems: BuyerRequestItem[];
 };
 
-export function IncomingList({ activeItems: initActive, archiveItems: initArchive, defaultIsArchive = false }: Props) {
-  const [isArchive, setIsArchive] = useState(defaultIsArchive);
-  const [activeItems, setActiveItems] = useState<IncomingItem[]>(initActive);
-  const [archiveItems, setArchiveItems] = useState<IncomingItem[]>(initArchive);
+export function RequestsList({ activeItems: initActive, archiveItems: initArchive }: Props) {
+  const [isArchive, setIsArchive] = useState(false);
+  const [activeItems, setActiveItems] = useState<BuyerRequestItem[]>(initActive);
+  const [archiveItems, setArchiveItems] = useState<BuyerRequestItem[]>(initArchive);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[] | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -75,7 +78,7 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
 
   function handleArchive(ids: string[]) {
     startTransition(async () => {
-      const res = await archiveRequests(ids);
+      const res = await archiveBuyerRequests(ids);
       if (res.error) { setError(res.error); return; }
       const moving = activeItems.filter((i) => ids.includes(i.id));
       setActiveItems((prev) => prev.filter((i) => !ids.includes(i.id)));
@@ -86,7 +89,7 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
 
   function handleRestore(ids: string[]) {
     startTransition(async () => {
-      const res = await restoreRequests(ids);
+      const res = await restoreBuyerRequests(ids);
       if (res.error) { setError(res.error); return; }
       const moving = archiveItems.filter((i) => ids.includes(i.id));
       setArchiveItems((prev) => prev.filter((i) => !ids.includes(i.id)));
@@ -100,7 +103,7 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
     const ids = confirmDeleteIds;
     setConfirmDeleteIds(null);
     startTransition(async () => {
-      const res = await deleteRequestsPermanently(ids);
+      const res = await deleteBuyerRequestsPermanently(ids);
       if (res.error) { setError(res.error); return; }
       if (isArchive) {
         setArchiveItems((prev) => prev.filter((i) => !ids.includes(i.id)));
@@ -113,7 +116,7 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
 
   return (
     <div className="space-y-4">
-      {/* Confirm permanent delete dialog */}
+      {/* Confirm dialog */}
       {confirmDeleteIds && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/40 backdrop-blur-sm px-4">
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
@@ -151,7 +154,6 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
 
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        {/* View toggle — instant, no server roundtrip */}
         <div className="flex rounded-xl border border-navy-200 overflow-hidden text-sm">
           <button
             onClick={() => switchTab(false)}
@@ -159,7 +161,7 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
               !isArchive ? "bg-navy-800 text-white" : "text-navy-500 hover:bg-navy-50"
             }`}
           >
-            Входящие
+            Мои запросы
             <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
               !isArchive ? "bg-white/20 text-white" : "bg-navy-100 text-navy-600"
             }`}>
@@ -184,7 +186,6 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
           </button>
         </div>
 
-        {/* Bulk actions */}
         {selected.size > 0 && (
           <div className="flex items-center gap-2">
             {isArchive ? (
@@ -216,16 +217,30 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
 
       {items.length === 0 ? (
         <Card>
-          <CardBody className="py-16 text-center">
-            {isArchive
-              ? <><Archive size={28} className="text-navy-300 mx-auto mb-3" strokeWidth={1.2} /><p className="text-sm text-navy-400">Архив пуст</p></>
-              : <><Package size={28} className="text-navy-300 mx-auto mb-3" strokeWidth={1.2} /><p className="text-sm text-navy-400">Нет входящих запросов</p></>
-            }
+          <CardBody className="py-16 flex flex-col items-center gap-4 text-center">
+            {isArchive ? (
+              <>
+                <Archive size={28} className="text-navy-300" strokeWidth={1.2} />
+                <p className="text-sm text-navy-400">Архив пуст</p>
+              </>
+            ) : (
+              <>
+                <div className="w-14 h-14 rounded-full bg-navy-50 flex items-center justify-center">
+                  <FileText size={24} strokeWidth={1.2} className="text-navy-300" />
+                </div>
+                <div>
+                  <p className="font-display font-semibold text-navy-700 mb-1">Запросов пока нет</p>
+                  <p className="text-sm text-navy-400">Добавьте товары в корзину и отправьте запрос цен</p>
+                </div>
+                <Link href="/catalog" className="text-sm text-teal-600 hover:text-teal-700 font-medium">
+                  Перейти в каталог →
+                </Link>
+              </>
+            )}
           </CardBody>
         </Card>
       ) : (
         <div className="space-y-2">
-          {/* Select-all */}
           <div className="flex items-center gap-3 px-1 py-1">
             <button
               onClick={toggleAll}
@@ -247,10 +262,12 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
           {items.map((req) => {
             const isSelected = selected.has(req.id);
             return (
-              <div key={req.id} className={`flex items-center gap-2 rounded-2xl border transition-all ${
-                isSelected ? "border-teal-300 bg-teal-50/40" : "border-transparent"
-              }`}>
-                {/* Checkbox */}
+              <div
+                key={req.id}
+                className={`flex items-center gap-2 rounded-2xl border transition-all ${
+                  isSelected ? "border-teal-300 bg-teal-50/40" : "border-transparent"
+                }`}
+              >
                 <button
                   onClick={() => toggleOne(req.id)}
                   className="pl-2 py-3 text-navy-400 hover:text-teal-500 transition-colors shrink-0"
@@ -261,8 +278,7 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
                   }
                 </button>
 
-                {/* Card */}
-                <Link href={`/account/incoming/${req.id}`} className="flex-1 min-w-0">
+                <Link href={`/account/requests/${req.id}`} className="flex-1 min-w-0">
                   <Card className={`hover:border-teal-200 hover:shadow-sm transition-all ${isSelected ? "border-transparent shadow-none" : ""}`}>
                     <CardBody className="p-3">
                       <div className="flex gap-3 items-center">
@@ -281,20 +297,19 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
                               <p className="text-sm font-semibold text-navy-800 leading-snug truncate">{req.product_name}</p>
                               <p className="text-xs font-mono text-navy-400">{req.sku}</p>
                             </div>
-                            <div className="flex flex-col items-end gap-1 shrink-0">
-                              <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${STATUS_STYLE[req.status] ?? "bg-navy-100 text-navy-500"}`}>
-                                {STATUS_LABEL[req.status] ?? req.status}
-                              </span>
-                              {req.hasOffer && (
-                                <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-teal-50 text-teal-600">
-                                  Предложено
-                                </span>
-                              )}
-                            </div>
+                            <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0 ${STATUS_STYLE[req.status] ?? "bg-navy-100 text-navy-500"}`}>
+                              {STATUS_LABEL[req.status] ?? req.status}
+                            </span>
                           </div>
                           <div className="flex items-center gap-3 mt-1 text-xs text-navy-400">
                             <span>Кол-во: <span className="text-navy-600 font-medium">{req.quantity}</span></span>
-                            {req.buyer_name && <span>{req.buyer_name}</span>}
+                            <span className="flex items-center gap-1">
+                              <MessageSquare size={11} />
+                              {req.offerCount > 0
+                                ? <span className="text-teal-600 font-medium">{req.offerCount} предложений</span>
+                                : "нет предложений"
+                              }
+                            </span>
                             <span className="ml-auto">{fmt(req.created_at)}</span>
                           </div>
                         </div>
@@ -304,7 +319,6 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
                   </Card>
                 </Link>
 
-                {/* Per-row right action */}
                 {isArchive ? (
                   <button
                     onClick={() => handleRestore([req.id])}
