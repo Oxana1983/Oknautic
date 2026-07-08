@@ -7,9 +7,10 @@ import { upsertInventoryRows } from "@/lib/inventory-actions";
 import type { InventoryRow } from "@/lib/inventory-actions";
 import * as XLSX from "xlsx";
 
-// Normalize header names from any language/format
+// Normalize header names: lowercase, strip spaces/underscores/special chars
+// "Product Name" → "productname", "product_name" → "productname"
 function normalizeHeader(h: string) {
-  return h.trim().toLowerCase().replace(/[^a-zа-яё0-9_]/gi, "");
+  return String(h).trim().toLowerCase().replace(/[^a-zа-яё0-9]/gi, "");
 }
 
 function findCol(header: string[], names: string[]): number {
