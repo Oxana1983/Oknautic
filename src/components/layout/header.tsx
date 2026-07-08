@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { ShoppingCart, User, Menu, X, ChevronDown, Search, LogOut, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,17 @@ export function Header({ user, role = "customer" }: { user: SupabaseUser | null;
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { itemCount, openCart } = useCart();
   const isSeller = role === "seller";
+  const pathname = usePathname();
+  const navGuard = useRef(false);
+
+  // Close all menus on route change and block clicks briefly (prevents ghost-click after login redirect)
+  useEffect(() => {
+    setUserMenuOpen(false);
+    setMobileOpen(false);
+    navGuard.current = true;
+    const t = setTimeout(() => { navGuard.current = false; }, 300);
+    return () => clearTimeout(t);
+  }, [pathname]);
 
   const displayName = user?.user_metadata?.first_name
     ?? user?.email?.split("@")[0]
@@ -96,7 +108,7 @@ export function Header({ user, role = "customer" }: { user: SupabaseUser | null;
             {user ? (
               <div className="relative ml-2">
                 <button
-                  onClick={() => setUserMenuOpen((v) => !v)}
+                  onClick={() => { if (!navGuard.current) setUserMenuOpen((v) => !v); }}
                   className="hidden sm:flex items-center gap-2 px-3 h-9 rounded-xl border border-navy-200 text-sm font-medium text-navy-700 hover:bg-navy-50 transition-colors"
                 >
                   <div className="w-6 h-6 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 text-xs font-bold">
@@ -108,7 +120,7 @@ export function Header({ user, role = "customer" }: { user: SupabaseUser | null;
 
                 {/* xs: just icon */}
                 <button
-                  onClick={() => setUserMenuOpen((v) => !v)}
+                  onClick={() => { if (!navGuard.current) setUserMenuOpen((v) => !v); }}
                   className="sm:hidden p-2 rounded-lg text-navy-500 hover:bg-navy-50 transition-colors"
                   aria-label="Аккаунт"
                 >
