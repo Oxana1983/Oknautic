@@ -8,6 +8,7 @@ export type InventoryRow = {
   sku: string;
   product_name: string;
   brand?: string;
+  category?: string;
   quantity: number;
   price?: number;
   currency?: string;
@@ -17,6 +18,39 @@ export type InventoryRow = {
 
 function toBrandSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+// Brand → root category slug heuristic
+const BRAND_CATEGORY_SLUG: Record<string, string> = {
+  // Navigation
+  "garmin": "navigation", "raymarine": "navigation", "simrad": "navigation",
+  "furuno": "navigation", "b&g": "navigation", "bg": "navigation",
+  "humminbird": "navigation", "standard horizon": "navigation",
+  "navionics": "navigation", "airmar": "navigation",
+  // Engines
+  "volvo penta": "engines", "yanmar": "engines", "mtu": "engines",
+  "caterpillar": "engines", "cummins": "engines", "mercruiser": "engines",
+  "honda": "engines", "tohatsu": "engines", "suzuki": "engines",
+  // Anchoring
+  "lewmar": "anchoring", "maxwell": "anchoring", "lofrans": "anchoring",
+  "quick": "anchoring", "muir": "anchoring",
+  // Deck Hardware
+  "harken": "deck-hardware", "ronstan": "deck-hardware",
+  "spinlock": "deck-hardware", "antal": "deck-hardware",
+  // Rigging
+  "selden": "rigging", "navtec": "rigging", "sta-lok": "rigging",
+  // Electrical
+  "victron": "electrical", "mastervolt": "electrical", "xantrex": "electrical",
+  "victron energy": "electrical",
+  // Safety
+  "plastimo": "safety", "ocean signal": "safety", "acr": "safety",
+  "kannad": "safety", "mcmurdo": "safety", "jotron": "safety",
+  "viking": "safety",
+};
+
+function guessCategorySlug(brand?: string): string | null {
+  if (!brand) return null;
+  return BRAND_CATEGORY_SLUG[brand.toLowerCase()] ?? null;
 }
 
 export async function upsertInventoryRows(
@@ -30,7 +64,8 @@ export async function upsertInventoryRows(
   const skus = rows.map((r) => r.sku.trim());
 
   // ── Step 1: find products already in catalog ──────────────────────────────
-  const { data: existingProducts } = await supabase
+  // Use admin client to see ALL products (including is_active=false)
+  const { data: existingProducts } = await admin
     .from("products")
     .select("id, sku")
     .in("sku", skus);
@@ -43,6 +78,27 @@ export async function upsertInventoryRows(
   const newRows = rows.filter((r) => !skuToProductId[r.sku.trim()]);
 
   if (newRows.length > 0) {
+    // Fetch all categories once for matching
+    const { data: allCategories } = await admin
+      .from("categories")
+      .select("id, slug, name");
+
+    const slugTocat: Record<string, string> = {};
+    const nameTocat: Record<string, string> = {};
+    for (const c of allCategories ?? []) {
+      slugTocat[c.slug] = c.id;
+      nameTocat[c.name.toLowerCase()] = c.id;
+    }
+
+    function resolveCategoryId(row: InventoryRow): string | null {
+      if (row.category) {
+        const s = row.category.trim().toLowerCase();
+        return slugTocat[s] ?? nameTocat[s] ?? null;
+      }
+      const guessed = guessCategorySlug(row.brand);
+      return guessed ? slugTocat[guessed] ?? null : null;
+    }
+
     // Collect unique brand names (non-empty)
     const brandNames = [...new Set(
       newRows.map((r) => r.brand?.trim()).filter(Boolean) as string[]
@@ -51,7 +107,6 @@ export async function upsertInventoryRows(
     const brandNameToId: Record<string, string> = {};
 
     if (brandNames.length > 0) {
-      // Fetch existing brands
       const { data: existingBrands } = await admin
         .from("brands")
         .select("id, name")
@@ -59,7 +114,6 @@ export async function upsertInventoryRows(
 
       for (const b of existingBrands ?? []) brandNameToId[b.name] = b.id;
 
-      // Create brands that don't exist yet
       const missingBrandNames = brandNames.filter((n) => !brandNameToId[n]);
       if (missingBrandNames.length > 0) {
         const { data: created } = await admin
@@ -78,20 +132,20 @@ export async function upsertInventoryRows(
       }
     }
 
-    // Create products for new SKUs
+    // Create products — ignoreDuplicates prevents errors on race conditions
     const productsToInsert = newRows.map((r) => ({
       sku: r.sku.trim(),
       name: r.product_name.trim(),
       brand_id: r.brand?.trim() ? brandNameToId[r.brand.trim()] ?? null : null,
+      category_id: resolveCategoryId(r),
       avg_price: r.price ?? null,
       currency: r.currency ?? "EUR",
       is_active: true,
     }));
 
-    // Insert one-by-one to tolerate brand_id+sku uniqueness conflicts gracefully
     const { data: createdProducts } = await admin
       .from("products")
-      .insert(productsToInsert)
+      .upsert(productsToInsert, { ignoreDuplicates: true, onConflict: "brand_id,sku" })
       .select("id, sku");
 
     for (const p of createdProducts ?? []) skuToProductId[p.sku] = p.id;
