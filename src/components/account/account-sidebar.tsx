@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, User, Store, LogOut } from "lucide-react";
+import { FileText, User, Store, LogOut, Warehouse } from "lucide-react";
 import { signOut } from "@/lib/auth-actions";
 import { cn } from "@/lib/utils";
 
@@ -21,9 +21,10 @@ export function AccountSidebar({ displayName, email, role }: Props) {
   ];
 
   const sellerLinks = [
-    { href: "/account/incoming", label: "Входящие",       icon: Store },
-    { href: "/account/offers",   label: "Мои предложения", icon: FileText },
-    { href: "/account/profile",  label: "Профиль",         icon: User },
+    { href: "/account/incoming",  label: "Входящие запросы", icon: Store },
+    { href: "/account/offers",    label: "Мои предложения",  icon: FileText },
+    { href: "/account/inventory", label: "Склад",             icon: Warehouse },
+    { href: "/account/profile",   label: "Профиль",           icon: User },
   ];
 
   const links = role === "seller" ? sellerLinks : customerLinks;
