@@ -2,28 +2,69 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
 import { CatalogFilters } from "@/components/catalog/filters";
 import { MobileFiltersButton } from "@/components/catalog/mobile-filters";
 import { ProductCard } from "@/components/catalog/product-card";
-import { filterProducts, getCategory } from "@/lib/mock-data";
+import { CATEGORIES } from "@/lib/mock-data";
+import type { Product } from "@/lib/mock-data";
+
+export const dynamic = "force-dynamic";
 
 type Props = {
   params: Promise<{ category: string }>;
   searchParams: Promise<{ brand?: string; q?: string }>;
 };
 
+async function fetchByCategory(categorySlug: string, brandSlug?: string, q?: string): Promise<Product[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("products")
+    .select("id, sku, name, description, photos, brand:brands!brand_id(name, slug), cat:categories!category_id(slug)")
+    .eq("is_active", true)
+    .eq("categories.slug", categorySlug)
+    .order("name");
+
+  let products: Product[] = (data ?? [])
+    .filter((p: any) => p.cat?.slug === categorySlug)
+    .map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      sku: p.sku,
+      brand: p.brand?.name ?? "",
+      category: p.cat?.slug ?? "",
+      description: p.description ?? "",
+      image: p.photos?.[0] ?? undefined,
+      images: p.photos ?? [],
+      hasVariants: false,
+    }));
+
+  if (brandSlug) {
+    products = products.filter((p) => p.brand.toLowerCase() === brandSlug.toLowerCase());
+  }
+  if (q) {
+    const ql = q.toLowerCase();
+    products = products.filter(
+      (p) =>
+        p.name.toLowerCase().includes(ql) ||
+        p.sku.toLowerCase().includes(ql) ||
+        p.brand.toLowerCase().includes(ql)
+    );
+  }
+  return products;
+}
+
 export default async function CategoryPage({ params, searchParams }: Props) {
   const { category } = await params;
   const sp = await searchParams;
 
-  const cat = getCategory(category);
+  const cat = CATEGORIES.find((c) => c.slug === category);
   if (!cat) notFound();
 
-  const products = filterProducts({ category, brand: sp.brand, q: sp.q });
+  const products = await fetchByCategory(category, sp.brand, sp.q);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-navy-400 mb-5">
         <Link href="/" className="hover:text-navy-700 transition-colors">Главная</Link>
         <ChevronRight size={14} />
@@ -32,7 +73,6 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         <span className="text-navy-700 font-medium">{cat.label}</span>
       </nav>
 
-      {/* Page header */}
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold text-navy-900 flex items-center gap-2">
@@ -47,14 +87,11 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       </div>
 
       <div className="flex gap-8">
-        {/* Sidebar */}
         <div className="hidden lg:block w-52 shrink-0">
           <Suspense>
             <CatalogFilters />
           </Suspense>
         </div>
-
-        {/* Grid */}
         <div className="flex-1 min-w-0">
           {products.length === 0 ? (
             <div className="text-center py-20">

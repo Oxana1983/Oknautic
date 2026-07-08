@@ -5,20 +5,69 @@ import { ChevronRight, Share2, Star, ShieldCheck, Truck, MessageCircle } from "l
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody } from "@/components/ui/card";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
-import { getProduct, getCategory, filterProducts } from "@/lib/mock-data";
 import { ProductCard } from "@/components/catalog/product-card";
+import { createClient } from "@/lib/supabase/server";
+import { CATEGORIES } from "@/lib/mock-data";
+import type { Product } from "@/lib/mock-data";
+
+export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ id: string }> };
 
+async function fetchProduct(id: string): Promise<Product | null> {
+  const supabase = await createClient();
+  const { data: p } = await supabase
+    .from("products")
+    .select("id, sku, name, description, photos, brand:brands!brand_id(name, slug), cat:categories!category_id(slug)")
+    .eq("id", id)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (!p) return null;
+  return {
+    id: (p as any).id,
+    name: (p as any).name,
+    sku: (p as any).sku,
+    brand: (p as any).brand?.name ?? "",
+    category: (p as any).cat?.slug ?? "",
+    description: (p as any).description ?? "",
+    image: (p as any).photos?.[0] ?? undefined,
+    images: (p as any).photos?.length > 0 ? (p as any).photos : undefined,
+    hasVariants: false,
+  };
+}
+
+async function fetchRelated(categorySlug: string, excludeId: string): Promise<Product[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("products")
+    .select("id, sku, name, description, photos, brand:brands!brand_id(name, slug), cat:categories!category_id(slug)")
+    .eq("is_active", true)
+    .neq("id", excludeId)
+    .limit(4);
+
+  return (data ?? [])
+    .filter((p: any) => p.cat?.slug === categorySlug)
+    .map((p: any) => ({
+      id: (p as any).id,
+      name: (p as any).name,
+      sku: (p as any).sku,
+      brand: (p as any).brand?.name ?? "",
+      category: (p as any).cat?.slug ?? "",
+      description: (p as any).description ?? "",
+      image: (p as any).photos?.[0] ?? undefined,
+      images: (p as any).photos?.length > 0 ? (p as any).photos : undefined,
+      hasVariants: false,
+    }));
+}
+
 export default async function ProductPage({ params }: Props) {
   const { id } = await params;
-  const product = getProduct(id);
+  const product = await fetchProduct(id);
   if (!product) notFound();
 
-  const category = getCategory(product.category);
-  const related = filterProducts({ category: product.category })
-    .filter((p) => p.id !== product.id)
-    .slice(0, 4);
+  const category = CATEGORIES.find((c) => c.slug === product.category);
+  const related = await fetchRelated(product.category, product.id);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -59,22 +108,11 @@ export default async function ProductPage({ params }: Props) {
                 <span className="text-xs font-mono text-navy-400">фото отсутствует</span>
               </div>
             )}
-            {product.hasVariants && (
-              <span className="absolute top-4 left-4 text-xs font-mono font-medium bg-gold-100 text-gold-700 px-2 py-1 rounded-lg z-10">
-                Доступны варианты
-              </span>
-            )}
           </div>
-          {/* Thumbnails */}
-          {product.images && (
+          {product.images && product.images.length > 1 && (
             <div className="flex gap-2">
-              {product.images.map((src, i) => (
-                <div
-                  key={i}
-                  className={`w-16 h-16 rounded-lg border relative overflow-hidden cursor-pointer transition-colors ${
-                    i === 0 ? "border-navy-800" : "border-navy-100 hover:border-navy-400"
-                  }`}
-                >
+              {product.images.slice(0, 4).map((src, i) => (
+                <div key={i} className={`w-16 h-16 rounded-lg border relative overflow-hidden cursor-pointer transition-colors ${i === 0 ? "border-navy-800" : "border-navy-100 hover:border-navy-400"}`}>
                   <Image src={src} alt={`${product.name} ${i + 1}`} fill className="object-cover" sizes="64px" />
                 </div>
               ))}
@@ -84,27 +122,20 @@ export default async function ProductPage({ params }: Props) {
 
         {/* Details */}
         <div className="flex flex-col gap-5">
-          {/* Badges */}
           <div className="flex flex-wrap gap-2">
             <Badge variant="brand">{product.brand}</Badge>
             {category && <Badge variant="category">{category.label}</Badge>}
           </div>
 
-          {/* Title */}
           <div>
-            <h1 className="font-display text-2xl font-bold text-navy-900 leading-snug mb-1">
-              {product.name}
-            </h1>
+            <h1 className="font-display text-2xl font-bold text-navy-900 leading-snug mb-1">{product.name}</h1>
             <p className="text-xs font-mono text-navy-400">SKU: {product.sku}</p>
           </div>
 
-          {/* Description */}
           <p className="text-sm text-navy-600 leading-relaxed">{product.description}</p>
 
-          {/* CTA with variants */}
-          <AddToCartButton product={product} variantGroups={product.variantGroups} />
+          <AddToCartButton product={product} />
 
-          {/* Wishlist / Share */}
           <div className="flex gap-2 -mt-1">
             <button className="px-3 h-9 rounded-xl border border-navy-200 text-navy-400 hover:text-gold-500 hover:border-gold-300 hover:bg-gold-50 transition-colors">
               <Star size={16} />
@@ -114,14 +145,12 @@ export default async function ProductPage({ params }: Props) {
             </button>
           </div>
 
-          {/* Trust badges */}
           <div className="grid grid-cols-3 gap-3 pt-1">
             <TrustItem icon={<ShieldCheck size={16} className="text-teal-600" />} label="Проверенные поставщики" />
             <TrustItem icon={<Truck size={16} className="text-teal-600" />} label="Доставка по всему миру" />
             <TrustItem icon={<MessageCircle size={16} className="text-teal-600" />} label="Чат с продавцом" />
           </div>
 
-          {/* RFQ info */}
           <Card className="bg-navy-50 border-navy-100">
             <CardBody className="py-3 px-4">
               <p className="text-xs font-display font-semibold text-navy-700 mb-1">Как работает запрос цены?</p>
@@ -132,28 +161,6 @@ export default async function ProductPage({ params }: Props) {
           </Card>
         </div>
       </div>
-
-      {/* Specs */}
-      {product.specs && Object.keys(product.specs).length > 0 && (
-        <section className="mb-12">
-          <h2 className="font-display text-lg font-bold text-navy-900 mb-4">Характеристики</h2>
-          <Card>
-            <CardBody className="p-0">
-              <dl className="divide-y divide-navy-50">
-                {Object.entries(product.specs).map(([key, value], i) => (
-                  <div
-                    key={key}
-                    className={`flex items-center px-5 py-3 gap-4 ${i % 2 === 0 ? "bg-white" : "bg-navy-50/50"}`}
-                  >
-                    <dt className="text-sm text-navy-500 w-40 shrink-0">{key}</dt>
-                    <dd className="text-sm font-medium text-navy-800">{value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </CardBody>
-          </Card>
-        </section>
-      )}
 
       {/* Related */}
       {related.length > 0 && (
@@ -180,9 +187,7 @@ export default async function ProductPage({ params }: Props) {
 function TrustItem({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
     <div className="flex flex-col items-center gap-1.5 text-center">
-      <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center">
-        {icon}
-      </div>
+      <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center">{icon}</div>
       <p className="text-[10px] text-navy-500 leading-tight">{label}</p>
     </div>
   );
