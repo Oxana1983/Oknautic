@@ -734,6 +734,7 @@ export type Database = {
           email_notifications_quotes: boolean
           first_name: string | null
           id: string
+          inbox_read_at: string | null
           last_name: string | null
           phone: string | null
           role: string
@@ -745,6 +746,7 @@ export type Database = {
           email_notifications_quotes?: boolean
           first_name?: string | null
           id: string
+          inbox_read_at?: string | null
           last_name?: string | null
           phone?: string | null
           role?: string
@@ -756,6 +758,7 @@ export type Database = {
           email_notifications_quotes?: boolean
           first_name?: string | null
           id?: string
+          inbox_read_at?: string | null
           last_name?: string | null
           phone?: string | null
           role?: string
