@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@theme {
+  /* === Colors === */
+  --color-navy-950: #06121f;
+  --color-navy-900: #0b1e35;
+  --color-navy-800: #0f2d52;
+  --color-navy-700: #163d6e;
+  --color-navy-600: #1e4f8a;
+  --color-navy-500: #2563a6;
+  --color-navy-400: #4a85c2;
+  --color-navy-300: #7aafd8;
+  --color-navy-200: #b0cfe9;
+  --color-navy-100: #d8e9f5;
+  --color-navy-50:  #edf4fb;
+
+  --color-teal-900: #073b3b;
+  --color-teal-700: #0c6060;
+  --color-teal-600: #0d7a7a;
+  --color-teal-500: #0e9494;
+  --color-teal-400: #23b5b5;
+  --color-teal-300: #5dd0d0;
+  --color-teal-200: #9de6e6;
+  --color-teal-100: #ccf4f4;
+  --color-teal-50:  #e6fafa;
+
+  --color-gold-900: #4a3200;
+  --color-gold-700: #8a5e00;
+  --color-gold-500: #b8850e;
+  --color-gold-400: #d4a520;
+  --color-gold-300: #e8c547;
+  --color-gold-200: #f4dc89;
+  --color-gold-100: #faf0c4;
+  --color-gold-50:  #fdf8e6;
+
+  --color-sand-100: #f5f0e8;
+  --color-sand-50:  #faf8f4;
+
+  /* === Typography === */
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-sans:    "Inter", system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono", "Courier New", monospace;
+
+  /* === Spacing / Radius === */
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+  --radius-2xl: 24px;
+}
+
+:root {
+  --bg:        #faf8f4;
+  --bg-card:   #ffffff;
+  --text:      #0b1e35;
+  --text-muted:#4b6280;
+  --border:    #dde4ed;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv02", "cv03", "cv04";
+  -webkit-font-smoothing: antialiased;
+}
