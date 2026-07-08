@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Inbox, Package, ChevronRight, Settings } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
+import { MarkInboxRead } from "@/components/seller/mark-inbox-read";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +65,7 @@ export default async function IncomingPage() {
 
   return (
     <div>
+      <MarkInboxRead />
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-xl font-bold text-navy-900">Входящие запросы</h1>
         {requests && requests.length > 0 && (
