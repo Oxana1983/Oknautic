@@ -45,12 +45,18 @@ export default async function RequestDetailPage({ params }: Props) {
 
   if (!req) notFound();
 
-  const { data: offers } = await supabase
+  const { data: offersRaw } = await supabase
     .from("offers")
     .select("*")
     .eq("quote_request_id", id)
     .neq("status", "withdrawn")
     .order("created_at", { ascending: true });
+
+  // In-stock offers shown first
+  const offers = (offersRaw ?? []).sort((a, b) => {
+    if (a.in_stock === b.in_stock) return 0;
+    return a.in_stock ? -1 : 1;
+  });
 
   // Fetch seller company names for offers
   const sellerIds = (offers ?? []).map((o) => o.seller_id);
@@ -194,17 +200,21 @@ export default async function RequestDetailPage({ params }: Props) {
                         </p>
                       )}
                     </div>
-                    <div className="bg-navy-50 rounded-xl p-3">
-                      <p className="text-xs text-navy-400 mb-0.5">Срок доставки</p>
-                      <p className="text-sm font-semibold text-navy-800 flex items-center gap-1.5 mt-1">
-                        <Truck size={14} className="text-navy-400" />
-                        {fmtShort(offer.delivery_datetime)}
-                      </p>
+                    <div className={`rounded-xl p-3 ${offer.in_stock ? "bg-teal-50 border border-teal-100" : "bg-navy-50"}`}>
+                      <p className="text-xs text-navy-400 mb-1">Доставка</p>
+                      {offer.in_stock ? (
+                        <p className="text-sm font-semibold text-teal-700 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-teal-500 inline-block shrink-0" />
+                          В наличии
+                        </p>
+                      ) : (
+                        <p className="text-sm font-semibold text-navy-600 flex items-center gap-1.5">
+                          <Truck size={14} className="text-navy-400 shrink-0" />
+                          Под заказ
+                        </p>
+                      )}
                       <p className="text-xs text-navy-500 mt-0.5">
-                        Наличие: {offer.in_stock
-                          ? <span className="text-teal-600">Есть</span>
-                          : <span className="text-navy-400">Под заказ</span>
-                        }
+                        Отгрузка до {fmtShort(offer.delivery_datetime)}
                       </p>
                     </div>
                   </div>

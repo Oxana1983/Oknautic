@@ -966,6 +966,72 @@ export type Database = {
           },
         ]
       }
+      seller_inventory: {
+        Row: {
+          brand: string | null
+          created_at: string
+          currency: string
+          id: string
+          is_available: boolean
+          location_city: string | null
+          location_country: string | null
+          price: number | null
+          product_id: string | null
+          product_name: string
+          quantity: number
+          seller_id: string
+          sku: string
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          is_available?: boolean
+          location_city?: string | null
+          location_country?: string | null
+          price?: number | null
+          product_id?: string | null
+          product_name: string
+          quantity?: number
+          seller_id: string
+          sku: string
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          is_available?: boolean
+          location_city?: string | null
+          location_country?: string | null
+          price?: number | null
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          seller_id?: string
+          sku?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_inventory_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_inventory_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seller_stores: {
         Row: {
           address: string
