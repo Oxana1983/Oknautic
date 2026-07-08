@@ -37,6 +37,10 @@ export default async function RootLayout({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  const { data: profile } = user
+    ? await supabase.from("profiles").select("role").eq("id", user.id).single()
+    : { data: null };
+
   return (
     <html
       lang="ru"
@@ -44,7 +48,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-sand-50">
         <CartProvider>
-          <Header user={user} />
+          <Header user={user} role={profile?.role ?? "customer"} />
           <CartDrawer />
           <main className="flex-1">{children}</main>
           <Footer />
