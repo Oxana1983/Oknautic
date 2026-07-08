@@ -194,11 +194,12 @@ export default async function RequestDetailPage({ params }: Props) {
                         {Number(offer.price_per_unit).toLocaleString("ru-RU")}
                         <span className="text-sm font-normal text-navy-400 ml-1">{offer.currency}</span>
                       </p>
-                      {offer.available_quantity > 1 && (
-                        <p className="text-xs text-navy-500 mt-0.5">
-                          Итого: {(Number(offer.price_per_unit) * offer.available_quantity).toLocaleString("ru-RU")} {offer.currency}
-                        </p>
-                      )}
+                      <p className="text-xs text-navy-500 mt-0.5">
+                        Кол-во: <span className="font-medium text-navy-700">{offer.available_quantity} шт.</span>
+                      </p>
+                      <p className="text-xs text-navy-500 mt-0.5">
+                        Итого: <span className="font-medium text-navy-700">{(Number(offer.price_per_unit) * offer.available_quantity).toLocaleString("ru-RU")} {offer.currency}</span>
+                      </p>
                     </div>
                     <div className={`rounded-xl p-3 ${offer.in_stock ? "bg-teal-50 border border-teal-100" : "bg-navy-50"}`}>
                       <p className="text-xs text-navy-400 mb-1">Доставка</p>
