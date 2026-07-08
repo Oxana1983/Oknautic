@@ -28,6 +28,7 @@ function parseRows(rows2d: string[][]): { rows: InventoryRow[]; errors: string[]
   const iName  = findCol(header, ["product_name", "name", "наименование", "название"]);
   const iQty   = findCol(header, ["quantity", "qty", "количество", "кол"]);
   const iBrand = findCol(header, ["brand", "бренд", "производитель"]);
+  const iCat   = findCol(header, ["category", "категория", "cat"]);
   const iPrice = findCol(header, ["price", "цена"]);
   const iCur   = findCol(header, ["currency", "валюта"]);
   const iCity  = findCol(header, ["location_city", "city", "город", "порт"]);
@@ -53,6 +54,7 @@ function parseRows(rows2d: string[][]): { rows: InventoryRow[]; errors: string[]
       sku,
       product_name: name,
       brand: iBrand >= 0 ? cols[iBrand]?.toString().trim() : undefined,
+      category: iCat >= 0 ? cols[iCat]?.toString().trim() || undefined : undefined,
       quantity,
       price: iPrice >= 0 ? parseFloat(cols[iPrice]?.toString().trim() ?? "") || undefined : undefined,
       currency: iCur >= 0 ? cols[iCur]?.toString().trim() || "EUR" : "EUR",
