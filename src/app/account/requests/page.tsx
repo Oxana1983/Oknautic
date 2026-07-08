@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { FileText, Package, ChevronRight, MessageSquare } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
+import { MarkOffersRead } from "@/components/buyer/mark-offers-read";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,7 @@ export default async function RequestsPage() {
 
   return (
     <div>
+      <MarkOffersRead />
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-xl font-bold text-navy-900">Мои запросы</h1>
         <Link href="/catalog" className="text-sm text-teal-600 hover:text-teal-700 font-medium">
