@@ -45,8 +45,10 @@ export async function submitRfq(
         delivery_datetime: new Date(
           Date.now() + 30 * 24 * 60 * 60 * 1000
         ).toISOString(),
-        additional_comment:
-          `${data.name} · ${data.phone}${data.comment ? " · " + data.comment : ""}`,
+        buyer_name: data.name,
+        buyer_phone: data.phone,
+        buyer_email: user.email ?? null,
+        additional_comment: data.comment || null,
       };
     })
   );

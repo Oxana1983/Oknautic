@@ -777,6 +777,9 @@ export type Database = {
           accepted_offer_id: string | null
           additional_comment: string | null
           brand_id: string | null
+          buyer_email: string | null
+          buyer_name: string | null
+          buyer_phone: string | null
           category_id: string | null
           created_at: string
           customer_id: string
@@ -797,6 +800,9 @@ export type Database = {
           accepted_offer_id?: string | null
           additional_comment?: string | null
           brand_id?: string | null
+          buyer_email?: string | null
+          buyer_name?: string | null
+          buyer_phone?: string | null
           category_id?: string | null
           created_at?: string
           customer_id: string
@@ -817,6 +823,9 @@ export type Database = {
           accepted_offer_id?: string | null
           additional_comment?: string | null
           brand_id?: string | null
+          buyer_email?: string | null
+          buyer_name?: string | null
+          buyer_phone?: string | null
           category_id?: string | null
           created_at?: string
           customer_id?: string
