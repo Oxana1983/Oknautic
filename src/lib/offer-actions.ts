@@ -25,6 +25,17 @@ export async function submitOffer(data: OfferInput): Promise<{ error?: string }>
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Server-side guard: quantity must not exceed what the buyer requested
+  const { data: req } = await supabase
+    .from("quote_requests")
+    .select("quantity")
+    .eq("id", data.quote_request_id)
+    .single();
+
+  if (req && data.available_quantity > req.quantity) {
+    return { error: `Количество не может превышать запрошенное (${req.quantity} шт.)` };
+  }
+
   const { error } = await supabase.from("offers").upsert(
     { ...data, seller_id: user.id },
     { onConflict: "quote_request_id,seller_id" }
