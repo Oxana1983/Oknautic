@@ -66,15 +66,26 @@ export async function acceptOffer(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { error } = await supabase
+  // Mark request as completed
+  const { error: reqError } = await supabase
     .from("quote_requests")
     .update({ accepted_offer_id: offerId, status: "completed" })
     .eq("id", requestId)
     .eq("customer_id", user.id);
 
-  if (error) return { error: error.message };
+  if (reqError) return { error: reqError.message };
+
+  // Mark the winning offer as accepted
+  const { error: offerError } = await supabase
+    .from("offers")
+    .update({ status: "accepted" })
+    .eq("id", offerId)
+    .eq("quote_request_id", requestId);
+
+  if (offerError) return { error: offerError.message };
 
   revalidatePath(`/account/requests/${requestId}`);
+  revalidatePath("/account/offers");
   return {};
 }
 
