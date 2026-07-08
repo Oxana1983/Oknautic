@@ -5,38 +5,44 @@ import { Upload, CheckCircle2, AlertCircle, FileSpreadsheet, X } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { upsertInventoryRows } from "@/lib/inventory-actions";
 import type { InventoryRow } from "@/lib/inventory-actions";
+import * as XLSX from "xlsx";
 
-// Parse CSV text → InventoryRow[]
-// Expected columns (case-insensitive, order flexible):
-// sku, product_name, brand, quantity, price, currency, location_city, location_country
-function parseCsv(text: string): { rows: InventoryRow[]; errors: string[] } {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim());
-  if (lines.length < 2) return { rows: [], errors: ["Файл пустой или содержит только заголовок"] };
+// Normalize header names from any language/format
+function normalizeHeader(h: string) {
+  return h.trim().toLowerCase().replace(/[^a-zа-яё0-9_]/gi, "");
+}
 
-  const header = lines[0].split(/[,;	]/).map((h) => h.trim().toLowerCase().replace(/[^a-z_]/g, ""));
-  const idx = (names: string[]) => names.map((n) => header.indexOf(n)).find((i) => i >= 0) ?? -1;
+function findCol(header: string[], names: string[]): number {
+  return names.map((n) => header.indexOf(normalizeHeader(n))).find((i) => i >= 0) ?? -1;
+}
 
-  const iSku   = idx(["sku", "артикул", "article"]);
-  const iName  = idx(["product_name", "name", "наименование", "название"]);
-  const iQty   = idx(["quantity", "qty", "количество", "кол"]);
-  const iBrand = idx(["brand", "бренд", "производитель"]);
-  const iPrice = idx(["price", "цена"]);
-  const iCur   = idx(["currency", "валюта"]);
-  const iCity  = idx(["location_city", "city", "город", "порт"]);
-  const iCtry  = idx(["location_country", "country", "страна"]);
+// Parse a 2D array of rows (from CSV or Excel sheet) → InventoryRow[]
+function parseRows(rows2d: string[][]): { rows: InventoryRow[]; errors: string[] } {
+  const dataRows = rows2d.filter((r) => r.some((c) => c?.toString().trim()));
+  if (dataRows.length < 2) return { rows: [], errors: ["Файл пустой или содержит только заголовок"] };
+
+  const header = dataRows[0].map((h) => normalizeHeader(String(h ?? "")));
+
+  const iSku   = findCol(header, ["sku", "артикул", "article"]);
+  const iName  = findCol(header, ["product_name", "name", "наименование", "название"]);
+  const iQty   = findCol(header, ["quantity", "qty", "количество", "кол"]);
+  const iBrand = findCol(header, ["brand", "бренд", "производитель"]);
+  const iPrice = findCol(header, ["price", "цена"]);
+  const iCur   = findCol(header, ["currency", "валюта"]);
+  const iCity  = findCol(header, ["location_city", "city", "город", "порт"]);
+  const iCtry  = findCol(header, ["location_country", "country", "страна"]);
 
   if (iSku < 0 || iName < 0 || iQty < 0) {
-    return { rows: [], errors: ["Не найдены обязательные колонки: SKU, Product Name, Quantity"] };
+    return { rows: [], errors: ["Не найдены обязательные колонки: SKU, Название, Количество"] };
   }
 
   const rows: InventoryRow[] = [];
   const errors: string[] = [];
 
-  lines.slice(1).forEach((line, li) => {
-    const cols = line.split(/[,;	]/);
-    const sku = cols[iSku]?.trim();
-    const name = cols[iName]?.trim();
-    const qtyRaw = cols[iQty]?.trim();
+  dataRows.slice(1).forEach((cols, li) => {
+    const sku = cols[iSku]?.toString().trim();
+    const name = cols[iName]?.toString().trim();
+    const qtyRaw = cols[iQty]?.toString().trim();
 
     if (!sku || !name) { errors.push(`Строка ${li + 2}: пропущен SKU или название`); return; }
     const quantity = parseInt(qtyRaw ?? "0", 10);
@@ -45,16 +51,35 @@ function parseCsv(text: string): { rows: InventoryRow[]; errors: string[] } {
     rows.push({
       sku,
       product_name: name,
-      brand: iBrand >= 0 ? cols[iBrand]?.trim() : undefined,
+      brand: iBrand >= 0 ? cols[iBrand]?.toString().trim() : undefined,
       quantity,
-      price: iPrice >= 0 ? parseFloat(cols[iPrice]?.trim() ?? "") || undefined : undefined,
-      currency: iCur >= 0 ? cols[iCur]?.trim() || "EUR" : "EUR",
-      location_city: iCity >= 0 ? cols[iCity]?.trim() : undefined,
-      location_country: iCtry >= 0 ? cols[iCtry]?.trim() : undefined,
+      price: iPrice >= 0 ? parseFloat(cols[iPrice]?.toString().trim() ?? "") || undefined : undefined,
+      currency: iCur >= 0 ? cols[iCur]?.toString().trim() || "EUR" : "EUR",
+      location_city: iCity >= 0 ? cols[iCity]?.toString().trim() : undefined,
+      location_country: iCtry >= 0 ? cols[iCtry]?.toString().trim() : undefined,
     });
   });
 
   return { rows, errors };
+}
+
+// Read file as ArrayBuffer and parse CSV or Excel
+function parseFile(file: File): Promise<{ rows: InventoryRow[]; errors: string[] }> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const ab = e.target?.result as ArrayBuffer;
+      try {
+        const wb = XLSX.read(ab, { type: "array" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows2d = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, defval: "" });
+        resolve(parseRows(rows2d as string[][]));
+      } catch {
+        resolve({ rows: [], errors: ["Не удалось прочитать файл. Убедитесь, что это Excel (.xlsx/.xls) или CSV."] });
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
 }
 
 export function InventoryUpload() {
@@ -65,34 +90,24 @@ export function InventoryUpload() {
   const [result, setResult] = useState<{ count?: number; error?: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  function handleFile(f: File) {
+  async function handleFile(f: File) {
     setFile(f);
     setResult(null);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      const { rows, errors } = parseCsv(text);
-      setPreview(rows.slice(0, 5));
-      setParseErrors(errors);
-    };
-    reader.readAsText(f);
+    const { rows, errors } = await parseFile(f);
+    setPreview(rows.slice(0, 5));
+    setParseErrors(errors);
   }
 
   async function handleUpload() {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const text = e.target?.result as string;
-      const { rows, errors } = parseCsv(text);
-      if (errors.length && !rows.length) { setParseErrors(errors); return; }
+    const { rows, errors } = await parseFile(file);
+    if (errors.length && !rows.length) { setParseErrors(errors); return; }
 
-      setUploading(true);
-      const res = await upsertInventoryRows(rows);
-      setUploading(false);
-      setResult(res);
-      if (!res.error) { setFile(null); setPreview([]); }
-    };
-    reader.readAsText(file);
+    setUploading(true);
+    const res = await upsertInventoryRows(rows);
+    setUploading(false);
+    setResult(res);
+    if (!res.error) { setFile(null); setPreview([]); }
   }
 
   return (
@@ -110,7 +125,7 @@ export function InventoryUpload() {
         <input
           ref={inputRef}
           type="file"
-          accept=".csv,.tsv,.txt"
+          accept=".csv,.tsv,.txt,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
           className="hidden"
           onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
         />
