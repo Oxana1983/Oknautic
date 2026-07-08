@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { ShoppingCart, User, Menu, X, ChevronDown, Search, LogOut, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,10 +28,24 @@ export function Header({ user, role = "customer" }: { user: SupabaseUser | null;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { itemCount, openCart } = useCart();
   const isSeller = role === "seller";
   const pathname = usePathname();
+  const router = useRouter();
   const navGuard = useRef(false);
+
+  // Clear search input on navigation
+  useEffect(() => {
+    setSearchQuery("");
+  }, [pathname]);
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    router.push(q ? `/catalog?q=${encodeURIComponent(q)}` : "/catalog");
+    setSearchOpen(false);
+  }
 
   // Close all menus on route change and block clicks briefly (prevents ghost-click after login redirect)
   useEffect(() => {
@@ -64,16 +78,18 @@ export function Header({ user, role = "customer" }: { user: SupabaseUser | null;
           </Link>
 
           {/* Desktop search */}
-          <div className="hidden md:flex flex-1 max-w-md mx-4">
+          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-4">
             <div className="relative w-full">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-400" />
               <input
                 type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Поиск по названию, SKU или бренду..."
                 className="w-full h-9 pl-9 pr-4 rounded-lg border border-navy-200 bg-navy-50 text-sm text-navy-900 placeholder:text-navy-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400 focus:bg-white transition"
               />
             </div>
-          </div>
+          </form>
 
           {/* Right actions */}
           <div className="flex items-center gap-1 ml-auto md:ml-0">
@@ -192,15 +208,19 @@ export function Header({ user, role = "customer" }: { user: SupabaseUser | null;
         {/* Mobile search bar */}
         {searchOpen && (
           <div className="md:hidden border-t border-navy-100 px-4 py-2">
-            <div className="relative">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-400" />
-              <input
-                autoFocus
-                type="search"
-                placeholder="Поиск..."
-                className="w-full h-9 pl-9 pr-4 rounded-lg border border-navy-200 bg-navy-50 text-sm placeholder:text-navy-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:bg-white transition"
-              />
-            </div>
+            <form onSubmit={handleSearch}>
+              <div className="relative">
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-400" />
+                <input
+                  autoFocus
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Поиск..."
+                  className="w-full h-9 pl-9 pr-4 rounded-lg border border-navy-200 bg-navy-50 text-sm placeholder:text-navy-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:bg-white transition"
+                />
+              </div>
+            </form>
           </div>
         )}
 
