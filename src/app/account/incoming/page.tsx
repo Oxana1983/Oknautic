@@ -17,11 +17,13 @@ export default async function IncomingPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, inbox_read_at")
     .eq("id", user.id)
     .single();
 
   if (profile?.role !== "seller") redirect("/account/requests");
+
+  const inboxReadAt = profile?.inbox_read_at ? new Date(profile.inbox_read_at) : null;
 
   // Get archive records
   const { data: archivedRows } = await supabase
@@ -70,13 +72,14 @@ export default async function IncomingPage() {
 
   const offeredSet = new Set((myOffers ?? []).map((o) => o.quote_request_id));
 
-  const toItem = (r: typeof activeReqsFiltered[number]): IncomingItem => ({
+  const toItem = (r: typeof activeReqsFiltered[number], checkNew = false): IncomingItem => ({
     ...r,
     hasOffer: offeredSet.has(r.id),
+    isNew: checkNew && inboxReadAt ? new Date(r.created_at) > inboxReadAt : false,
   });
 
-  const activeItems = activeReqsFiltered.map(toItem);
-  const archiveItems = (archivedReqs ?? []).map(toItem);
+  const activeItems = activeReqsFiltered.map((r) => toItem(r, true));
+  const archiveItems = (archivedReqs ?? []).map((r) => toItem(r, false));
 
   const { count: brandCatCount } = await supabase
     .from("seller_brand_categories")
