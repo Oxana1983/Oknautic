@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { FileText, Package, ChevronRight, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { FileText, Package, ChevronRight, CheckCircle2, Clock, XCircle, Ban } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
 import { MarkAcceptedRead } from "@/components/seller/mark-accepted-read";
 
@@ -16,12 +16,13 @@ function fmtPrice(price: number, currency: string) {
   return `${price.toLocaleString("ru-RU")} ${currency}`;
 }
 
-type OfferStatus = "pending" | "accepted" | "withdrawn";
+type OfferStatus = "pending" | "accepted" | "withdrawn" | "closed";
 
 const OFFER_BADGE: Record<OfferStatus, { label: string; cls: string; icon: React.ReactNode }> = {
-  pending:   { label: "Ожидает ответа", cls: "bg-blue-50 text-blue-600", icon: <Clock size={11} /> },
-  accepted:  { label: "Принято!",        cls: "bg-teal-50 text-teal-700", icon: <CheckCircle2 size={11} /> },
-  withdrawn: { label: "Отозвано",        cls: "bg-navy-100 text-navy-400", icon: <XCircle size={11} /> },
+  pending:   { label: "Ожидает ответа",    cls: "bg-blue-50 text-blue-600",    icon: <Clock size={11} /> },
+  accepted:  { label: "Принято!",           cls: "bg-teal-50 text-teal-700",    icon: <CheckCircle2 size={11} /> },
+  withdrawn: { label: "Отозвано",           cls: "bg-navy-100 text-navy-400",   icon: <XCircle size={11} /> },
+  closed:    { label: "Закрыто покупателем", cls: "bg-navy-100 text-navy-500",   icon: <Ban size={11} /> },
 };
 
 export default async function MyOffersPage() {
@@ -92,12 +93,15 @@ export default async function MyOffersPage() {
         <div className="space-y-3">
           {offers.map((offer) => {
             const req = reqMap[offer.quote_request_id];
-            const badge = OFFER_BADGE[offer.status as OfferStatus] ?? OFFER_BADGE.pending;
+            const effectiveStatus: OfferStatus =
+              offer.status === "pending" && req?.status === "closed" ? "closed" : (offer.status as OfferStatus);
+            const badge = OFFER_BADGE[effectiveStatus] ?? OFFER_BADGE.pending;
 
             return (
               <Link key={offer.id} href={`/account/incoming/${offer.quote_request_id}`}>
                 <Card className={`hover:border-teal-200 hover:shadow-sm transition-all ${
-                  offer.status === "accepted" ? "border-teal-200 bg-teal-50/20" : ""
+                  effectiveStatus === "accepted" ? "border-teal-200 bg-teal-50/20" :
+                  effectiveStatus === "closed"   ? "opacity-60" : ""
                 }`}>
                   <CardBody className="p-4">
                     <div className="flex gap-4 items-center">
