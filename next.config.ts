@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
+      { protocol: "https", hostname: "kgiipxccnquatppaywle.supabase.co" },
       { protocol: "https", hostname: "picsum.photos" },
       { protocol: "https", hostname: "fishermans-marine.com" },
       { protocol: "https", hostname: "d73v3rdaoqh96.cloudfront.net" },
