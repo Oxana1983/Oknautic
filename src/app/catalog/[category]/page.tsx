@@ -19,7 +19,7 @@ type Props = {
 async function fetchByCategory(categorySlug: string, brandSlug?: string, q?: string): Promise<Product[]> {
   const supabase = await createClient();
 
-  // Resolve slug → id first (direct column filter works reliably)
+  // Resolve slug → id
   const { data: catRow } = await supabase
     .from("categories")
     .select("id")
@@ -28,11 +28,19 @@ async function fetchByCategory(categorySlug: string, brandSlug?: string, q?: str
 
   if (!catRow) return [];
 
+  // Include subcategories (products are assigned to leaf categories, not roots)
+  const { data: children } = await supabase
+    .from("categories")
+    .select("id")
+    .eq("parent_id", catRow.id);
+
+  const categoryIds = [catRow.id, ...(children ?? []).map((c: any) => c.id)];
+
   const { data } = await supabase
     .from("products")
     .select("id, sku, name, description, photos, brand:brands!brand_id(name, slug), cat:categories!category_id(slug)")
     .eq("is_active", true)
-    .eq("category_id", catRow.id)
+    .in("category_id", categoryIds)
     .order("name");
 
   let products: Product[] = (data ?? [])
