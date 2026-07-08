@@ -135,7 +135,7 @@ export function IncomingList({ items: initial, isArchive, activeCount, archiveCo
           >
             {isArchive
               ? <><ArchiveRestore size={14} /> Восстановить ({selected.size})</>
-              : <><Trash2 size={14} /> Игнорировать ({selected.size})</>
+              : <><Trash2 size={14} /> Удалить ({selected.size})</>
             }
           </button>
         )}
@@ -244,7 +244,7 @@ export function IncomingList({ items: initial, isArchive, activeCount, archiveCo
                 <button
                   onClick={() => handleBulkAction([req.id])}
                   disabled={isPending}
-                  title={isArchive ? "Восстановить" : "Игнорировать"}
+                  title={isArchive ? "Восстановить" : "Удалить"}
                   className={`pr-1 p-2 rounded-xl transition-colors disabled:opacity-40 shrink-0 ${
                     isArchive
                       ? "text-navy-300 hover:text-teal-500 hover:bg-teal-50"
