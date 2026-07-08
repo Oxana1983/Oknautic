@@ -1050,6 +1050,39 @@ export type Database = {
           },
         ]
       }
+      seller_request_archive: {
+        Row: {
+          archived_at: string
+          quote_request_id: string
+          seller_id: string
+        }
+        Insert: {
+          archived_at?: string
+          quote_request_id: string
+          seller_id: string
+        }
+        Update: {
+          archived_at?: string
+          quote_request_id?: string
+          seller_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_request_archive_quote_request_id_fkey"
+            columns: ["quote_request_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_request_archive_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seller_stores: {
         Row: {
           address: string
