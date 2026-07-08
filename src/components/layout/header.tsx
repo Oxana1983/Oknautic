@@ -9,6 +9,7 @@ import { useCart } from "@/lib/cart-context";
 import { signOut } from "@/lib/auth-actions";
 import { cn } from "@/lib/utils";
 import { SellerBell } from "@/components/seller/seller-bell";
+import { BuyerBell } from "@/components/buyer/buyer-bell";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 const CATEGORIES = [
@@ -72,8 +73,9 @@ export function Header({ user }: { user: SupabaseUser | null }) {
               <Search size={20} />
             </button>
 
-            {/* Seller bell */}
+            {/* Notification bell */}
             {user?.user_metadata?.role === "seller" && <SellerBell />}
+            {user && user?.user_metadata?.role !== "seller" && <BuyerBell />}
 
             {/* Cart */}
             <button

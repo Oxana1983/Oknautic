@@ -736,6 +736,7 @@ export type Database = {
           id: string
           inbox_read_at: string | null
           last_name: string | null
+          offers_read_at: string | null
           phone: string | null
           role: string
           updated_at: string
@@ -748,6 +749,7 @@ export type Database = {
           id: string
           inbox_read_at?: string | null
           last_name?: string | null
+          offers_read_at?: string | null
           phone?: string | null
           role?: string
           updated_at?: string
@@ -760,6 +762,7 @@ export type Database = {
           id?: string
           inbox_read_at?: string | null
           last_name?: string | null
+          offers_read_at?: string | null
           phone?: string | null
           role?: string
           updated_at?: string
