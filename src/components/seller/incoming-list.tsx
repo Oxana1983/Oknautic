@@ -20,6 +20,7 @@ export type IncomingItem = {
   created_at: string;
   buyer_name?: string | null;
   hasOffer: boolean;
+  isNew: boolean;
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -263,7 +264,9 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
 
                 {/* Card */}
                 <Link href={`/account/incoming/${req.id}`} className="flex-1 min-w-0">
-                  <Card className={`hover:border-teal-200 hover:shadow-sm transition-all ${isSelected ? "border-transparent shadow-none" : ""}`}>
+                  <Card className={`hover:border-teal-200 hover:shadow-sm transition-all ${
+                    isSelected ? "border-transparent shadow-none" : req.isNew ? "border-blue-200 bg-blue-50/30" : ""
+                  }`}>
                     <CardBody className="p-3">
                       <div className="flex gap-3 items-center">
                         <div className="w-12 h-12 rounded-xl border border-navy-100 bg-navy-50 relative overflow-hidden shrink-0">
@@ -278,10 +281,17 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
-                              <p className="text-sm font-semibold text-navy-800 leading-snug truncate">{req.product_name}</p>
+                              <p className={`text-sm leading-snug truncate ${req.isNew ? "font-bold text-navy-900" : "font-semibold text-navy-800"}`}>
+                                {req.product_name}
+                              </p>
                               <p className="text-xs font-mono text-navy-400">{req.sku}</p>
                             </div>
                             <div className="flex flex-col items-end gap-1 shrink-0">
+                              {req.isNew && (
+                                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-500 text-white">
+                                  Новый
+                                </span>
+                              )}
                               <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${STATUS_STYLE[req.status] ?? "bg-navy-100 text-navy-500"}`}>
                                 {STATUS_LABEL[req.status] ?? req.status}
                               </span>
