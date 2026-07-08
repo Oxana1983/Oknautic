@@ -14,12 +14,12 @@ export async function updateProfile(
 
   const { error } = await supabase
     .from("profiles")
-    .upsert({
-      id: user.id,
+    .update({
       first_name: data.first_name.trim() || null,
       last_name: data.last_name.trim() || null,
       phone: data.phone.trim() || null,
-    });
+    })
+    .eq("id", user.id);
 
   if (error) return { error: error.message };
   revalidatePath("/account/profile");
