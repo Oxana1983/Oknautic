@@ -23,11 +23,12 @@ const CATEGORIES = [
   { slug: "rigging",        label: "Такелаж" },
 ];
 
-export function Header({ user }: { user: SupabaseUser | null }) {
+export function Header({ user, role = "customer" }: { user: SupabaseUser | null; role?: string }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { itemCount, openCart } = useCart();
+  const isSeller = role === "seller";
 
   const displayName = user?.user_metadata?.first_name
     ?? user?.email?.split("@")[0]
@@ -74,8 +75,8 @@ export function Header({ user }: { user: SupabaseUser | null }) {
             </button>
 
             {/* Notification bell */}
-            {user?.user_metadata?.role === "seller" && <SellerBell />}
-            {user && user?.user_metadata?.role !== "seller" && <BuyerBell />}
+            {user && isSeller && <SellerBell />}
+            {user && !isSeller && <BuyerBell />}
 
             {/* Cart */}
             <button
@@ -130,7 +131,7 @@ export function Header({ user }: { user: SupabaseUser | null }) {
                         className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy-700 hover:bg-navy-50 transition-colors"
                       >
                         <FileText size={15} className="text-navy-400" />
-                        {user.user_metadata?.role === "seller" ? "Кабинет продавца" : "Мои запросы"}
+                        {isSeller ? "Кабинет продавца" : "Мои запросы"}
                       </Link>
                       <form action={signOut}>
                         <button
@@ -272,7 +273,7 @@ export function Header({ user }: { user: SupabaseUser | null }) {
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center px-5 py-2.5 text-sm text-navy-700 hover:bg-navy-50"
               >
-                {user?.user_metadata?.role === "seller" ? "Кабинет продавца" : "Мои запросы"}
+                {isSeller ? "Кабинет продавца" : "Мои запросы"}
               </Link>
             </nav>
 
