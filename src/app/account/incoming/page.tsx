@@ -8,12 +8,9 @@ import type { IncomingItem } from "@/components/seller/incoming-list";
 
 export const dynamic = "force-dynamic";
 
-type Props = { searchParams: Promise<{ view?: string }> };
+const SELECT = "id, sku, product_name, product_photo, quantity, status, created_at, buyer_name";
 
-export default async function IncomingPage({ searchParams }: Props) {
-  const { view } = await searchParams;
-  const isArchive = view === "archive";
-
+export default async function IncomingPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/account/incoming");
@@ -26,47 +23,61 @@ export default async function IncomingPage({ searchParams }: Props) {
 
   if (profile?.role !== "seller") redirect("/account/requests");
 
-  // Get archived IDs for this seller
+  // Get archive records
   const { data: archivedRows } = await supabase
     .from("seller_request_archive")
-    .select("quote_request_id")
+    .select("quote_request_id, is_permanent")
     .eq("seller_id", user.id);
 
-  const archivedIds = new Set((archivedRows ?? []).map((r) => r.quote_request_id));
-  const archiveCount = archivedIds.size;
+  const allArchivedIds = new Set((archivedRows ?? []).map((r) => r.quote_request_id));
+  const softArchivedIds = Array.from(
+    new Set((archivedRows ?? []).filter((r) => !r.is_permanent).map((r) => r.quote_request_id))
+  );
 
-  // Fetch all routed requests (RLS filters automatically)
-  const { data: allRequests, error } = await supabase
+  // Fetch active requests (in_progress, not archived)
+  const { data: activeReqs, error } = await supabase
     .from("quote_requests")
-    .select("id, sku, product_name, product_photo, quantity, status, created_at, buyer_name, additional_comment")
+    .select(SELECT)
     .eq("status", "in_progress")
     .order("created_at", { ascending: false });
 
-  // Split into active / archived
-  const activeRequests = (allRequests ?? []).filter((r) => !archivedIds.has(r.id));
-  const archivedRequests = (allRequests ?? []).filter((r) => archivedIds.has(r.id));
-  const visibleRequests = isArchive ? archivedRequests : activeRequests;
+  const activeReqsFiltered = (activeReqs ?? []).filter((r) => !allArchivedIds.has(r.id));
 
-  // Which requests already have an offer from this seller
-  const visibleIds = visibleRequests.map((r) => r.id);
+  // Fetch archived requests by ID (any status)
+  const { data: archivedReqs } =
+    softArchivedIds.length > 0
+      ? await supabase
+          .from("quote_requests")
+          .select(SELECT)
+          .in("id", softArchivedIds)
+          .order("created_at", { ascending: false })
+      : { data: [] };
+
+  // Offers for all visible requests
+  const allIds = [
+    ...activeReqsFiltered.map((r) => r.id),
+    ...(archivedReqs ?? []).map((r) => r.id),
+  ];
   const { data: myOffers } =
-    visibleIds.length > 0
+    allIds.length > 0
       ? await supabase
           .from("offers")
           .select("quote_request_id")
           .eq("seller_id", user.id)
           .neq("status", "withdrawn")
-          .in("quote_request_id", visibleIds)
+          .in("quote_request_id", allIds)
       : { data: [] };
 
   const offeredSet = new Set((myOffers ?? []).map((o) => o.quote_request_id));
 
-  const items: IncomingItem[] = visibleRequests.map((r) => ({
+  const toItem = (r: typeof activeReqsFiltered[number]): IncomingItem => ({
     ...r,
     hasOffer: offeredSet.has(r.id),
-  }));
+  });
 
-  // Check brand/category setup
+  const activeItems = activeReqsFiltered.map(toItem);
+  const archiveItems = (archivedReqs ?? []).map(toItem);
+
   const { count: brandCatCount } = await supabase
     .from("seller_brand_categories")
     .select("id", { count: "exact", head: true })
@@ -100,12 +111,7 @@ export default async function IncomingPage({ searchParams }: Props) {
         </Card>
       )}
 
-      <IncomingList
-        items={items}
-        isArchive={isArchive}
-        activeCount={activeRequests.length}
-        archiveCount={archiveCount}
-      />
+      <IncomingList activeItems={activeItems} archiveItems={archiveItems} />
     </div>
   );
 }

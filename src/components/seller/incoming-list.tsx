@@ -1,15 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Package, ChevronRight, Archive, ArchiveRestore,
-  Trash2, CheckSquare, Square, MinusSquare
+  Package, ChevronRight, Trash2, Archive, ArchiveRestore,
+  CheckSquare, Square, MinusSquare, AlertTriangle
 } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
-import { archiveRequests, restoreRequests } from "@/lib/incoming-actions";
+import { archiveRequests, deleteRequestsPermanently, restoreRequests } from "@/lib/incoming-actions";
 
 export type IncomingItem = {
   id: string;
@@ -20,7 +19,6 @@ export type IncomingItem = {
   status: string;
   created_at: string;
   buyer_name?: string | null;
-  additional_comment?: string | null;
   hasOffer: boolean;
 };
 
@@ -40,28 +38,31 @@ function fmt(iso: string) {
 }
 
 type Props = {
-  items: IncomingItem[];
-  isArchive: boolean;
-  activeCount: number;
-  archiveCount: number;
+  activeItems: IncomingItem[];
+  archiveItems: IncomingItem[];
+  defaultIsArchive?: boolean;
 };
 
-export function IncomingList({ items: initial, isArchive, activeCount, archiveCount }: Props) {
-  const [items, setItems] = useState<IncomingItem[]>(initial);
+export function IncomingList({ activeItems: initActive, archiveItems: initArchive, defaultIsArchive = false }: Props) {
+  const [isArchive, setIsArchive] = useState(defaultIsArchive);
+  const [activeItems, setActiveItems] = useState<IncomingItem[]>(initActive);
+  const [archiveItems, setArchiveItems] = useState<IncomingItem[]>(initArchive);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[] | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
+  const items = isArchive ? archiveItems : activeItems;
   const allSelected = items.length > 0 && selected.size === items.length;
   const someSelected = selected.size > 0 && !allSelected;
 
+  function switchTab(toArchive: boolean) {
+    setIsArchive(toArchive);
+    setSelected(new Set());
+  }
+
   function toggleAll() {
-    if (allSelected || someSelected) {
-      setSelected(new Set());
-    } else {
-      setSelected(new Set(items.map((i) => i.id)));
-    }
+    setSelected(allSelected || someSelected ? new Set() : new Set(items.map((i) => i.id)));
   }
 
   function toggleOne(id: string) {
@@ -72,72 +73,140 @@ export function IncomingList({ items: initial, isArchive, activeCount, archiveCo
     });
   }
 
-  function handleBulkAction(ids: string[]) {
+  function handleArchive(ids: string[]) {
     startTransition(async () => {
-      const res = isArchive
-        ? await restoreRequests(ids)
-        : await archiveRequests(ids);
+      const res = await archiveRequests(ids);
       if (res.error) { setError(res.error); return; }
-      setItems((prev) => prev.filter((i) => !ids.includes(i.id)));
+      const moving = activeItems.filter((i) => ids.includes(i.id));
+      setActiveItems((prev) => prev.filter((i) => !ids.includes(i.id)));
+      setArchiveItems((prev) => [...moving, ...prev]);
+      setSelected(new Set());
+    });
+  }
+
+  function handleRestore(ids: string[]) {
+    startTransition(async () => {
+      const res = await restoreRequests(ids);
+      if (res.error) { setError(res.error); return; }
+      const moving = archiveItems.filter((i) => ids.includes(i.id));
+      setArchiveItems((prev) => prev.filter((i) => !ids.includes(i.id)));
+      setActiveItems((prev) => [...moving, ...prev]);
+      setSelected(new Set());
+    });
+  }
+
+  function confirmDelete() {
+    if (!confirmDeleteIds) return;
+    const ids = confirmDeleteIds;
+    setConfirmDeleteIds(null);
+    startTransition(async () => {
+      const res = await deleteRequestsPermanently(ids);
+      if (res.error) { setError(res.error); return; }
+      if (isArchive) {
+        setArchiveItems((prev) => prev.filter((i) => !ids.includes(i.id)));
+      } else {
+        setActiveItems((prev) => prev.filter((i) => !ids.includes(i.id)));
+      }
       setSelected(new Set());
     });
   }
 
   return (
     <div className="space-y-4">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3">
-          {/* View toggle */}
-          <div className="flex rounded-xl border border-navy-200 overflow-hidden text-sm">
-            <button
-              onClick={() => router.push("/account/incoming")}
-              className={`px-3 py-1.5 flex items-center gap-1.5 transition-colors ${
-                !isArchive ? "bg-navy-800 text-white" : "text-navy-500 hover:bg-navy-50"
-              }`}
-            >
-              Входящие
-              <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
-                !isArchive ? "bg-white/20 text-white" : "bg-navy-100 text-navy-600"
-              }`}>
-                {activeCount}
-              </span>
-            </button>
-            <button
-              onClick={() => router.push("/account/incoming?view=archive")}
-              className={`px-3 py-1.5 flex items-center gap-1.5 transition-colors border-l border-navy-200 ${
-                isArchive ? "bg-navy-800 text-white" : "text-navy-500 hover:bg-navy-50"
-              }`}
-            >
-              <Archive size={13} />
-              Архив
-              {archiveCount > 0 && (
-                <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
-                  isArchive ? "bg-white/20 text-white" : "bg-navy-100 text-navy-600"
-                }`}>
-                  {archiveCount}
-                </span>
-              )}
-            </button>
+      {/* Confirm permanent delete dialog */}
+      {confirmDeleteIds && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/40 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                <AlertTriangle size={18} className="text-red-500" />
+              </div>
+              <div>
+                <p className="font-display font-semibold text-navy-900">
+                  Удалить {confirmDeleteIds.length > 1 ? `${confirmDeleteIds.length} запроса` : "запрос"}?
+                </p>
+                <p className="text-sm text-navy-500 mt-1">
+                  Это действие нельзя отменить. Запрос исчезнет навсегда.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setConfirmDeleteIds(null)}
+                className="px-4 py-2 rounded-xl text-sm text-navy-600 hover:bg-navy-50 transition-colors"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={isPending}
+                className="px-4 py-2 rounded-xl text-sm font-medium bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                Удалить навсегда
+              </button>
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Bulk action */}
-        {selected.size > 0 && (
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        {/* View toggle — instant, no server roundtrip */}
+        <div className="flex rounded-xl border border-navy-200 overflow-hidden text-sm">
           <button
-            onClick={() => handleBulkAction(Array.from(selected))}
-            disabled={isPending}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${
-              isArchive
-                ? "bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200"
-                : "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
-            } disabled:opacity-50`}
+            onClick={() => switchTab(false)}
+            className={`px-3 py-1.5 flex items-center gap-1.5 transition-colors ${
+              !isArchive ? "bg-navy-800 text-white" : "text-navy-500 hover:bg-navy-50"
+            }`}
           >
-            {isArchive
-              ? <><ArchiveRestore size={14} /> Восстановить ({selected.size})</>
-              : <><Trash2 size={14} /> Удалить ({selected.size})</>
-            }
+            Входящие
+            <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
+              !isArchive ? "bg-white/20 text-white" : "bg-navy-100 text-navy-600"
+            }`}>
+              {activeItems.length}
+            </span>
           </button>
+          <button
+            onClick={() => switchTab(true)}
+            className={`px-3 py-1.5 flex items-center gap-1.5 border-l border-navy-200 transition-colors ${
+              isArchive ? "bg-navy-800 text-white" : "text-navy-500 hover:bg-navy-50"
+            }`}
+          >
+            <Archive size={13} />
+            Архив
+            {archiveItems.length > 0 && (
+              <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
+                isArchive ? "bg-white/20 text-white" : "bg-navy-100 text-navy-600"
+              }`}>
+                {archiveItems.length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Bulk actions */}
+        {selected.size > 0 && (
+          <div className="flex items-center gap-2">
+            {isArchive ? (
+              <button
+                onClick={() => handleRestore(Array.from(selected))}
+                disabled={isPending}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200 disabled:opacity-50 transition-colors"
+              >
+                <ArchiveRestore size={14} />
+                Восстановить ({selected.size})
+              </button>
+            ) : (
+              <button
+                onClick={() => setConfirmDeleteIds(Array.from(selected))}
+                disabled={isPending}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 disabled:opacity-50 transition-colors"
+              >
+                <Trash2 size={14} />
+                Удалить ({selected.size})
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -156,7 +225,7 @@ export function IncomingList({ items: initial, isArchive, activeCount, archiveCo
         </Card>
       ) : (
         <div className="space-y-2">
-          {/* Select-all row */}
+          {/* Select-all */}
           <div className="flex items-center gap-3 px-1 py-1">
             <button
               onClick={toggleAll}
@@ -185,7 +254,6 @@ export function IncomingList({ items: initial, isArchive, activeCount, archiveCo
                 <button
                   onClick={() => toggleOne(req.id)}
                   className="pl-2 py-3 text-navy-400 hover:text-teal-500 transition-colors shrink-0"
-                  aria-label={`Выбрать ${req.product_name}`}
                 >
                   {isSelected
                     ? <CheckSquare size={18} className="text-teal-500" />
@@ -198,7 +266,6 @@ export function IncomingList({ items: initial, isArchive, activeCount, archiveCo
                   <Card className={`hover:border-teal-200 hover:shadow-sm transition-all ${isSelected ? "border-transparent shadow-none" : ""}`}>
                     <CardBody className="p-3">
                       <div className="flex gap-3 items-center">
-                        {/* Product image */}
                         <div className="w-12 h-12 rounded-xl border border-navy-100 bg-navy-50 relative overflow-hidden shrink-0">
                           {req.product_photo ? (
                             <Image src={req.product_photo} alt={req.product_name} fill className="object-cover" sizes="48px" />
@@ -208,8 +275,6 @@ export function IncomingList({ items: initial, isArchive, activeCount, archiveCo
                             </div>
                           )}
                         </div>
-
-                        {/* Info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
@@ -233,26 +298,32 @@ export function IncomingList({ items: initial, isArchive, activeCount, archiveCo
                             <span className="ml-auto">{fmt(req.created_at)}</span>
                           </div>
                         </div>
-
                         <ChevronRight size={15} className="text-navy-300 shrink-0" />
                       </div>
                     </CardBody>
                   </Card>
                 </Link>
 
-                {/* Per-row ignore/restore */}
-                <button
-                  onClick={() => handleBulkAction([req.id])}
-                  disabled={isPending}
-                  title={isArchive ? "Восстановить" : "Удалить"}
-                  className={`pr-1 p-2 rounded-xl transition-colors disabled:opacity-40 shrink-0 ${
-                    isArchive
-                      ? "text-navy-300 hover:text-teal-500 hover:bg-teal-50"
-                      : "text-navy-300 hover:text-red-400 hover:bg-red-50"
-                  }`}
-                >
-                  {isArchive ? <ArchiveRestore size={16} /> : <Archive size={16} />}
-                </button>
+                {/* Per-row right action */}
+                {isArchive ? (
+                  <button
+                    onClick={() => handleRestore([req.id])}
+                    disabled={isPending}
+                    className="pr-1 flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs text-navy-400 hover:text-teal-600 hover:bg-teal-50 transition-colors disabled:opacity-40 shrink-0"
+                  >
+                    <ArchiveRestore size={14} />
+                    Восстановить
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleArchive([req.id])}
+                    disabled={isPending}
+                    className="pr-1 flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs text-navy-400 hover:text-navy-700 hover:bg-navy-100 transition-colors disabled:opacity-40 shrink-0"
+                  >
+                    <Archive size={14} />
+                    Архив
+                  </button>
+                )}
               </div>
             );
           })}

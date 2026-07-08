@@ -233,45 +233,39 @@ export default async function IncomingDetailPage({ params }: Props) {
           )}
         </div>
 
-        {/* Right: offer form */}
-        <div className="lg:sticky lg:top-24">
-          <Card>
-            <CardBody className="p-5">
-              <h2 className="font-display font-semibold text-navy-800 mb-5">
-                {existingOffer
-                  ? existingOffer.status === "withdrawn"
-                    ? "Предложение отозвано"
-                    : existingOffer.status === "accepted"
-                    ? "Ваше предложение принято"
-                    : "Ваше предложение"
-                  : "Создать предложение"
-                }
-              </h2>
+        {/* Right: offer form — hidden once offer is accepted */}
+        {existingOffer?.status !== "accepted" && (
+          <div className="lg:sticky lg:top-24">
+            <Card>
+              <CardBody className="p-5">
+                <h2 className="font-display font-semibold text-navy-800 mb-5">
+                  {existingOffer
+                    ? existingOffer.status === "withdrawn"
+                      ? "Предложение отозвано"
+                      : "Ваше предложение"
+                    : "Создать предложение"
+                  }
+                </h2>
 
-              {existingOffer?.status === "accepted" ? (
-                <div className="text-center py-4 space-y-2">
-                  <CheckCircle2 size={32} className="text-teal-500 mx-auto" />
-                  <p className="text-sm font-semibold text-teal-700">Предложение принято!</p>
-                  <p className="text-xs text-navy-400">Свяжитесь с покупателем через карточку слева</p>
-                </div>
-              ) : existingOffer?.status === "withdrawn" ? (
-                <div className="text-sm text-navy-400 text-center py-4">
-                  Вы отозвали предложение по этому запросу
-                </div>
-              ) : isOpen ? (
-                <OfferForm
-                  requestId={req.id}
-                  requestedQty={req.quantity}
-                  existingOffer={existingOffer ?? null}
-                />
-              ) : (
-                <div className="text-sm text-navy-400 text-center py-4">
-                  Запрос закрыт покупателем
-                </div>
-              )}
-            </CardBody>
-          </Card>
-        </div>
+                {existingOffer?.status === "withdrawn" ? (
+                  <div className="text-sm text-navy-400 text-center py-4">
+                    Вы отозвали предложение по этому запросу
+                  </div>
+                ) : isOpen ? (
+                  <OfferForm
+                    requestId={req.id}
+                    requestedQty={req.quantity}
+                    existingOffer={existingOffer ?? null}
+                  />
+                ) : (
+                  <div className="text-sm text-navy-400 text-center py-4">
+                    Запрос закрыт покупателем
+                  </div>
+                )}
+              </CardBody>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );

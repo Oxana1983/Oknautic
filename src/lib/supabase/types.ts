@@ -131,6 +131,38 @@ export type Database = {
         }
         Relationships: []
       }
+      buyer_request_archive: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          id: string
+          is_permanent: boolean
+          quote_request_id: string
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          id?: string
+          is_permanent?: boolean
+          quote_request_id: string
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          id?: string
+          is_permanent?: boolean
+          quote_request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyer_request_archive_quote_request_id_fkey"
+            columns: ["quote_request_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cart_items: {
         Row: {
           additional_comment: string | null
@@ -1053,16 +1085,19 @@ export type Database = {
       seller_request_archive: {
         Row: {
           archived_at: string
+          is_permanent: boolean
           quote_request_id: string
           seller_id: string
         }
         Insert: {
           archived_at?: string
+          is_permanent?: boolean
           quote_request_id: string
           seller_id: string
         }
         Update: {
           archived_at?: string
+          is_permanent?: boolean
           quote_request_id?: string
           seller_id?: string
         }
