@@ -113,6 +113,10 @@ export function OfferForm({ requestId, requestedQty, existingOffer }: Props) {
       setError("Укажите срок доставки");
       return;
     }
+    if (Number(form.available_quantity) > requestedQty) {
+      setError(`Количество не может превышать запрошенное (${requestedQty} шт.)`);
+      return;
+    }
 
     setSaving(true);
     const payload: OfferInput = {
@@ -201,11 +205,12 @@ export function OfferForm({ requestId, requestedQty, existingOffer }: Props) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-medium text-navy-600 mb-1.5">
-            Доступное количество
+            Количество <span className="text-navy-400 font-normal">(макс. {requestedQty})</span>
           </label>
           <input
             type="number"
             min="1"
+            max={requestedQty}
             value={form.available_quantity}
             onChange={(e) => set("available_quantity", e.target.value)}
             disabled={isAccepted}
