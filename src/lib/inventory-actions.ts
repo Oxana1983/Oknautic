@@ -9,6 +9,7 @@ export type InventoryRow = {
   product_name: string;
   brand?: string;
   category?: string;
+  photo_url?: string;
   quantity: number;
   price?: number;
   currency?: string;
@@ -140,6 +141,7 @@ export async function upsertInventoryRows(
       category_id: resolveCategoryId(r),
       avg_price: r.price ?? null,
       currency: r.currency ?? "EUR",
+      photos: r.photo_url?.trim() ? [r.photo_url.trim()] : [],
       is_active: true,
     }));
 
@@ -149,6 +151,19 @@ export async function upsertInventoryRows(
       .select("id, sku");
 
     for (const p of createdProducts ?? []) skuToProductId[p.sku] = p.id;
+
+    // For already-existing products that have no photos yet — fill them in
+    const photoUpdates = rows.filter(
+      (r) => r.photo_url?.trim() && skuToProductId[r.sku.trim()]
+        && !newRows.find((n) => n.sku === r.sku) // only existing ones
+    );
+    for (const r of photoUpdates) {
+      await admin
+        .from("products")
+        .update({ photos: [r.photo_url!.trim()] })
+        .eq("id", skuToProductId[r.sku.trim()])
+        .eq("photos", "{}"); // only if photos array is still empty
+    }
   }
 
   // ── Step 3: upsert into seller_inventory ─────────────────────────────────

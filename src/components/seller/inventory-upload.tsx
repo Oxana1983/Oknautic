@@ -29,6 +29,7 @@ function parseRows(rows2d: string[][]): { rows: InventoryRow[]; errors: string[]
   const iQty   = findCol(header, ["quantity", "qty", "количество", "кол"]);
   const iBrand = findCol(header, ["brand", "бренд", "производитель"]);
   const iCat   = findCol(header, ["category", "категория", "cat"]);
+  const iPhoto = findCol(header, ["photo_url", "photo", "image", "фото", "изображение", "url"]);
   const iPrice = findCol(header, ["price", "цена"]);
   const iCur   = findCol(header, ["currency", "валюта"]);
   const iCity  = findCol(header, ["location_city", "city", "город", "порт"]);
@@ -55,6 +56,7 @@ function parseRows(rows2d: string[][]): { rows: InventoryRow[]; errors: string[]
       product_name: name,
       brand: iBrand >= 0 ? cols[iBrand]?.toString().trim() : undefined,
       category: iCat >= 0 ? cols[iCat]?.toString().trim() || undefined : undefined,
+      photo_url: iPhoto >= 0 ? cols[iPhoto]?.toString().trim() || undefined : undefined,
       quantity,
       price: iPrice >= 0 ? parseFloat(cols[iPrice]?.toString().trim() ?? "") || undefined : undefined,
       currency: iCur >= 0 ? cols[iCur]?.toString().trim() || "EUR" : "EUR",
@@ -124,7 +126,8 @@ export function InventoryUpload() {
       >
         <FileSpreadsheet size={36} className="text-navy-300 mx-auto mb-3" />
         <p className="text-sm font-medium text-navy-700">Перетащите CSV/Excel файл или нажмите для выбора</p>
-        <p className="text-xs text-navy-400 mt-1">Формат: SKU, Product Name, Brand, Quantity, Price, Currency, City, Country</p>
+        <p className="text-xs text-navy-400 mt-1">Колонки: SKU, Product Name, Brand, Category, Photo URL, Quantity, Price, Currency, City, Country</p>
+        <p className="text-xs text-navy-400">Category и Photo URL — необязательные</p>
         <input
           ref={inputRef}
           type="file"
@@ -137,9 +140,9 @@ export function InventoryUpload() {
       {/* Template download hint */}
       <div className="text-xs text-navy-400 flex items-center gap-1.5">
         <Upload size={12} />
-        Пример строки CSV:
+        Пример CSV:
         <code className="bg-navy-50 px-1.5 py-0.5 rounded text-navy-600 font-mono">
-          GRM-ECHOMAP94SV,Garmin ECHOMAP Ultra 94sv,Garmin,3,1250.00,EUR,Antibes,France
+          GRM-ECHOMAP94SV,Garmin ECHOMAP Ultra 94sv,Garmin,navigation,https://…/photo.jpg,3,1250.00,EUR,Antibes,France
         </code>
       </div>
 
