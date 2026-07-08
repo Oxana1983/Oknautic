@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { Card, CardBody } from "@/components/ui/card";
 import { ProfileForm } from "@/components/account/profile-form";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProfilePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
