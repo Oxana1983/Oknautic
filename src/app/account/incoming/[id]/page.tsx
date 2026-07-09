@@ -51,6 +51,33 @@ export default async function IncomingDetailPage({ params }: Props) {
     .eq("seller_id", user.id)
     .maybeSingle();
 
+  // Try matching by product_id first, fall back to sku
+  let inventoryItem: { price: number | null; currency: string } | null = null;
+  if (req.product_id) {
+    const { data, error: e1 } = await supabase
+      .from("seller_inventory")
+      .select("price, currency")
+      .eq("seller_id", user.id)
+      .eq("product_id", req.product_id)
+      .maybeSingle();
+    console.log("[offer] product_id lookup:", req.product_id, "→ data:", data, "err:", e1?.message);
+    inventoryItem = data;
+  }
+  if (!inventoryItem) {
+    const { data, error: e2 } = await supabase
+      .from("seller_inventory")
+      .select("price, currency")
+      .eq("seller_id", user.id)
+      .eq("sku", req.sku)
+      .maybeSingle();
+    console.log("[offer] sku lookup:", req.sku, "→ data:", data, "err:", e2?.message);
+    inventoryItem = data;
+  }
+  // numeric from PostgreSQL may arrive as string — coerce to number
+  const inventoryPrice = inventoryItem?.price != null ? Number(inventoryItem.price) : null;
+  const inventoryCurrency = inventoryItem?.currency ?? null;
+  console.log("[offer] final inventoryPrice:", inventoryPrice, inventoryCurrency);
+
   const variantAttrs = req.variant_attrs as Record<string, string> | null;
   const isOpen = req.status === "in_progress";
 
@@ -256,6 +283,8 @@ export default async function IncomingDetailPage({ params }: Props) {
                     requestId={req.id}
                     requestedQty={req.quantity}
                     existingOffer={existingOffer ?? null}
+                    inventoryPrice={inventoryPrice}
+                    inventoryCurrency={inventoryCurrency}
                   />
                 ) : (
                   <div className="text-sm text-navy-400 text-center py-4">
