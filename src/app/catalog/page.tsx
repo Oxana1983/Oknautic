@@ -48,7 +48,7 @@ async function fetchProducts(brandSlug?: string, q?: string): Promise<Product[]>
 
 const PHONE = "38269962980";
 const WA_URL = `https://wa.me/${PHONE}`;
-const TG_URL = `https://t.me/+${PHONE}`;
+const TG_URL = "https://t.me/OksanaTivat";
 
 function NotFound({ query }: { query?: string }) {
   const text = query
@@ -84,7 +84,7 @@ function NotFound({ query }: { query?: string }) {
               WhatsApp
             </a>
             <a
-              href={`${TG_URL}`}
+              href={`${TG_URL}?text=${encodeURIComponent(text)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2.5 h-10 rounded-xl bg-[#229ED9] text-white text-sm font-medium hover:bg-[#1a8bbf] transition-colors"
