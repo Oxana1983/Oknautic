@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowRight, Search, Send, CheckCircle2, Package, Upload, Bell, Handshake } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -38,10 +37,10 @@ export default function HowItWorksPage() {
     <div className="max-w-4xl mx-auto px-4 py-12">
       {/* Header */}
       <div className="text-center mb-14">
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <span className="text-xs text-navy-400 uppercase tracking-widest">Платформа</span>
-          <Image src="/logo.png" alt="OKnautic" width={100} height={28} className="h-5 w-auto" />
-        </div>
+        <p className="mb-3">
+          <span className="text-xs text-navy-400 uppercase tracking-widest">Платформа </span>
+          <span className="text-sm font-extrabold text-navy-700" style={{ fontFamily: "var(--font-brand)" }}>OKnautic</span>
+        </p>
         <h1 className="font-display text-3xl sm:text-4xl font-bold text-navy-900 mb-4">
           Как это работает
         </h1>
