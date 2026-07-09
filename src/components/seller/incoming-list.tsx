@@ -322,7 +322,7 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
                     className="pr-1 flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs text-navy-400 hover:text-teal-600 hover:bg-teal-50 transition-colors disabled:opacity-40 shrink-0"
                   >
                     <ArchiveRestore size={14} />
-                    Восстановить
+                    <span className="hidden sm:inline">Восстановить</span>
                   </button>
                 ) : (
                   <button
@@ -331,7 +331,7 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
                     className="pr-1 flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs text-navy-400 hover:text-navy-700 hover:bg-navy-100 transition-colors disabled:opacity-40 shrink-0"
                   >
                     <Archive size={14} />
-                    Архив
+                    <span className="hidden sm:inline">Архив</span>
                   </button>
                 )}
               </div>

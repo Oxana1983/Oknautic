@@ -230,7 +230,7 @@ export default async function IncomingDetailPage({ params }: Props) {
                           icon={<WhatsAppIcon />}
                         />
                         <MessengerBtn
-                          href={`viber://chat?number=%2B${cleanPhone(phone)}`}
+                          href={`viber://chat?number=+${cleanPhone(phone)}`}
                           label="Viber"
                           color="bg-[#7360F2]"
                           icon={<ViberIcon />}
