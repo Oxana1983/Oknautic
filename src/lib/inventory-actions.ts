@@ -152,17 +152,16 @@ export async function upsertInventoryRows(
 
     for (const p of createdProducts ?? []) skuToProductId[p.sku] = p.id;
 
-    // For already-existing products that have no photos yet — fill them in
+    // For already-existing products — update photo if seller provided URL
     const photoUpdates = rows.filter(
       (r) => r.photo_url?.trim() && skuToProductId[r.sku.trim()]
-        && !newRows.find((n) => n.sku === r.sku) // only existing ones
+        && !newRows.find((n) => n.sku.trim() === r.sku.trim())
     );
     for (const r of photoUpdates) {
       await admin
         .from("products")
         .update({ photos: [r.photo_url!.trim()] })
-        .eq("id", skuToProductId[r.sku.trim()])
-        .eq("photos", "{}"); // only if photos array is still empty
+        .eq("id", skuToProductId[r.sku.trim()]);
     }
   }
 
