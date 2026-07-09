@@ -59,7 +59,7 @@ export async function upsertInventoryRows(
   rows: InventoryRow[]
 ): Promise<{ error?: string; count?: number }> {
   const supabase = await createClient();
-  const admin = await createAdminClient();
+  const admin = createAdminClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
@@ -146,11 +146,12 @@ export async function upsertInventoryRows(
       is_active: true,
     }));
 
-    const { data: createdProducts } = await admin
+    const { data: createdProducts, error: productError } = await admin
       .from("products")
       .upsert(productsToInsert, { ignoreDuplicates: true, onConflict: "brand_id,sku" })
       .select("id, sku");
 
+    if (productError) return { error: `Ошибка добавления в каталог: ${productError.message}` };
     for (const p of createdProducts ?? []) skuToProductId[p.sku] = p.id;
 
     // For already-existing products — update photo if seller provided URL
