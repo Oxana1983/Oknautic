@@ -23,15 +23,32 @@ export function SellerBell() {
       .select("inbox_read_at, accepted_read_at")
       .single();
 
-    // New incoming requests
+    // New incoming requests — only for products this seller carries in inventory
     let requestCount = 0;
     if (profile?.inbox_read_at) {
-      const { count } = await supabase
-        .from("quote_requests")
-        .select("*", { count: "exact", head: true })
-        .gt("created_at", profile.inbox_read_at)
-        .neq("status", "deleted");
-      requestCount = count ?? 0;
+      const { data: inventory } = await supabase
+        .from("seller_inventory")
+        .select("sku, product_id")
+        .eq("seller_id", user.id);
+
+      const skus = [...new Set((inventory ?? []).map((i) => i.sku))];
+      const productIds = [...new Set(
+        (inventory ?? []).map((i) => i.product_id).filter((id): id is string => !!id)
+      )];
+
+      if (skus.length > 0 || productIds.length > 0) {
+        const orParts: string[] = [];
+        if (skus.length > 0) orParts.push(`sku.in.(${skus.map((s) => `"${s}"`).join(",")})`);
+        if (productIds.length > 0) orParts.push(`product_id.in.(${productIds.join(",")})`);
+
+        const { count } = await supabase
+          .from("quote_requests")
+          .select("*", { count: "exact", head: true })
+          .gt("created_at", profile.inbox_read_at)
+          .neq("status", "deleted")
+          .or(orParts.join(","));
+        requestCount = count ?? 0;
+      }
     }
 
     // Accepted offers (buyer chose this seller's offer)
