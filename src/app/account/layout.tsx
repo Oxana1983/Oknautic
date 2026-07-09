@@ -19,8 +19,8 @@ export default async function AccountLayout({ children }: { children: React.Reac
     "Аккаунт";
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="flex gap-8 items-start">
+    <div className="max-w-6xl mx-auto px-4 py-6 md:py-8">
+      <div className="md:flex md:gap-8 md:items-start">
         <AccountSidebar
           displayName={displayName}
           email={user.email ?? ""}
