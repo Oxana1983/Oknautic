@@ -8,8 +8,19 @@ import { upsertInventoryRows } from "@/lib/inventory-actions";
 
 const CURRENCIES = ["EUR", "USD", "GBP", "RUB", "TRY"];
 
+const CATEGORIES = [
+  { slug: "navigation",    label: "Навигация" },
+  { slug: "anchoring",     label: "Якорное" },
+  { slug: "deck-hardware", label: "Палуба" },
+  { slug: "mooring",       label: "Швартовка" },
+  { slug: "engines",       label: "Двигатели" },
+  { slug: "electrical",    label: "Электрика" },
+  { slug: "safety",        label: "Безопасность" },
+  { slug: "rigging",       label: "Такелаж" },
+];
+
 const EMPTY = {
-  sku: "", product_name: "", brand: "", quantity: "1",
+  sku: "", product_name: "", brand: "", category: "", quantity: "1",
   price: "", currency: "EUR", location_city: "", location_country: "",
 };
 
@@ -26,7 +37,7 @@ export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
     setError(null);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!form.sku.trim()) { setError("Введите SKU"); return; }
     if (!form.product_name.trim()) { setError("Введите название товара"); return; }
@@ -38,6 +49,7 @@ export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
         sku: form.sku.trim(),
         product_name: form.product_name.trim(),
         brand: form.brand.trim() || undefined,
+        category: form.category || undefined,
         quantity: qty,
         price: form.price ? parseFloat(form.price) : undefined,
         currency: form.currency || "EUR",
@@ -122,6 +134,20 @@ export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
                   placeholder="Garmin ECHOMAP Ultra 94sv"
                   className="w-full h-9 px-3 rounded-lg border border-navy-200 text-sm placeholder:text-navy-300 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-navy-600 mb-1">Категория</label>
+                <select
+                  value={form.category}
+                  onChange={(e) => set("category", e.target.value)}
+                  className="w-full h-9 px-3 rounded-lg border border-navy-200 text-sm bg-white focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400"
+                >
+                  <option value="">— не указана (по бренду) —</option>
+                  {CATEGORIES.map((c) => (
+                    <option key={c.slug} value={c.slug}>{c.label}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Qty + Price + Currency */}
