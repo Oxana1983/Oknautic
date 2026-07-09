@@ -2,7 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { sendNewRequestEmail, sendOfferAcceptedEmail } from "@/lib/email";
 import type { CartItem } from "@/lib/cart-context";
 
 type RfqInput = {
@@ -53,11 +54,49 @@ export async function submitRfq(
     })
   );
 
-  const { error } = await supabase.from("quote_requests").insert(rows);
+  const { data: inserted, error } = await supabase
+    .from("quote_requests")
+    .insert(rows)
+    .select("id, sku, product_name, quantity");
   if (error) return { error: error.message };
+
+  // Notify sellers whose inventory matches each new request
+  void notifyMatchingSellers(inserted ?? []);
 
   revalidatePath("/account/requests");
   return {};
+}
+
+async function notifyMatchingSellers(
+  requests: { id: string; sku: string; product_name: string; quantity: number }[]
+) {
+  if (!requests.length) return;
+  const admin = createAdminClient();
+
+  for (const req of requests) {
+    // Find sellers who have this SKU in inventory with notifications enabled
+    const { data: matches } = await admin
+      .from("seller_inventory")
+      .select("seller_id, profiles!inner(email_notifications_quotes)")
+      .eq("sku", req.sku)
+      .eq("is_available", true)
+      .gt("quantity", 0);
+
+    for (const m of matches ?? []) {
+      const profile = m.profiles as { email_notifications_quotes: boolean } | null;
+      if (!profile?.email_notifications_quotes) continue;
+
+      const { data: { user: seller } } = await admin.auth.admin.getUserById(m.seller_id);
+      if (seller?.email) {
+        await sendNewRequestEmail(seller.email, {
+          productName: req.product_name,
+          sku: req.sku,
+          quantity: req.quantity,
+          requestId: req.id,
+        });
+      }
+    }
+  }
 }
 
 export async function acceptOffer(
@@ -86,9 +125,46 @@ export async function acceptOffer(
 
   if (offerError) return { error: offerError.message };
 
+  // Email the winning seller
+  void notifySellerOfAcceptance(offerId, requestId);
+
   revalidatePath(`/account/requests/${requestId}`);
   revalidatePath("/account/offers");
   return {};
+}
+
+async function notifySellerOfAcceptance(offerId: string, requestId: string) {
+  const admin = createAdminClient();
+
+  const { data: offer } = await admin
+    .from("offers")
+    .select("seller_id, profiles!inner(email_notifications_offers)")
+    .eq("id", offerId)
+    .single();
+
+  if (!offer) return;
+  const profile = offer.profiles as { email_notifications_offers: boolean } | null;
+  if (!profile?.email_notifications_offers) return;
+
+  const { data: req } = await admin
+    .from("quote_requests")
+    .select("product_name, sku, buyer_name, buyer_phone, buyer_email")
+    .eq("id", requestId)
+    .single();
+
+  if (!req) return;
+
+  const { data: { user: seller } } = await admin.auth.admin.getUserById(offer.seller_id);
+  if (!seller?.email) return;
+
+  await sendOfferAcceptedEmail(seller.email, {
+    productName: req.product_name,
+    sku: req.sku,
+    buyerName: req.buyer_name ?? "Покупатель",
+    buyerPhone: req.buyer_phone,
+    buyerEmail: req.buyer_email,
+    requestId,
+  });
 }
 
 export async function closeRequest(
