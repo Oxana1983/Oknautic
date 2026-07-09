@@ -2,7 +2,6 @@
 
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = "OKnautic <noreply@oknautic.com>";
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.oknautic.com";
 
@@ -15,6 +14,7 @@ export async function sendNewRequestEmail(to: string, data: {
 }) {
   if (!process.env.RESEND_API_KEY) return;
 
+  const resend = new Resend(process.env.RESEND_API_KEY);
   const link = `${BASE_URL}/account/incoming/${data.requestId}`;
 
   await resend.emails.send({
@@ -102,6 +102,7 @@ export async function sendOfferAcceptedEmail(to: string, data: {
 }) {
   if (!process.env.RESEND_API_KEY) return;
 
+  const resend = new Resend(process.env.RESEND_API_KEY);
   const link = `${BASE_URL}/account/incoming/${data.requestId}`;
 
   const contactRows = [
