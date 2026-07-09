@@ -21,7 +21,8 @@ export function RegisterForm() {
   const [email, setEmail] = useState(searchParams.get("email") ?? "");
 
   const [state, action, isPending] = useActionState(signUp, null);
-  const [role, setRole] = useState<"customer" | "seller">("customer");
+  const defaultRole = searchParams.get("role") === "seller" ? "seller" : "customer";
+  const [role, setRole] = useState<"customer" | "seller">(defaultRole);
 
   return (
     <div className="bg-white rounded-2xl border border-navy-100 shadow-sm p-8">
