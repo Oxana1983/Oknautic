@@ -128,8 +128,12 @@ export default async function IncomingDetailPage({ params }: Props) {
                     </div>
                   )}
                 </div>
-                <div className="flex-1 space-y-2 text-sm">
-                  <p className="font-mono text-xs text-navy-400">{req.sku}</p>
+                <div className="flex-1 min-w-0 space-y-3">
+                  <div>
+                    <span className="inline-block font-mono text-xs text-navy-500 bg-navy-50 border border-navy-100 px-2 py-0.5 rounded-md">
+                      {req.sku}
+                    </span>
+                  </div>
                   {variantAttrs && Object.keys(variantAttrs).length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {Object.entries(variantAttrs).map(([k, v]) => (
@@ -139,14 +143,18 @@ export default async function IncomingDetailPage({ params }: Props) {
                       ))}
                     </div>
                   )}
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-navy-500">
-                    <div className="flex items-center gap-1.5">
-                      <Package size={12} className="text-navy-300" />
-                      Количество: <span className="font-semibold text-navy-800">{req.quantity} шт.</span>
+                  <div className="flex gap-6">
+                    <div>
+                      <p className="text-[11px] text-navy-400 mb-0.5 flex items-center gap-1">
+                        <Package size={11} className="text-navy-300" /> Количество
+                      </p>
+                      <p className="text-sm font-semibold text-navy-800">{req.quantity} шт.</p>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <Calendar size={12} className="text-navy-300" />
-                      Создан: <span className="text-navy-700">{fmt(req.created_at)}</span>
+                    <div>
+                      <p className="text-[11px] text-navy-400 mb-0.5 flex items-center gap-1">
+                        <Calendar size={11} className="text-navy-300" /> Создан
+                      </p>
+                      <p className="text-sm text-navy-700">{fmt(req.created_at)}</p>
                     </div>
                   </div>
                 </div>
