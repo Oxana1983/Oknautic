@@ -22,6 +22,7 @@ const CATEGORIES = [
 const EMPTY = {
   sku: "", product_name: "", brand: "", category: "", quantity: "1",
   price: "", currency: "EUR", location_city: "", location_country: "",
+  photo_url: "", is_new: "true",
 };
 
 export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
@@ -50,6 +51,8 @@ export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
         product_name: form.product_name.trim(),
         brand: form.brand.trim() || undefined,
         category: form.category || undefined,
+        photo_url: form.photo_url.trim() || undefined,
+        is_new: form.is_new === "true",
         quantity: qty,
         price: form.price ? parseFloat(form.price) : undefined,
         currency: form.currency || "EUR",
@@ -186,6 +189,39 @@ export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
                     {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
                   </select>
                 </div>
+              </div>
+
+              {/* Condition */}
+              <div>
+                <label className="block text-xs font-medium text-navy-600 mb-2">Состояние</label>
+                <div className="flex gap-2">
+                  {[{ v: "true", label: "Новый" }, { v: "false", label: "Б/У" }].map(({ v, label }) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => set("is_new", v)}
+                      className={`flex-1 h-9 rounded-lg border text-sm font-medium transition-colors ${
+                        form.is_new === v
+                          ? "border-teal-400 bg-teal-50 text-teal-700"
+                          : "border-navy-200 text-navy-500 hover:bg-navy-50"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Photo URL */}
+              <div>
+                <label className="block text-xs font-medium text-navy-600 mb-1">Фото (URL)</label>
+                <input
+                  type="url"
+                  value={form.photo_url}
+                  onChange={(e) => set("photo_url", e.target.value)}
+                  placeholder="https://example.com/photo.jpg"
+                  className="w-full h-9 px-3 rounded-lg border border-navy-200 text-sm placeholder:text-navy-300 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400"
+                />
               </div>
 
               {/* Location */}

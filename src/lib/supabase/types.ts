@@ -1023,8 +1023,10 @@ export type Database = {
           currency: string
           id: string
           is_available: boolean
+          is_new: boolean
           location_city: string | null
           location_country: string | null
+          photo_url: string | null
           price: number | null
           product_id: string | null
           product_name: string
@@ -1039,8 +1041,10 @@ export type Database = {
           currency?: string
           id?: string
           is_available?: boolean
+          is_new?: boolean
           location_city?: string | null
           location_country?: string | null
+          photo_url?: string | null
           price?: number | null
           product_id?: string | null
           product_name: string
@@ -1055,8 +1059,10 @@ export type Database = {
           currency?: string
           id?: string
           is_available?: boolean
+          is_new?: boolean
           location_city?: string | null
           location_country?: string | null
+          photo_url?: string | null
           price?: number | null
           product_id?: string | null
           product_name?: string
