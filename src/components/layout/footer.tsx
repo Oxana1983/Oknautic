@@ -4,16 +4,13 @@ import Image from "next/image";
 
 const LINKS = {
   buyers: [
-    { href: "/catalog",   label: "Каталог запчастей" },
-    { href: "/rfq",       label: "Мои запросы (RFQ)" },
-    { href: "/orders",    label: "История заказов" },
-    { href: "/cart",      label: "Корзина" },
+    { href: "/catalog",          label: "Каталог запчастей" },
+    { href: "/rfq/new",          label: "Подать запрос" },
+    { href: "/account/requests", label: "Личный кабинет" },
   ],
   sellers: [
-    { href: "/sellers",         label: "Стать продавцом" },
-    { href: "/seller/offers",   label: "Мои предложения" },
-    { href: "/seller/products", label: "Мои товары" },
-    { href: "/seller/stats",    label: "Статистика" },
+    { href: "/sellers",          label: "Стать продавцом" },
+    { href: "/account/incoming", label: "Личный кабинет" },
   ],
   company: [
     { href: "/about",   label: "О платформе" },
