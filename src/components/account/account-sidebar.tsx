@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, User, Store, LogOut, Warehouse } from "lucide-react";
+import { FileText, User, Store, LogOut, Warehouse, ArrowLeftRight } from "lucide-react";
 import { signOut } from "@/lib/auth-actions";
+import { switchRole } from "@/lib/profile-actions";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -74,6 +75,15 @@ export function AccountSidebar({ displayName, email, role }: Props) {
             </Link>
           );
         })}
+        <form action={switchRole.bind(null, role)}>
+          <button
+            type="submit"
+            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-navy-500 hover:bg-navy-50 transition-colors border-b border-navy-50"
+          >
+            <ArrowLeftRight size={16} className="text-navy-400" />
+            {role === "seller" ? "Режим покупателя" : "Режим продавца"}
+          </button>
+        </form>
         <form action={signOut}>
           <button
             type="submit"
