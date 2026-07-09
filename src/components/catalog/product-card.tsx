@@ -63,7 +63,7 @@ export function ProductCard({ product }: { product: Product }) {
         <Button
           variant="primary"
           size="sm"
-          className="flex-1"
+          className="flex-1 text-xs"
           onClick={() => addItem(product)}
         >
           <ShoppingCart size={14} />
