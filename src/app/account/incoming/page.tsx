@@ -25,6 +25,17 @@ export default async function IncomingPage() {
 
   const inboxReadAt = profile?.inbox_read_at ? new Date(profile.inbox_read_at) : null;
 
+  // Get seller's inventory to filter requests
+  const { data: inventory } = await supabase
+    .from("seller_inventory")
+    .select("sku, product_id")
+    .eq("seller_id", user.id);
+
+  const sellerSkus = [...new Set((inventory ?? []).map((i) => i.sku))];
+  const sellerProductIds = [...new Set(
+    (inventory ?? []).map((i) => i.product_id).filter((id): id is string => !!id)
+  )];
+
   // Get archive records
   const { data: archivedRows } = await supabase
     .from("seller_request_archive")
@@ -36,12 +47,20 @@ export default async function IncomingPage() {
     new Set((archivedRows ?? []).filter((r) => !r.is_permanent).map((r) => r.quote_request_id))
   );
 
-  // Fetch active requests (in_progress, not archived)
-  const { data: activeReqs, error } = await supabase
-    .from("quote_requests")
-    .select(SELECT)
-    .eq("status", "in_progress")
-    .order("created_at", { ascending: false });
+  // Fetch active requests only for products this seller carries
+  const hasInventory = sellerSkus.length > 0 || sellerProductIds.length > 0;
+  const orParts: string[] = [];
+  if (sellerSkus.length > 0) orParts.push(`sku.in.(${sellerSkus.map((s) => `"${s}"`).join(",")})`);
+  if (sellerProductIds.length > 0) orParts.push(`product_id.in.(${sellerProductIds.join(",")})`);
+
+  const { data: activeReqs, error } = hasInventory
+    ? await supabase
+        .from("quote_requests")
+        .select(SELECT)
+        .eq("status", "in_progress")
+        .or(orParts.join(","))
+        .order("created_at", { ascending: false })
+    : { data: [], error: null };
 
   const activeReqsFiltered = (activeReqs ?? []).filter((r) => !allArchivedIds.has(r.id));
 

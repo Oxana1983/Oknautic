@@ -27,6 +27,8 @@ type Props = {
   requestId: string;
   requestedQty: number;
   existingOffer: ExistingOffer | null;
+  inventoryPrice?: number | null;
+  inventoryCurrency?: string | null;
 };
 
 const inputCls =
@@ -74,12 +76,12 @@ function tomorrow() {
   return d.toISOString().split("T")[0];
 }
 
-export function OfferForm({ requestId, requestedQty, existingOffer }: Props) {
+export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPrice, inventoryCurrency }: Props) {
   const isAccepted = existingOffer?.status === "accepted";
 
   const [form, setForm] = useState({
-    price_per_unit: existingOffer?.price_per_unit?.toString() ?? "",
-    currency: existingOffer?.currency ?? "EUR",
+    price_per_unit: existingOffer?.price_per_unit?.toString() ?? inventoryPrice?.toString() ?? "",
+    currency: existingOffer?.currency ?? inventoryCurrency ?? "EUR",
     available_quantity: existingOffer?.available_quantity?.toString() ?? requestedQty.toString(),
     delivery_datetime: existingOffer
       ? existingOffer.delivery_datetime.split("T")[0]
@@ -184,6 +186,11 @@ export function OfferForm({ requestId, requestedQty, existingOffer }: Props) {
             disabled={isAccepted}
             className={inputCls}
           />
+          {inventoryPrice && !existingOffer && (
+            <p className="text-[11px] text-navy-400 mt-1">
+              Из вашего склада: {inventoryPrice} {inventoryCurrency}
+            </p>
+          )}
         </div>
         <div>
           <label className="block text-xs font-medium text-navy-600 mb-1.5">Валюта</label>
