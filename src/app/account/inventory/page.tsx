@@ -1,12 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import {
-  Plus, Upload, Package, CheckCircle2, XCircle, Pencil
-} from "lucide-react";
+import { Upload, Package } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
 import { InventoryUpload } from "@/components/seller/inventory-upload";
 import { InventoryTable } from "@/components/seller/inventory-table";
+import { AddInventoryItem } from "@/components/seller/add-inventory-item";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +40,7 @@ export default async function InventoryPage() {
             {total} позиций · {inStock} в наличии
           </p>
         </div>
+        <AddInventoryItem />
       </div>
 
       {/* Stats */}
