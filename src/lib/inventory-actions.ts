@@ -10,6 +10,7 @@ export type InventoryRow = {
   brand?: string;
   category?: string;
   photo_url?: string;
+  is_new?: boolean;
   quantity: number;
   price?: number;
   currency?: string;
@@ -177,6 +178,8 @@ export async function upsertInventoryRows(
     currency: r.currency ?? "EUR",
     location_city: r.location_city?.trim() || null,
     location_country: r.location_country?.trim() || null,
+    is_new: r.is_new ?? true,
+    photo_url: r.photo_url?.trim() || null,
     is_available: true,
   }));
 
