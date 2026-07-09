@@ -1,16 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 
-const CATEGORIES = [
-  { slug: "navigation",    label: "Навигация" },
-  { slug: "anchoring",     label: "Якорное снаряжение" },
-  { slug: "deck-hardware", label: "Палубное оборудование" },
-  { slug: "mooring",       label: "Швартовка" },
-  { slug: "engines",       label: "Двигатели" },
-  { slug: "electrical",    label: "Электрика" },
-  { slug: "safety",        label: "Безопасность" },
-  { slug: "rigging",       label: "Такелаж" },
-];
 
 const LINKS = {
   buyers: [
@@ -94,24 +84,6 @@ export function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
-        </div>
-
-        {/* Categories */}
-        <div className="mt-10 pt-8 border-t border-white/10">
-          <p className="text-xs font-medium text-navy-400 uppercase tracking-wider mb-3">
-            Категории
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((cat) => (
-              <Link
-                key={cat.slug}
-                href={`/catalog/${cat.slug}`}
-                className="text-xs text-navy-300 hover:text-white bg-white/5 hover:bg-white/10 px-2.5 py-1 rounded-md transition-colors"
-              >
-                {cat.label}
-              </Link>
-            ))}
           </div>
         </div>
 
