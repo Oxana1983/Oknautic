@@ -24,9 +24,9 @@ export function Footer() {
   return (
     <footer className="bg-navy-900 text-white mt-auto">
       <div className="max-w-6xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
           {/* Brand */}
-          <div className="col-span-2 sm:col-span-2 lg:col-span-1">
+          <div>
             <Link href="/" className="inline-block mb-4">
               <Image
                 src="/logo.png"
@@ -36,9 +36,23 @@ export function Footer() {
                 className="h-9 w-auto brightness-0 invert"
               />
             </Link>
-            <p className="text-sm text-navy-200 leading-relaxed max-w-56">
+            <p className="text-sm text-navy-200 leading-relaxed">
               B2B/B2C маркетплейс для профессионалов яхтенной отрасли. Запчасти, оборудование, снаряжение.
             </p>
+          </div>
+
+          {/* Company — next to logo on mobile */}
+          <div>
+            <h3 className="font-display font-semibold text-white text-sm mb-3">Компания</h3>
+            <ul className="space-y-2">
+              {LINKS.company.map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} className="text-sm text-navy-300 hover:text-white transition-colors">
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* Buyers */}
@@ -60,20 +74,6 @@ export function Footer() {
             <h3 className="font-display font-semibold text-white text-sm mb-3">Продавцам</h3>
             <ul className="space-y-2">
               {LINKS.sellers.map((l) => (
-                <li key={l.href}>
-                  <Link href={l.href} className="text-sm text-navy-300 hover:text-white transition-colors">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <h3 className="font-display font-semibold text-white text-sm mb-3">Компания</h3>
-            <ul className="space-y-2">
-              {LINKS.company.map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className="text-sm text-navy-300 hover:text-white transition-colors">
                     {l.label}
