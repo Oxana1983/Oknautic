@@ -115,29 +115,34 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
     setErrors({});
     setStatus("submitting");
 
-    const result = await submitRfq({ ...form, items });
+    try {
+      const result = await submitRfq({ ...form, items });
 
-    if (result?.requiresAuth) {
-      // Guest flow: show success + register prompt (request not saved to DB)
+      if (result?.requiresAuth) {
+        // Guest flow: show success + register prompt (request not saved to DB)
+        const num = generateRfqNumber();
+        setRfqNumber(num);
+        setSubmittedCount(itemCount);
+        setStatus("success_guest");
+        clearCart();
+        return;
+      }
+
+      if (result?.error) {
+        setErrors({ comment: result.error });
+        setStatus("idle");
+        return;
+      }
+
       const num = generateRfqNumber();
       setRfqNumber(num);
       setSubmittedCount(itemCount);
-      setStatus("success_guest");
+      setStatus("success");
       clearCart();
-      return;
-    }
-
-    if (result?.error) {
-      setErrors({ comment: result.error });
+    } catch (err) {
+      setErrors({ comment: err instanceof Error ? err.message : "Ошибка отправки. Попробуйте ещё раз." });
       setStatus("idle");
-      return;
     }
-
-    const num = generateRfqNumber();
-    setRfqNumber(num);
-    setSubmittedCount(itemCount);
-    setStatus("success");
-    clearCart();
   }
 
   // Empty cart
