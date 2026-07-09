@@ -146,13 +146,22 @@ export function InventoryTable({ items: initial }: { items: Item[] }) {
                 {/* Location */}
                 <td className="px-4 py-3">
                   {isEditing ? (
-                    <input
-                      type="text"
-                      value={draft.location_city ?? ""}
-                      placeholder="Город"
-                      onChange={(e) => setDraft((d) => ({ ...d, location_city: e.target.value }))}
-                      className="w-28 px-2 py-1 rounded-lg border border-navy-200 text-xs focus:outline-none focus:border-teal-400"
-                    />
+                    <div className="flex flex-col gap-1">
+                      <input
+                        type="text"
+                        value={draft.location_city ?? ""}
+                        placeholder="Город"
+                        onChange={(e) => setDraft((d) => ({ ...d, location_city: e.target.value }))}
+                        className="w-28 px-2 py-1 rounded-lg border border-navy-200 text-xs focus:outline-none focus:border-teal-400"
+                      />
+                      <input
+                        type="text"
+                        value={draft.location_country ?? ""}
+                        placeholder="Страна"
+                        onChange={(e) => setDraft((d) => ({ ...d, location_country: e.target.value }))}
+                        className="w-28 px-2 py-1 rounded-lg border border-navy-200 text-xs focus:outline-none focus:border-teal-400"
+                      />
+                    </div>
                   ) : (
                     <span className="text-xs text-navy-500">
                       {[item.location_city, item.location_country].filter(Boolean).join(", ") || "—"}
