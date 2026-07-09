@@ -148,13 +148,13 @@ export default async function IncomingDetailPage({ params }: Props) {
                       <p className="text-[11px] text-navy-400 mb-0.5 flex items-center gap-1">
                         <Package size={11} className="text-navy-300" /> Количество
                       </p>
-                      <p className="text-sm font-semibold text-navy-800">{req.quantity} шт.</p>
+                      <p className="text-xs font-semibold text-navy-800">{req.quantity} шт.</p>
                     </div>
                     <div>
                       <p className="text-[11px] text-navy-400 mb-0.5 flex items-center gap-1">
                         <Calendar size={11} className="text-navy-300" /> Создан
                       </p>
-                      <p className="text-sm text-navy-700">{fmt(req.created_at)}</p>
+                      <p className="text-xs text-navy-700">{fmt(req.created_at)}</p>
                     </div>
                   </div>
                 </div>
