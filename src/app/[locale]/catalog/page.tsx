@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { CatalogFilters } from "@/components/catalog/filters";
 import { CatalogView } from "@/components/catalog/catalog-view";
 import type { Product } from "@/lib/mock-data";
@@ -11,21 +11,21 @@ type Props = {
   searchParams: Promise<{ brand?: string; q?: string }>;
 };
 
-async function fetchProducts(brandSlug?: string, q?: string): Promise<Product[]> {
+async function fetchProducts(locale: string, brandSlug?: string, q?: string): Promise<Product[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("products")
-    .select("id, sku, name, description, photos, brand:brands!brand_id(name, slug), cat:categories!category_id(slug)")
+    .select("id, sku, name, name_i18n, description, description_i18n, photos, brand:brands!brand_id(name, slug), cat:categories!category_id(slug)")
     .eq("is_active", true)
     .order("name");
 
   let products: Product[] = (data ?? []).map((p: any) => ({
     id: p.id,
-    name: p.name,
+    name: p.name_i18n?.[locale] || p.name,
     sku: p.sku,
     brand: p.brand?.name ?? "",
     category: p.cat?.slug ?? "",
-    description: p.description ?? "",
+    description: p.description_i18n?.[locale] || p.description || "",
     image: p.photos?.[0] ?? undefined,
     images: p.photos ?? [],
     hasVariants: false,
@@ -105,8 +105,9 @@ async function NotFound({ query }: { query?: string }) {
 
 export default async function CatalogPage({ searchParams }: Props) {
   const t = await getTranslations("catalog");
+  const locale = await getLocale();
   const params = await searchParams;
-  const products = await fetchProducts(params.brand, params.q);
+  const products = await fetchProducts(locale, params.brand, params.q);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">

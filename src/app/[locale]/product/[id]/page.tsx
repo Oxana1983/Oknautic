@@ -7,18 +7,19 @@ import { Card, CardBody } from "@/components/ui/card";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { ProductCard } from "@/components/catalog/product-card";
 import { createClient } from "@/lib/supabase/server";
+import { getLocale } from "next-intl/server";
 import { CATEGORIES } from "@/lib/mock-data";
 import type { Product } from "@/lib/mock-data";
 
 export const dynamic = "force-dynamic";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ id: string; locale: string }> };
 
-async function fetchProduct(id: string): Promise<Product | null> {
+async function fetchProduct(id: string, locale: string): Promise<Product | null> {
   const supabase = await createClient();
   const { data: p } = await supabase
     .from("products")
-    .select("id, sku, name, description, photos, brand:brands!brand_id(name, slug), cat:categories!category_id(slug)")
+    .select("id, sku, name, name_i18n, description, description_i18n, photos, brand:brands!brand_id(name, slug), cat:categories!category_id(slug)")
     .eq("id", id)
     .eq("is_active", true)
     .maybeSingle();
@@ -26,22 +27,22 @@ async function fetchProduct(id: string): Promise<Product | null> {
   if (!p) return null;
   return {
     id: (p as any).id,
-    name: (p as any).name,
+    name: (p as any).name_i18n?.[locale] || (p as any).name,
     sku: (p as any).sku,
     brand: (p as any).brand?.name ?? "",
     category: (p as any).cat?.slug ?? "",
-    description: (p as any).description ?? "",
+    description: (p as any).description_i18n?.[locale] || (p as any).description || "",
     image: (p as any).photos?.[0] ?? undefined,
     images: (p as any).photos?.length > 0 ? (p as any).photos : undefined,
     hasVariants: false,
   };
 }
 
-async function fetchRelated(categorySlug: string, excludeId: string): Promise<Product[]> {
+async function fetchRelated(categorySlug: string, excludeId: string, locale: string): Promise<Product[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("products")
-    .select("id, sku, name, description, photos, brand:brands!brand_id(name, slug), cat:categories!category_id(slug)")
+    .select("id, sku, name, name_i18n, description, description_i18n, photos, brand:brands!brand_id(name, slug), cat:categories!category_id(slug)")
     .eq("is_active", true)
     .neq("id", excludeId)
     .limit(4);
@@ -50,11 +51,11 @@ async function fetchRelated(categorySlug: string, excludeId: string): Promise<Pr
     .filter((p: any) => p.cat?.slug === categorySlug)
     .map((p: any) => ({
       id: (p as any).id,
-      name: (p as any).name,
+      name: (p as any).name_i18n?.[locale] || (p as any).name,
       sku: (p as any).sku,
       brand: (p as any).brand?.name ?? "",
       category: (p as any).cat?.slug ?? "",
-      description: (p as any).description ?? "",
+      description: (p as any).description_i18n?.[locale] || (p as any).description || "",
       image: (p as any).photos?.[0] ?? undefined,
       images: (p as any).photos?.length > 0 ? (p as any).photos : undefined,
       hasVariants: false,
@@ -63,11 +64,12 @@ async function fetchRelated(categorySlug: string, excludeId: string): Promise<Pr
 
 export default async function ProductPage({ params }: Props) {
   const { id } = await params;
-  const product = await fetchProduct(id);
+  const locale = await getLocale();
+  const product = await fetchProduct(id, locale);
   if (!product) notFound();
 
   const category = CATEGORIES.find((c) => c.slug === product.category);
-  const related = await fetchRelated(product.category, product.id);
+  const related = await fetchRelated(product.category, product.id, locale);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
