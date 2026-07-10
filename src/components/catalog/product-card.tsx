@@ -1,15 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
 import { ShoppingCart, Star } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart-context";
+import { useTranslations } from "next-intl";
 import type { Product } from "@/lib/mock-data";
 import { CATEGORIES } from "@/lib/mock-data";
 
 export function ProductCard({ product }: { product: Product }) {
+  const t = useTranslations("catalog");
   const category = CATEGORIES.find((c) => c.slug === product.category);
   const { addItem } = useCart();
 
@@ -28,12 +30,12 @@ export function ProductCard({ product }: { product: Product }) {
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-navy-300">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-            <span className="text-[10px] font-mono">нет фото</span>
+            <span className="text-[10px] font-mono">{t("noPhoto")}</span>
           </div>
         )}
         {product.hasVariants && (
           <span className="absolute top-2 right-2 text-[10px] font-mono font-medium bg-gold-100 text-gold-700 px-1.5 py-0.5 rounded z-10">
-            варианты
+            {t("variants")}
           </span>
         )}
       </Link>
@@ -67,7 +69,7 @@ export function ProductCard({ product }: { product: Product }) {
           onClick={() => addItem(product)}
         >
           <ShoppingCart size={14} />
-          Запросить цену
+          {t("requestPrice")}
         </Button>
         <button className="shrink-0 p-2 rounded-lg text-navy-400 hover:text-gold-500 hover:bg-gold-50 transition-colors">
           <Star size={16} />

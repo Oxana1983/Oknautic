@@ -1,26 +1,28 @@
-import Link from "next/link";
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 
+export async function Footer() {
+  const t = await getTranslations("footer");
 
-const LINKS = {
-  buyers: [
-    { href: "/catalog",          label: "Каталог запчастей" },
-    { href: "/rfq/new",          label: "Подать запрос" },
-    { href: "/account/requests", label: "Личный кабинет" },
-  ],
-  sellers: [
-    { href: "/sellers",          label: "Стать продавцом" },
-    { href: "/account/incoming", label: "Личный кабинет" },
-  ],
-  company: [
-    { href: "/about",   label: "О платформе" },
-    { href: "/how",     label: "Как это работает" },
-    { href: "/contact", label: "Контакты" },
-    { href: "/help",    label: "Помощь" },
-  ],
-};
+  const LINKS = {
+    buyers: [
+      { href: "/catalog",          label: t("catalog") },
+      { href: "/rfq/new",          label: t("submitRequest") },
+      { href: "/account/requests", label: t("cabinet") },
+    ],
+    sellers: [
+      { href: "/sellers",          label: t("becomeSeller") },
+      { href: "/account/incoming", label: t("cabinet") },
+    ],
+    company: [
+      { href: "/about",   label: t("about") },
+      { href: "/how",     label: t("how") },
+      { href: "/contact", label: t("contacts") },
+      { href: "/help",    label: t("help") },
+    ],
+  };
 
-export function Footer() {
   return (
     <footer className="bg-navy-900 text-white mt-auto">
       <div className="max-w-6xl mx-auto px-4 py-12">
@@ -37,13 +39,13 @@ export function Footer() {
               />
             </Link>
             <p className="text-sm text-navy-200 leading-relaxed">
-              B2B/B2C маркетплейс для профессионалов яхтенной отрасли. Запчасти, оборудование, снаряжение.
+              {t("description")}
             </p>
           </div>
 
           {/* Company — next to logo on mobile */}
           <div>
-            <h3 className="font-display font-semibold text-white text-sm mb-3">Компания</h3>
+            <h3 className="font-display font-semibold text-white text-sm mb-3">{t("company")}</h3>
             <ul className="space-y-2">
               {LINKS.company.map((l) => (
                 <li key={l.href}>
@@ -57,7 +59,7 @@ export function Footer() {
 
           {/* Buyers */}
           <div>
-            <h3 className="font-display font-semibold text-white text-sm mb-3">Покупателям</h3>
+            <h3 className="font-display font-semibold text-white text-sm mb-3">{t("buyers")}</h3>
             <ul className="space-y-2">
               {LINKS.buyers.map((l) => (
                 <li key={l.href}>
@@ -71,7 +73,7 @@ export function Footer() {
 
           {/* Sellers */}
           <div>
-            <h3 className="font-display font-semibold text-white text-sm mb-3">Продавцам</h3>
+            <h3 className="font-display font-semibold text-white text-sm mb-3">{t("sellers")}</h3>
             <ul className="space-y-2">
               {LINKS.sellers.map((l) => (
                 <li key={l.href}>
@@ -87,14 +89,14 @@ export function Footer() {
         {/* Bottom */}
         <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <p className="text-xs text-navy-400">
-            © 2026 OKnautic. Все права защищены.
+            © 2026 OKnautic. {t("rights")}
           </p>
           <div className="flex gap-4">
             <Link href="/privacy" className="text-xs text-navy-400 hover:text-white transition-colors">
-              Политика конфиденциальности
+              {t("privacy")}
             </Link>
             <Link href="/terms" className="text-xs text-navy-400 hover:text-white transition-colors">
-              Условия использования
+              {t("terms")}
             </Link>
           </div>
         </div>

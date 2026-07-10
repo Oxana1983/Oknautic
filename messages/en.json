@@ -1,0 +1,77 @@
+{
+  "nav": {
+    "searchPlaceholder": "Search by name, SKU or brand...",
+    "searchPlaceholderMobile": "Search...",
+    "cart": "Cart",
+    "account": "Account",
+    "sellerCabinet": "Seller Dashboard",
+    "myRequests": "My Requests",
+    "signOut": "Sign Out",
+    "register": "Register",
+    "signIn": "Sign In",
+    "menu": "Menu",
+    "categories": "Categories",
+    "allCategories": "All Categories",
+    "closeMenu": "Close menu",
+    "openMenu": "Open menu"
+  },
+  "categories": {
+    "navigation": "Navigation",
+    "anchoring": "Anchoring",
+    "deck-hardware": "Deck Hardware",
+    "mooring": "Mooring",
+    "engines": "Engines",
+    "electrical": "Electrical",
+    "safety": "Safety",
+    "rigging": "Rigging"
+  },
+  "footer": {
+    "buyers": "For Buyers",
+    "sellers": "For Sellers",
+    "company": "Company",
+    "catalog": "Parts Catalog",
+    "submitRequest": "Submit Request",
+    "cabinet": "My Account",
+    "becomeSeller": "Become a Seller",
+    "about": "About Platform",
+    "how": "How It Works",
+    "contacts": "Contacts",
+    "help": "Help",
+    "rights": "All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Use",
+    "description": "B2B/B2C marketplace for yacht industry professionals. Parts, equipment, gear."
+  },
+  "catalog": {
+    "title": "Catalog",
+    "count": "{count} items",
+    "noPhoto": "no photo",
+    "requestPrice": "Request Price",
+    "addToCart": "Add to Cart",
+    "variants": "variants",
+    "listView": "List",
+    "gridView": "Grid",
+    "filters": "Filters",
+    "noResults": "Nothing found",
+    "noResultsQuery": "No results for \"{query}\"",
+    "noResultsHint": "Try changing filters or search query",
+    "notFoundTitle": "Can't find what you need?",
+    "notFoundDesc": "Contact our consultant — we'll help find and deliver",
+    "allBrands": "All brands"
+  },
+  "account": {
+    "myRequests": "My Requests",
+    "profile": "Profile",
+    "incoming": "Incoming",
+    "offers": "Offers",
+    "inventory": "Inventory",
+    "switchToBuyer": "Buyer",
+    "switchToSeller": "Seller",
+    "switchToBuyerMode": "Buyer Mode",
+    "switchToSellerMode": "Seller Mode",
+    "signOut": "Sign Out"
+  },
+  "localeSwitcher": {
+    "label": "Language"
+  }
+}
