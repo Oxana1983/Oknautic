@@ -1,8 +1,7 @@
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { CatalogFilters } from "@/components/catalog/filters";
-import { MobileFiltersButton } from "@/components/catalog/mobile-filters";
-import { ProductCard } from "@/components/catalog/product-card";
+import { CatalogView } from "@/components/catalog/catalog-view";
 import type { Product } from "@/lib/mock-data";
 
 export const dynamic = "force-dynamic";
@@ -107,14 +106,9 @@ export default async function CatalogPage({ searchParams }: Props) {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-navy-900">Каталог</h1>
-          <p className="text-sm text-navy-400 mt-0.5">{products.length} товаров</p>
-        </div>
-        <Suspense>
-          <MobileFiltersButton />
-        </Suspense>
+      <div className="mb-6">
+        <h1 className="font-display text-2xl font-bold text-navy-900">Каталог</h1>
+        <p className="text-sm text-navy-400 mt-0.5">{products.length} товаров</p>
       </div>
 
       <div className="flex gap-8">
@@ -123,17 +117,11 @@ export default async function CatalogPage({ searchParams }: Props) {
             <CatalogFilters />
           </Suspense>
         </div>
-        <div className="flex-1 min-w-0">
-          {products.length === 0 ? (
-            <NotFound query={params.q} />
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {products.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          )}
-        </div>
+        {products.length === 0 ? (
+          <NotFound query={params.q} />
+        ) : (
+          <CatalogView products={products} />
+        )}
       </div>
     </div>
   );
