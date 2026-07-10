@@ -1,7 +1,8 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
+import { getTranslations, getLocale } from "next-intl/server";
 import {
   ArrowLeft, Package, Calendar, MessageSquare,
   CheckCircle2, Mail, Phone, Send
@@ -13,16 +14,19 @@ export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ id: string }> };
 
-function fmt(iso: string) {
-  return new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
-}
-
 function cleanPhone(phone: string) {
   return phone.replace(/\D/g, "");
 }
 
 export default async function IncomingDetailPage({ params }: Props) {
   const { id } = await params;
+  const t = await getTranslations("incoming");
+  const locale = await getLocale();
+
+  function fmt(iso: string) {
+    return new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/login?next=/account/incoming/${id}`);
@@ -87,7 +91,7 @@ export default async function IncomingDetailPage({ params }: Props) {
   // Buyer name: prefer new field, fall back to parsing legacy additional_comment
   const buyerName = req.buyer_name
     ?? (req.additional_comment ? req.additional_comment.split(" · ")[0] : null)
-    ?? "Покупатель";
+    ?? t("buyerFallback");
 
   const phone = req.buyer_phone ?? null;
   const email = req.buyer_email ?? null;
@@ -104,7 +108,7 @@ export default async function IncomingDetailPage({ params }: Props) {
         className="inline-flex items-center gap-1.5 text-sm text-navy-400 hover:text-navy-700 transition-colors mb-6"
       >
         <ArrowLeft size={14} />
-        Входящие запросы
+        {t("title")}
       </Link>
 
       <h1 className="font-display text-xl font-bold text-navy-900 mb-6">
@@ -117,7 +121,7 @@ export default async function IncomingDetailPage({ params }: Props) {
           {/* Product card */}
           <Card>
             <CardBody className="p-5">
-              <h2 className="font-display font-semibold text-navy-800 mb-4">Детали запроса</h2>
+              <h2 className="font-display font-semibold text-navy-800 mb-4">{t("requestDetails")}</h2>
               <div className="flex gap-4">
                 <div className="w-20 h-20 rounded-xl border border-navy-100 bg-navy-50 relative overflow-hidden shrink-0">
                   {req.product_photo ? (
@@ -146,13 +150,13 @@ export default async function IncomingDetailPage({ params }: Props) {
                   <div className="flex gap-6">
                     <div>
                       <p className="text-[11px] text-navy-400 mb-0.5 flex items-center gap-1">
-                        <Package size={11} className="text-navy-300" /> Количество
+                        <Package size={11} className="text-navy-300" /> {t("quantity")}
                       </p>
-                      <p className="text-xs font-semibold text-navy-800">{req.quantity} шт.</p>
+                      <p className="text-xs font-semibold text-navy-800">{req.quantity}</p>
                     </div>
                     <div>
                       <p className="text-[11px] text-navy-400 mb-0.5 flex items-center gap-1">
-                        <Calendar size={11} className="text-navy-300" /> Создан
+                        <Calendar size={11} className="text-navy-300" /> {t("createdAt")}
                       </p>
                       <p className="text-xs text-navy-700">{fmt(req.created_at)}</p>
                     </div>
@@ -172,7 +176,7 @@ export default async function IncomingDetailPage({ params }: Props) {
           {/* Buyer card */}
           <Card className={offerAccepted ? "border-teal-200" : ""}>
             <CardBody className="p-5">
-              <h2 className="font-display font-semibold text-navy-800 mb-3">Покупатель</h2>
+              <h2 className="font-display font-semibold text-navy-800 mb-3">{t("buyer")}</h2>
 
               {offerAccepted ? (
                 /* ── ACCEPTED: show full contacts ── */
@@ -180,8 +184,8 @@ export default async function IncomingDetailPage({ params }: Props) {
                   <div className="flex items-center gap-2 p-3 rounded-xl bg-teal-50 border border-teal-100">
                     <CheckCircle2 size={16} className="text-teal-500 shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold text-teal-800">Покупатель выбрал ваше предложение!</p>
-                      <p className="text-xs text-teal-600">Свяжитесь с ним для оформления сделки</p>
+                      <p className="text-sm font-semibold text-teal-800">{t("offerAcceptedTitle")}</p>
+                      <p className="text-xs text-teal-600">{t("offerAcceptedDesc")}</p>
                     </div>
                   </div>
 
@@ -211,7 +215,7 @@ export default async function IncomingDetailPage({ params }: Props) {
                           <Phone size={15} className="text-navy-500 group-hover:text-teal-600" />
                         </div>
                         <div>
-                          <p className="text-[11px] text-navy-400">Телефон</p>
+                          <p className="text-[11px] text-navy-400">{t("phone")}</p>
                           <p className="text-sm font-medium text-navy-800">{phone}</p>
                         </div>
                       </a>
@@ -221,7 +225,7 @@ export default async function IncomingDetailPage({ params }: Props) {
                   {/* Messenger buttons */}
                   {phone && (
                     <div>
-                      <p className="text-xs text-navy-400 mb-2">Написать в мессенджер:</p>
+                      <p className="text-xs text-navy-400 mb-2">{t("writeMessenger")}</p>
                       <div className="flex flex-wrap gap-2">
                         <MessengerBtn
                           href={`https://wa.me/${cleanPhone(phone)}`}
@@ -251,7 +255,7 @@ export default async function IncomingDetailPage({ params }: Props) {
                   <p className="text-sm text-navy-700 font-medium">{buyerName}</p>
                   <p className="text-xs text-navy-400 flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-navy-300 inline-block" />
-                    Контакты появятся, если покупатель выберет ваше предложение
+                    {t("contactsHint")}
                   </p>
                 </div>
               )}
@@ -260,7 +264,7 @@ export default async function IncomingDetailPage({ params }: Props) {
 
           {!isOpen && !offerAccepted && (
             <div className="p-4 rounded-xl bg-navy-50 border border-navy-100 text-sm text-navy-500 text-center">
-              Запрос закрыт — предложения больше не принимаются
+              {t("requestClosed")}
             </div>
           )}
         </div>
@@ -273,15 +277,15 @@ export default async function IncomingDetailPage({ params }: Props) {
                 <h2 className="font-display font-semibold text-navy-800 mb-5">
                   {existingOffer
                     ? existingOffer.status === "withdrawn"
-                      ? "Предложение отозвано"
-                      : "Ваше предложение"
-                    : "Создать предложение"
+                      ? t("offerWithdrawn")
+                      : t("yourOffer")
+                    : t("createOffer")
                   }
                 </h2>
 
                 {existingOffer?.status === "withdrawn" ? (
                   <div className="text-sm text-navy-400 text-center py-4">
-                    Вы отозвали предложение по этому запросу
+                    {t("offerWithdrawnMsg")}
                   </div>
                 ) : isOpen ? (
                   <OfferForm
@@ -293,7 +297,7 @@ export default async function IncomingDetailPage({ params }: Props) {
                   />
                 ) : (
                   <div className="text-sm text-navy-400 text-center py-4">
-                    Запрос закрыт покупателем
+                    {t("requestClosedByBuyer")}
                   </div>
                 )}
               </CardBody>

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Settings } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
 import { MarkInboxRead } from "@/components/seller/mark-inbox-read";
@@ -11,6 +12,7 @@ export const dynamic = "force-dynamic";
 const SELECT = "id, sku, product_name, product_photo, quantity, status, created_at, buyer_name";
 
 export default async function IncomingPage() {
+  const t = await getTranslations("incoming");
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/account/incoming");
@@ -110,12 +112,12 @@ export default async function IncomingPage() {
       <MarkInboxRead />
 
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-xl font-bold text-navy-900">Входящие запросы</h1>
+        <h1 className="font-display text-xl font-bold text-navy-900">{t("title")}</h1>
       </div>
 
       {error && (
         <div className="p-3 mb-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">
-          Ошибка загрузки: {error.message}
+          {t("loadError")} {error.message}
         </div>
       )}
 
@@ -124,9 +126,9 @@ export default async function IncomingPage() {
           <CardBody className="p-4 flex items-start gap-3">
             <Settings size={18} className="text-amber-500 shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-amber-800">Настройте категории товаров</p>
+              <p className="text-sm font-medium text-amber-800">{t("setupTitle")}</p>
               <p className="text-xs text-amber-600 mt-0.5">
-                Чтобы получать запросы, добавьте бренды и категории в профиле продавца.
+                {t("setupDesc")}
               </p>
             </div>
           </CardBody>

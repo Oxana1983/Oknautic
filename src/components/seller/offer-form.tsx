@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 import { submitOffer, withdrawOffer } from "@/lib/offer-actions";
 import type { OfferInput } from "@/lib/offer-actions";
 
@@ -77,6 +78,7 @@ function tomorrow() {
 }
 
 export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPrice, inventoryCurrency }: Props) {
+  const t = useTranslations("offerForm");
   const isAccepted = existingOffer?.status === "accepted";
 
   const [form, setForm] = useState({
@@ -108,15 +110,15 @@ export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPri
   async function handleSubmit() {
     setError("");
     if (!form.price_per_unit || Number(form.price_per_unit) <= 0) {
-      setError("Введите цену за единицу");
+      setError(t("errorPrice"));
       return;
     }
     if (!form.delivery_datetime) {
-      setError("Укажите срок доставки");
+      setError(t("errorDelivery"));
       return;
     }
     if (Number(form.available_quantity) > requestedQty) {
-      setError(`Количество не может превышать запрошенное (${requestedQty} шт.)`);
+      setError(t("errorQty", { max: requestedQty }));
       return;
     }
 
@@ -159,7 +161,7 @@ export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPri
       {isAccepted && (
         <div className="flex items-center gap-2 p-3 rounded-xl bg-teal-50 border border-teal-200 text-sm text-teal-700">
           <CheckCircle2 size={16} className="shrink-0" />
-          Ваше предложение принято покупателем
+          {t("accepted")}
         </div>
       )}
 
@@ -174,7 +176,7 @@ export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPri
       <div className="grid grid-cols-[1fr_120px] gap-3">
         <div>
           <label className="block text-xs font-medium text-navy-600 mb-1.5">
-            Цена за единицу *
+            {t("pricePerUnit")}
           </label>
           <input
             type="number"
@@ -188,12 +190,12 @@ export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPri
           />
           {inventoryPrice && !existingOffer && (
             <p className="text-[11px] text-navy-400 mt-1">
-              Из вашего склада: {inventoryPrice} {inventoryCurrency}
+              {t("fromInventory", { price: inventoryPrice, currency: inventoryCurrency ?? "" })}
             </p>
           )}
         </div>
         <div>
-          <label className="block text-xs font-medium text-navy-600 mb-1.5">Валюта</label>
+          <label className="block text-xs font-medium text-navy-600 mb-1.5">{t("currency")}</label>
           <select
             value={form.currency}
             onChange={(e) => set("currency", e.target.value)}
@@ -212,7 +214,7 @@ export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPri
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-medium text-navy-600 mb-1.5">
-            Количество <span className="text-navy-400 font-normal">(макс. {requestedQty})</span>
+            {t("quantity")} <span className="text-navy-400 font-normal">({t("quantityMax", { max: requestedQty })})</span>
           </label>
           <input
             type="number"
@@ -226,7 +228,7 @@ export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPri
         </div>
         <div>
           <label className="block text-xs font-medium text-navy-600 mb-1.5">
-            Срок доставки *
+            {t("deliveryDate")}
           </label>
           <input
             type="date"
@@ -240,7 +242,7 @@ export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPri
 
       {/* Condition */}
       <div>
-        <p className="text-xs font-medium text-navy-600 mb-2">Состояние</p>
+        <p className="text-xs font-medium text-navy-600 mb-2">{t("condition")}</p>
         <div className="grid grid-cols-2 gap-2">
           {([true, false] as const).map((isNew) => (
             <button
@@ -254,7 +256,7 @@ export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPri
                   : "border-navy-200 text-navy-500 hover:border-navy-400"
               }`}
             >
-              {isNew ? "Новый" : "Б/У"}
+              {isNew ? t("conditionNew") : t("conditionUsed")}
             </button>
           ))}
         </div>
@@ -263,7 +265,7 @@ export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPri
       {/* Warranty */}
       <div>
         <label className="block text-xs font-medium text-navy-600 mb-1.5">
-          Гарантия (месяцев, 0 = нет)
+          {t("warranty")}
         </label>
         <input
           type="number"
@@ -281,39 +283,39 @@ export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPri
         <Toggle
           checked={form.in_stock}
           onChange={(v) => set("in_stock", v)}
-          label="Есть в наличии"
-          description="Снимите, если товар под заказ"
+          label={t("inStock")}
+          description={t("inStockDesc")}
         />
         <Toggle
           checked={form.includes_vat}
           onChange={(v) => set("includes_vat", v)}
-          label="НДС включён в цену"
+          label={t("includesVat")}
         />
         <Toggle
           checked={form.allows_pickup}
           onChange={(v) => set("allows_pickup", v)}
-          label="Возможен самовывоз"
+          label={t("allowsPickup")}
         />
         <Toggle
           checked={form.payment_cash}
           onChange={(v) => set("payment_cash", v)}
-          label="Оплата наличными"
+          label={t("paymentCash")}
         />
         <Toggle
           checked={form.payment_cashless}
           onChange={(v) => set("payment_cashless", v)}
-          label="Безналичная оплата"
+          label={t("paymentCashless")}
         />
       </div>
 
       {/* Comment */}
       <div>
         <label className="block text-xs font-medium text-navy-600 mb-1.5">
-          Комментарий к предложению
+          {t("comment")}
         </label>
         <textarea
           rows={3}
-          placeholder="Дополнительные условия, уточнения по товару..."
+          placeholder={t("commentPlaceholder")}
           value={form.comment}
           onChange={(e) => set("comment", e.target.value)}
           disabled={isAccepted}
@@ -331,10 +333,10 @@ export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPri
             className="flex-1 gap-1.5"
           >
             {saved
-              ? <><CheckCircle2 size={15} /> Отправлено</>
+              ? <><CheckCircle2 size={15} /> {t("sent")}</>
               : existingOffer
-                ? "Обновить предложение"
-                : "Отправить предложение"
+                ? t("updateOffer")
+                : t("submitOffer")
             }
           </Button>
 
@@ -347,7 +349,7 @@ export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPri
               onClick={() => void handleWithdraw()}
               className="text-red-500 border-red-200 hover:bg-red-50"
             >
-              Отозвать
+              {t("withdraw")}
             </Button>
           )}
         </div>
