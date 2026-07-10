@@ -283,17 +283,14 @@ export default async function IncomingDetailPage({ params }: Props) {
                   }
                 </h2>
 
-                {existingOffer?.status === "withdrawn" ? (
-                  <div className="text-sm text-navy-400 text-center py-4">
-                    {t("offerWithdrawnMsg")}
-                  </div>
-                ) : isOpen ? (
+                {isOpen ? (
                   <OfferForm
                     requestId={req.id}
                     requestedQty={req.quantity}
                     existingOffer={existingOffer ?? null}
                     inventoryPrice={inventoryPrice}
                     inventoryCurrency={inventoryCurrency}
+                    withdrawnMsg={t("offerWithdrawnMsg")}
                   />
                 ) : (
                   <div className="text-sm text-navy-400 text-center py-4">
