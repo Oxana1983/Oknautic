@@ -4,7 +4,6 @@ import { useState } from "react";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
 import { submitOffer, withdrawOffer } from "@/lib/offer-actions";
 import type { OfferInput } from "@/lib/offer-actions";
 
@@ -31,6 +30,7 @@ type Props = {
   existingOffer: ExistingOffer | null;
   inventoryPrice?: number | null;
   inventoryCurrency?: string | null;
+  withdrawnMsg: string;
 };
 
 const inputCls =
@@ -78,10 +78,10 @@ function tomorrow() {
   return d.toISOString().split("T")[0];
 }
 
-export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPrice, inventoryCurrency }: Props) {
+export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPrice, inventoryCurrency, withdrawnMsg }: Props) {
   const t = useTranslations("offerForm");
-  const router = useRouter();
   const isAccepted = existingOffer?.status === "accepted";
+  const [wasWithdrawn, setWasWithdrawn] = useState(existingOffer?.status === "withdrawn");
 
   const [form, setForm] = useState({
     price_per_unit: existingOffer?.price_per_unit?.toString() ?? inventoryPrice?.toString() ?? "",
@@ -153,7 +153,15 @@ export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPri
     setWithdrawing(true);
     const result = await withdrawOffer(existingOffer.id, requestId);
     setWithdrawing(false);
-    if (!result?.error) router.refresh();
+    if (!result?.error) setWasWithdrawn(true);
+  }
+
+  if (wasWithdrawn) {
+    return (
+      <div className="text-sm text-navy-400 text-center py-4">
+        {withdrawnMsg}
+      </div>
+    );
   }
 
   return (
