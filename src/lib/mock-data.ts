@@ -20,6 +20,8 @@ export type Product = {
   variantGroups?: VariantGroup[];
   tags?: string[];
   hasVariants?: boolean;
+  name_i18n?: Record<string, string>;
+  description_i18n?: Record<string, string>;
 };
 
 function pic(seed: string) {
