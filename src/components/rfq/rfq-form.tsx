@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import {
   ShoppingCart, CheckCircle2, ArrowLeft, Trash2,
   Minus, Plus, User, Mail, Phone, MessageSquare,
   Package, UserPlus, LogIn,
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
+import { useTranslations } from "next-intl";
 import { submitRfq } from "@/lib/rfq-actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
@@ -20,15 +21,6 @@ type Props = {
   prefill: { name: string; email: string; phone: string } | null;
   isAuthenticated: boolean;
 };
-
-function pluralPositions(n: number) {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod100 >= 11 && mod100 <= 19) return `${n} позиций`;
-  if (mod10 === 1) return `${n} позиция`;
-  if (mod10 >= 2 && mod10 <= 4) return `${n} позиции`;
-  return `${n} позиций`;
-}
 
 function generateRfqNumber() {
   const d = new Date().toISOString().slice(0, 10).replace(/-/g, "");
@@ -76,6 +68,7 @@ function Field({
 
 export function RfqForm({ prefill, isAuthenticated }: Props) {
   const { items, removeItem, updateQty, clearCart, itemCount } = useCart();
+  const t = useTranslations("rfq");
 
   const [form, setForm] = useState<FormState>({
     name: prefill?.name ?? "",
@@ -88,7 +81,6 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
   const [submittedCount, setSubmittedCount] = useState(0);
   const [errors, setErrors] = useState<Partial<FormState>>({});
 
-  // Sync prefill when server data arrives (e.g. after login redirect)
   useEffect(() => {
     if (prefill) {
       setForm((f) => ({
@@ -102,10 +94,10 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
 
   function validate() {
     const e: Partial<FormState> = {};
-    if (!form.name.trim()) e.name = "Введите имя";
-    if (!form.email.trim()) e.email = "Введите email";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Некорректный email";
-    if (!form.phone.trim()) e.phone = "Введите телефон";
+    if (!form.name.trim()) e.name = t("errorName");
+    if (!form.email.trim()) e.email = t("errorEmail");
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = t("errorEmailInvalid");
+    if (!form.phone.trim()) e.phone = t("errorPhone");
     return e;
   }
 
@@ -119,7 +111,6 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
       const result = await submitRfq({ ...form, items });
 
       if (result?.requiresAuth) {
-        // Guest flow: show success + register prompt (request not saved to DB)
         const num = generateRfqNumber();
         setRfqNumber(num);
         setSubmittedCount(itemCount);
@@ -140,7 +131,7 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
       setStatus("success");
       clearCart();
     } catch (err) {
-      setErrors({ comment: err instanceof Error ? err.message : "Ошибка отправки. Попробуйте ещё раз." });
+      setErrors({ comment: err instanceof Error ? err.message : t("errorSubmit") });
       setStatus("idle");
     }
   }
@@ -150,10 +141,10 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-16 flex flex-col items-center gap-4 text-center">
         <ShoppingCart size={48} strokeWidth={1.2} className="text-navy-300" />
-        <h1 className="font-display text-xl font-bold text-navy-800">Корзина пуста</h1>
-        <p className="text-sm text-navy-500">Добавьте товары из каталога, чтобы отправить запрос</p>
+        <h1 className="font-display text-xl font-bold text-navy-800">{t("emptyTitle")}</h1>
+        <p className="text-sm text-navy-500">{t("emptyDesc")}</p>
         <Button variant="primary" asChild>
-          <Link href="/catalog">Перейти в каталог</Link>
+          <Link href="/catalog">{t("toCatalog")}</Link>
         </Button>
       </div>
     );
@@ -167,34 +158,32 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
           <CheckCircle2 size={40} className="text-teal-500" />
         </div>
         <div>
-          <h1 className="font-display text-2xl font-bold text-navy-900 mb-2">Запрос отправлен!</h1>
-          <p className="text-sm text-navy-500">
-            Поставщики получили ваш запрос и свяжутся с вами в течение 24 часов.
-          </p>
+          <h1 className="font-display text-2xl font-bold text-navy-900 mb-2">{t("successTitle")}</h1>
+          <p className="text-sm text-navy-500">{t("successDesc")}</p>
         </div>
         <Card className="w-full text-left">
           <CardBody className="py-4 px-5 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-navy-500">Номер запроса</span>
+              <span className="text-xs text-navy-500">{t("successRequestNum")}</span>
               <span className="font-mono text-sm font-bold text-navy-800">{rfqNumber}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-navy-500">Отправлено на</span>
+              <span className="text-xs text-navy-500">{t("successSentTo")}</span>
               <span className="text-sm text-navy-700">{form.email}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-navy-500">Товаров в запросе</span>
-              <span className="text-sm font-medium text-navy-700">{pluralPositions(submittedCount)}</span>
+              <span className="text-xs text-navy-500">{t("successItemCount")}</span>
+              <span className="text-sm font-medium text-navy-700">{t("itemsCountDetail", { count: submittedCount })}</span>
             </div>
           </CardBody>
         </Card>
-        <p className="text-xs text-navy-400">Отслеживайте статус в личном кабинете</p>
+        <p className="text-xs text-navy-400">{t("successTrack")}</p>
         <div className="flex gap-3">
           <Button variant="primary" asChild>
-            <Link href="/account/requests">Мои запросы</Link>
+            <Link href="/account/requests">{t("myRequests")}</Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link href="/catalog">В каталог</Link>
+            <Link href="/catalog">{t("toCatalogBtn")}</Link>
           </Button>
         </div>
       </div>
@@ -209,20 +198,20 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
           <CheckCircle2 size={40} className="text-teal-500" />
         </div>
         <div>
-          <h1 className="font-display text-2xl font-bold text-navy-900 mb-2">Запрос принят!</h1>
+          <h1 className="font-display text-2xl font-bold text-navy-900 mb-2">{t("guestSuccessTitle")}</h1>
           <p className="text-sm text-navy-500">
-            Мы получили вашу заявку на {pluralPositions(submittedCount)}.
+            {t("guestSuccessDesc", { count: submittedCount })}
           </p>
         </div>
 
         <Card className="w-full text-left">
           <CardBody className="py-4 px-5 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-navy-500">Номер запроса</span>
+              <span className="text-xs text-navy-500">{t("guestRequestNum")}</span>
               <span className="font-mono text-sm font-bold text-navy-800">{rfqNumber}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-navy-500">Контакт</span>
+              <span className="text-xs text-navy-500">{t("guestContact")}</span>
               <span className="text-sm text-navy-700">{form.email}</span>
             </div>
           </CardBody>
@@ -235,9 +224,9 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
               <UserPlus size={18} className="text-teal-600" />
             </div>
             <div>
-              <p className="font-display font-semibold text-navy-800 text-sm">Зарегистрируйтесь бесплатно</p>
+              <p className="font-display font-semibold text-navy-800 text-sm">{t("registerTitle")}</p>
               <p className="text-xs text-navy-500 mt-0.5 leading-relaxed">
-                Создайте аккаунт, чтобы отслеживать статус запросов, получать предложения от поставщиков и управлять заказами в личном кабинете.
+                {t("registerDesc")}
               </p>
             </div>
           </div>
@@ -245,20 +234,20 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
             <Button variant="primary" size="sm" asChild className="flex-1">
               <Link href={`/register?name=${encodeURIComponent(form.name)}&email=${encodeURIComponent(form.email)}&next=/rfq/new`}>
                 <UserPlus size={14} />
-                Создать аккаунт
+                {t("registerBtn")}
               </Link>
             </Button>
             <Button variant="outline" size="sm" asChild className="flex-1">
-              <Link href={`/login?next=/rfq/new`}>
+              <Link href="/login?next=/rfq/new">
                 <LogIn size={14} />
-                Войти
+                {t("loginBtn")}
               </Link>
             </Button>
           </div>
         </div>
 
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/catalog">Продолжить без аккаунта →</Link>
+          <Link href="/catalog">{t("continueGuest")}</Link>
         </Button>
       </div>
     );
@@ -268,28 +257,26 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <nav className="flex items-center gap-2 text-sm text-navy-400 mb-6">
-        <Link href="/" className="hover:text-navy-700 transition-colors">Главная</Link>
+        <Link href="/" className="hover:text-navy-700 transition-colors">{t("home")}</Link>
         <span>/</span>
-        <span className="text-navy-700 font-medium">Запрос цен</span>
+        <span className="text-navy-700 font-medium">{t("title")}</span>
       </nav>
 
-      <h1 className="font-display text-2xl font-bold text-navy-900 mb-1">Запрос цен</h1>
-      <p className="text-sm text-navy-500 mb-8">
-        Поставщики получат ваш запрос и пришлют предложения с ценами и сроками
-      </p>
+      <h1 className="font-display text-2xl font-bold text-navy-900 mb-1">{t("title")}</h1>
+      <p className="text-sm text-navy-500 mb-8">{t("subtitle")}</p>
 
       <div className="grid lg:grid-cols-[1fr_380px] gap-8 items-start">
         {/* Left: cart items */}
         <div className="space-y-3">
           <div className="flex items-center justify-between mb-2">
             <h2 className="font-display font-semibold text-navy-800">
-              Товары <span className="text-navy-400 font-normal">({itemCount})</span>
+              {t("items")} <span className="text-navy-400 font-normal">({itemCount})</span>
             </h2>
             <button
               onClick={clearCart}
               className="text-xs text-navy-400 hover:text-red-500 transition-colors"
             >
-              Очистить всё
+              {t("clearAll")}
             </button>
           </div>
 
@@ -335,7 +322,7 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
                       </div>
                     )}
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="text-xs text-navy-500">Количество:</span>
+                      <span className="text-xs text-navy-500">{t("qty")}</span>
                       <div className="flex items-center border border-navy-200 rounded-lg overflow-hidden">
                         <button
                           onClick={() => updateQty(item.productId, item.quantity - 1)}
@@ -365,7 +352,7 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
             className="inline-flex items-center gap-1.5 text-sm text-teal-600 hover:text-teal-700 font-medium mt-2"
           >
             <ArrowLeft size={14} />
-            Добавить ещё товары
+            {t("addMore")}
           </Link>
         </div>
 
@@ -374,15 +361,15 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
           <Card>
             <CardBody className="p-6">
               <div className="flex items-center justify-between mb-5">
-                <h2 className="font-display font-semibold text-navy-800">Контактные данные</h2>
+                <h2 className="font-display font-semibold text-navy-800">{t("contactDetails")}</h2>
                 {isAuthenticated ? (
                   <span className="text-[11px] text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
                     <CheckCircle2 size={10} />
-                    Заполнено из профиля
+                    {t("filledFromProfile")}
                   </span>
                 ) : (
                   <Link href="/login?next=/rfq/new" className="text-[11px] text-navy-400 hover:text-teal-600 transition-colors">
-                    Войти для автозаполнения
+                    {t("loginForAutofill")}
                   </Link>
                 )}
               </div>
@@ -390,9 +377,9 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
               <form onSubmit={(e) => { e.preventDefault(); void handleSubmit(); }} className="space-y-4" noValidate>
                 <Field
                   icon={<User size={12} />}
-                  label="Имя *"
+                  label={t("fieldName")}
                   id="name"
-                  placeholder="Иван Иванов"
+                  placeholder={t("namePlaceholder")}
                   value={form.name}
                   error={errors.name}
                   onChange={(v) => setForm((f) => ({ ...f, name: v }))}
@@ -409,19 +396,19 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
                 />
                 <Field
                   icon={<Phone size={12} />}
-                  label="Телефон *"
+                  label={t("fieldPhone")}
                   id="phone"
                   type="tel"
-                  placeholder="+7 900 000 00 00"
+                  placeholder={t("phonePlaceholder")}
                   value={form.phone}
                   error={errors.phone}
                   onChange={(v) => setForm((f) => ({ ...f, phone: v }))}
                 />
                 <Field
                   icon={<MessageSquare size={12} />}
-                  label="Комментарий"
+                  label={t("fieldComment")}
                   id="comment"
-                  placeholder="Порт доставки, сроки, особые требования..."
+                  placeholder={t("commentPlaceholder")}
                   value={form.comment}
                   error={errors.comment}
                   textarea
@@ -435,13 +422,13 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
                   className="w-full"
                   loading={status === "submitting"}
                 >
-                  {status === "submitting" ? "Отправляем..." : "Отправить запрос"}
+                  {status === "submitting" ? t("submitting") : t("submit")}
                 </Button>
 
                 <p className="text-[11px] text-navy-400 text-center leading-relaxed">
-                  Нажимая кнопку, вы соглашаетесь с{" "}
+                  {t("termsPrefix")}{" "}
                   <Link href="/terms" className="underline hover:text-navy-600">
-                    условиями использования
+                    {t("termsLink")}
                   </Link>
                 </p>
               </form>
@@ -450,11 +437,7 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
 
           {/* Info block */}
           <div className="mt-4 p-4 rounded-xl bg-teal-50 border border-teal-100 space-y-2">
-            {[
-              "Запрос получат проверенные поставщики",
-              "Ответ в течение 24 часов",
-              "Вы выбираете лучшее предложение",
-            ].map((text) => (
+            {[t("infoLine1"), t("infoLine2"), t("infoLine3")].map((text) => (
               <div key={text} className="flex items-start gap-2 text-xs text-teal-700">
                 <CheckCircle2 size={13} className="shrink-0 mt-0.5 text-teal-500" />
                 {text}
@@ -467,8 +450,8 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
             <div className="mt-3 p-3 rounded-xl bg-white border border-navy-100 flex items-center gap-2.5">
               <UserPlus size={16} className="text-navy-300 shrink-0" />
               <p className="text-xs text-navy-500 leading-snug">
-                <Link href="/login?next=/rfq/new" className="text-teal-600 font-medium hover:underline">Войдите</Link>
-                {" "}для автозаполнения контактов и отслеживания запросов
+                <Link href="/login?next=/rfq/new" className="text-teal-600 font-medium hover:underline">{t("loginHintLink")}</Link>
+                {" "}{t("loginHint")}
               </p>
             </div>
           )}
