@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import {
   Package, ChevronRight, Trash2, Archive, ArchiveRestore,
   CheckSquare, Square, MinusSquare, AlertTriangle
 } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
+import { useTranslations, useLocale } from "next-intl";
 import { archiveRequests, deleteRequestsPermanently, restoreRequests } from "@/lib/incoming-actions";
 
 export type IncomingItem = {
@@ -23,20 +24,11 @@ export type IncomingItem = {
   isNew: boolean;
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  in_progress: "Активный",
-  completed:   "Завершён",
-  closed:      "Закрыт",
-};
 const STATUS_STYLE: Record<string, string> = {
   in_progress: "bg-blue-50 text-blue-600",
   completed:   "bg-navy-100 text-navy-500",
   closed:      "bg-navy-100 text-navy-400",
 };
-
-function fmt(iso: string) {
-  return new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "short", year: "numeric" });
-}
 
 type Props = {
   activeItems: IncomingItem[];
@@ -45,6 +37,19 @@ type Props = {
 };
 
 export function IncomingList({ activeItems: initActive, archiveItems: initArchive, defaultIsArchive = false }: Props) {
+  const t = useTranslations("incoming");
+  const locale = useLocale();
+
+  function fmt(iso: string) {
+    return new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" });
+  }
+
+  const STATUS_LABEL: Record<string, string> = {
+    in_progress: t("statusActive"),
+    completed:   t("statusCompleted"),
+    closed:      t("statusClosed"),
+  };
+
   const [isArchive, setIsArchive] = useState(defaultIsArchive);
   const [activeItems, setActiveItems] = useState<IncomingItem[]>(initActive);
   const [archiveItems, setArchiveItems] = useState<IncomingItem[]>(initArchive);
@@ -124,10 +129,10 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
               </div>
               <div>
                 <p className="font-display font-semibold text-navy-900">
-                  Удалить {confirmDeleteIds.length > 1 ? `${confirmDeleteIds.length} запроса` : "запрос"}?
+                  {t("deleteConfirmTitle", { count: confirmDeleteIds.length })}
                 </p>
                 <p className="text-sm text-navy-500 mt-1">
-                  Это действие нельзя отменить. Запрос исчезнет навсегда.
+                  {t("deleteConfirmDesc")}
                 </p>
               </div>
             </div>
@@ -136,14 +141,14 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
                 onClick={() => setConfirmDeleteIds(null)}
                 className="px-4 py-2 rounded-xl text-sm text-navy-600 hover:bg-navy-50 transition-colors"
               >
-                Отмена
+                {t("cancel")}
               </button>
               <button
                 onClick={confirmDelete}
                 disabled={isPending}
                 className="px-4 py-2 rounded-xl text-sm font-medium bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50"
               >
-                Удалить навсегда
+                {t("deleteBtn")}
               </button>
             </div>
           </div>
@@ -152,7 +157,6 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
 
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        {/* View toggle — instant, no server roundtrip */}
         <div className="flex rounded-xl border border-navy-200 overflow-hidden text-sm">
           <button
             onClick={() => switchTab(false)}
@@ -160,7 +164,7 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
               !isArchive ? "bg-navy-800 text-white" : "text-navy-500 hover:bg-navy-50"
             }`}
           >
-            Входящие
+            {t("tab")}
             <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
               !isArchive ? "bg-white/20 text-white" : "bg-navy-100 text-navy-600"
             }`}>
@@ -174,7 +178,7 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
             }`}
           >
             <Archive size={13} />
-            Архив
+            {t("archive")}
             {archiveItems.length > 0 && (
               <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
                 isArchive ? "bg-white/20 text-white" : "bg-navy-100 text-navy-600"
@@ -195,7 +199,7 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200 disabled:opacity-50 transition-colors"
               >
                 <ArchiveRestore size={14} />
-                Восстановить ({selected.size})
+                {t("restore", { count: selected.size })}
               </button>
             ) : (
               <button
@@ -204,7 +208,7 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 disabled:opacity-50 transition-colors"
               >
                 <Trash2 size={14} />
-                Удалить ({selected.size})
+                {t("deleteSelected", { count: selected.size })}
               </button>
             )}
           </div>
@@ -219,8 +223,8 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
         <Card>
           <CardBody className="py-16 text-center">
             {isArchive
-              ? <><Archive size={28} className="text-navy-300 mx-auto mb-3" strokeWidth={1.2} /><p className="text-sm text-navy-400">Архив пуст</p></>
-              : <><Package size={28} className="text-navy-300 mx-auto mb-3" strokeWidth={1.2} /><p className="text-sm text-navy-400">Нет входящих запросов</p></>
+              ? <><Archive size={28} className="text-navy-300 mx-auto mb-3" strokeWidth={1.2} /><p className="text-sm text-navy-400">{t("archiveEmpty")}</p></>
+              : <><Package size={28} className="text-navy-300 mx-auto mb-3" strokeWidth={1.2} /><p className="text-sm text-navy-400">{t("empty")}</p></>
             }
           </CardBody>
         </Card>
@@ -231,7 +235,7 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
             <button
               onClick={toggleAll}
               className="text-navy-400 hover:text-navy-700 transition-colors shrink-0"
-              aria-label="Выделить все"
+              aria-label={t("selectAll")}
             >
               {allSelected
                 ? <CheckSquare size={18} className="text-teal-500" />
@@ -241,7 +245,7 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
               }
             </button>
             <span className="text-xs text-navy-400">
-              {selected.size > 0 ? `Выбрано: ${selected.size}` : "Выделить все"}
+              {selected.size > 0 ? t("selectedCount", { count: selected.size }) : t("selectAll")}
             </span>
           </div>
 
@@ -289,7 +293,7 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
                             <div className="flex flex-col items-end gap-1 shrink-0">
                               {req.isNew && (
                                 <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-500 text-white">
-                                  Новый
+                                  {t("badgeNew")}
                                 </span>
                               )}
                               <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${STATUS_STYLE[req.status] ?? "bg-navy-100 text-navy-500"}`}>
@@ -297,13 +301,13 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
                               </span>
                               {req.hasOffer && (
                                 <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-teal-50 text-teal-600">
-                                  Предложено
+                                  {t("badgeOffered")}
                                 </span>
                               )}
                             </div>
                           </div>
                           <div className="flex items-center gap-3 mt-1 text-xs text-navy-400">
-                            <span>Кол-во: <span className="text-navy-600 font-medium">{req.quantity}</span></span>
+                            <span>{t("qty")} <span className="text-navy-600 font-medium">{req.quantity}</span></span>
                             {req.buyer_name && <span>{req.buyer_name}</span>}
                             <span className="ml-auto">{fmt(req.created_at)}</span>
                           </div>
@@ -322,7 +326,7 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
                     className="pr-1 flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs text-navy-400 hover:text-teal-600 hover:bg-teal-50 transition-colors disabled:opacity-40 shrink-0"
                   >
                     <ArchiveRestore size={14} />
-                    <span className="hidden sm:inline">Восстановить</span>
+                    <span className="hidden sm:inline">{t("restoreOne")}</span>
                   </button>
                 ) : (
                   <button
@@ -331,7 +335,7 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
                     className="pr-1 flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs text-navy-400 hover:text-navy-700 hover:bg-navy-100 transition-colors disabled:opacity-40 shrink-0"
                   >
                     <Archive size={14} />
-                    <span className="hidden sm:inline">Архив</span>
+                    <span className="hidden sm:inline">{t("archiveAction")}</span>
                   </button>
                 )}
               </div>

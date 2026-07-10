@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Pencil, Trash2, Check, X, ToggleLeft, ToggleRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { updateInventoryItem, deleteInventoryItem } from "@/lib/inventory-actions";
 
 type Item = {
@@ -18,6 +19,7 @@ type Item = {
 };
 
 export function InventoryTable({ items: initial }: { items: Item[] }) {
+  const t = useTranslations("inventory");
   const [items, setItems] = useState<Item[]>(initial);
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState<Partial<Item>>({});
@@ -63,7 +65,7 @@ export function InventoryTable({ items: initial }: { items: Item[] }) {
   }
 
   function deleteItem(id: string) {
-    if (!confirm("Удалить позицию?")) return;
+    if (!confirm(t("deleteConfirm"))) return;
     startTransition(async () => {
       const res = await deleteInventoryItem(id);
       if (res.error) { setError(res.error); return; }
@@ -80,18 +82,17 @@ export function InventoryTable({ items: initial }: { items: Item[] }) {
         <thead className="bg-navy-50 border-b border-navy-100">
           <tr>
             <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-36">SKU</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-navy-500">Название</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-24">Кол-во</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-32">Цена</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-32">Город</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-24">Статус</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-navy-500">{t("tableName")}</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-24">{t("tableQty")}</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-32">{t("tablePrice")}</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-32">{t("tableCity")}</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-24">{t("tableStatus")}</th>
             <th className="px-4 py-3 w-20" />
           </tr>
         </thead>
         <tbody className="divide-y divide-navy-50">
           {items.map((item) => {
             const isEditing = editing === item.id;
-            const available = isEditing ? draft.is_available : item.is_available;
             const qty = isEditing ? (draft.quantity ?? item.quantity) : item.quantity;
 
             return (
@@ -138,7 +139,7 @@ export function InventoryTable({ items: initial }: { items: Item[] }) {
                     />
                   ) : (
                     <span className="text-xs text-navy-600">
-                      {item.price ? `${Number(item.price).toLocaleString("ru-RU")} ${item.currency}` : "—"}
+                      {item.price ? `${Number(item.price).toLocaleString()} ${item.currency}` : "—"}
                     </span>
                   )}
                 </td>
@@ -150,14 +151,14 @@ export function InventoryTable({ items: initial }: { items: Item[] }) {
                       <input
                         type="text"
                         value={draft.location_city ?? ""}
-                        placeholder="Город"
+                        placeholder={t("city")}
                         onChange={(e) => setDraft((d) => ({ ...d, location_city: e.target.value }))}
                         className="w-28 px-2 py-1 rounded-lg border border-navy-200 text-xs focus:outline-none focus:border-teal-400"
                       />
                       <input
                         type="text"
                         value={draft.location_country ?? ""}
-                        placeholder="Страна"
+                        placeholder={t("country")}
                         onChange={(e) => setDraft((d) => ({ ...d, location_country: e.target.value }))}
                         className="w-28 px-2 py-1 rounded-lg border border-navy-200 text-xs focus:outline-none focus:border-teal-400"
                       />
@@ -182,7 +183,7 @@ export function InventoryTable({ items: initial }: { items: Item[] }) {
                         : <ToggleLeft size={18} className="text-navy-300" />
                       }
                       <span className={draft.is_available ? "text-teal-600" : "text-navy-400"}>
-                        {draft.is_available ? "Доступен" : "Скрыт"}
+                        {draft.is_available ? t("statusAvailable") : t("statusHidden")}
                       </span>
                     </button>
                   ) : (
@@ -191,7 +192,7 @@ export function InventoryTable({ items: initial }: { items: Item[] }) {
                         ? "bg-teal-50 text-teal-700 border-teal-100"
                         : "bg-navy-50 text-navy-400 border-navy-100"
                     }`}>
-                      {item.is_available && item.quantity > 0 ? "В наличии" : item.quantity === 0 ? "0 шт" : "Скрыт"}
+                      {item.is_available && item.quantity > 0 ? t("statusInStock") : item.quantity === 0 ? t("statusZero") : t("statusHidden")}
                     </span>
                   )}
                 </td>
@@ -205,7 +206,7 @@ export function InventoryTable({ items: initial }: { items: Item[] }) {
                           onClick={() => saveEdit(item)}
                           disabled={isPending}
                           className="p-1.5 rounded-lg text-teal-600 hover:bg-teal-50 transition-colors"
-                          title="Сохранить"
+                          title={t("save")}
                         >
                           <Check size={14} />
                         </button>
@@ -213,7 +214,7 @@ export function InventoryTable({ items: initial }: { items: Item[] }) {
                           onClick={cancelEdit}
                           disabled={isPending}
                           className="p-1.5 rounded-lg text-navy-400 hover:bg-navy-50 transition-colors"
-                          title="Отмена"
+                          title={t("cancel")}
                         >
                           <X size={14} />
                         </button>
@@ -223,14 +224,14 @@ export function InventoryTable({ items: initial }: { items: Item[] }) {
                         <button
                           onClick={() => startEdit(item)}
                           className="p-1.5 rounded-lg text-navy-400 hover:text-navy-700 hover:bg-navy-50 transition-colors"
-                          title="Редактировать"
+                          title={t("edit")}
                         >
                           <Pencil size={14} />
                         </button>
                         <button
                           onClick={() => deleteItem(item.id)}
                           className="p-1.5 rounded-lg text-navy-300 hover:text-red-500 hover:bg-red-50 transition-colors"
-                          title="Удалить"
+                          title={t("deleteBtn")}
                         >
                           <Trash2 size={14} />
                         </button>

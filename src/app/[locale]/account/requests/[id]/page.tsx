@@ -1,7 +1,8 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
+import { getTranslations, getLocale } from "next-intl/server";
 import {
   Package, ArrowLeft, Clock, CheckCircle2, XCircle,
   Truck, ShieldCheck, CreditCard, Banknote, Star
@@ -11,26 +12,30 @@ import { AcceptOfferButton, CloseRequestButton } from "@/components/account/requ
 
 type Props = { params: Promise<{ id: string }> };
 
-const STATUS_LABEL: Record<string, string> = {
-  in_progress: "В обработке",
-  completed:   "Завершён",
-  closed:      "Закрыт",
-};
 const STATUS_STYLE: Record<string, string> = {
   in_progress: "bg-blue-50 text-blue-600 border-blue-100",
   completed:   "bg-teal-50 text-teal-700 border-teal-100",
   closed:      "bg-navy-100 text-navy-500 border-navy-200",
 };
 
-function fmt(iso: string) {
-  return new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
-}
-function fmtShort(iso: string) {
-  return new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
-}
-
 export default async function RequestDetailPage({ params }: Props) {
   const { id } = await params;
+  const t = await getTranslations("requests");
+  const locale = await getLocale();
+
+  function fmt(iso: string) {
+    return new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+  }
+  function fmtShort(iso: string) {
+    return new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "short" });
+  }
+
+  const STATUS_LABEL: Record<string, string> = {
+    in_progress: t("statusInProgress"),
+    completed:   t("statusCompleted"),
+    closed:      t("statusClosed"),
+  };
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/login?next=/account/requests/${id}`);
@@ -83,7 +88,7 @@ export default async function RequestDetailPage({ params }: Props) {
         className="inline-flex items-center gap-1.5 text-sm text-navy-400 hover:text-navy-700 transition-colors mb-6"
       >
         <ArrowLeft size={14} />
-        Мои запросы
+        {t("title")}
       </Link>
 
       {/* Header */}
@@ -121,10 +126,10 @@ export default async function RequestDetailPage({ params }: Props) {
                 </div>
               )}
               <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-navy-500">
-                <span>Количество: <b className="text-navy-800">{req.quantity}</b></span>
-                <span>Запрос создан: <b className="text-navy-800">{fmt(req.created_at)}</b></span>
+                <span>{t("quantity")} <b className="text-navy-800">{req.quantity}</b></span>
+                <span>{t("createdAt")} <b className="text-navy-800">{fmt(req.created_at)}</b></span>
                 {req.additional_comment && (
-                  <span className="col-span-2">Комментарий: <b className="text-navy-800">{req.additional_comment}</b></span>
+                  <span className="col-span-2">{t("comment")} <b className="text-navy-800">{req.additional_comment}</b></span>
                 )}
               </div>
             </div>
@@ -135,7 +140,7 @@ export default async function RequestDetailPage({ params }: Props) {
       {/* Offers */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-display font-semibold text-navy-800">
-          Предложения поставщиков{" "}
+          {t("suppliersOffers")}{" "}
           <span className="text-navy-400 font-normal text-sm">
             ({(offers ?? []).length})
           </span>
@@ -150,10 +155,8 @@ export default async function RequestDetailPage({ params }: Props) {
           <CardBody className="py-12 flex flex-col items-center gap-3 text-center">
             <Clock size={32} strokeWidth={1.2} className="text-navy-300" />
             <div>
-              <p className="font-display font-semibold text-navy-600">Ожидаем предложения</p>
-              <p className="text-sm text-navy-400 mt-1">
-                Поставщики получили ваш запрос и готовят предложения. Обычно это занимает до 24 часов.
-              </p>
+              <p className="font-display font-semibold text-navy-600">{t("waitingOffers")}</p>
+              <p className="text-sm text-navy-400 mt-1">{t("waitingOffersDesc")}</p>
             </div>
           </CardBody>
         </Card>
@@ -174,14 +177,14 @@ export default async function RequestDetailPage({ params }: Props) {
                   <div className="flex items-start justify-between gap-3 mb-4">
                     <div>
                       <p className="text-sm font-semibold text-navy-800">
-                        {company?.company_name ?? `Поставщик ${idx + 1}`}
+                        {company?.company_name ?? `${t("supplier")} ${idx + 1}`}
                       </p>
-                      <p className="text-xs text-navy-400">Предложение от {fmtShort(offer.created_at)}</p>
+                      <p className="text-xs text-navy-400">{t("offerFrom", { date: fmtShort(offer.created_at) })}</p>
                     </div>
                     {isAccepted && (
                       <span className="flex items-center gap-1 text-xs font-medium text-teal-700 bg-teal-100 px-2.5 py-1 rounded-full">
                         <CheckCircle2 size={12} />
-                        Принято
+                        {t("accepted")}
                       </span>
                     )}
                   </div>
@@ -189,54 +192,54 @@ export default async function RequestDetailPage({ params }: Props) {
                   {/* Price + delivery */}
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div className="bg-navy-50 rounded-xl p-3">
-                      <p className="text-xs text-navy-400 mb-0.5">Цена за единицу</p>
+                      <p className="text-xs text-navy-400 mb-0.5">{t("pricePerUnit")}</p>
                       <p className="text-xl font-bold text-navy-900">
-                        {Number(offer.price_per_unit).toLocaleString("ru-RU")}
+                        {Number(offer.price_per_unit).toLocaleString(locale)}
                         <span className="text-sm font-normal text-navy-400 ml-1">{offer.currency}</span>
                       </p>
                       <p className="text-xs text-navy-500 mt-0.5">
-                        Кол-во: <span className="font-medium text-navy-700">{offer.available_quantity} шт.</span>
+                        {t("qty")} <span className="font-medium text-navy-700">{offer.available_quantity}</span>
                       </p>
                       <p className="text-xs text-navy-500 mt-0.5">
-                        Итого: <span className="font-medium text-navy-700">{(Number(offer.price_per_unit) * offer.available_quantity).toLocaleString("ru-RU")} {offer.currency}</span>
+                        {t("total")} <span className="font-medium text-navy-700">{(Number(offer.price_per_unit) * offer.available_quantity).toLocaleString(locale)} {offer.currency}</span>
                       </p>
                     </div>
                     <div className={`rounded-xl p-3 ${offer.in_stock ? "bg-teal-50 border border-teal-100" : "bg-navy-50"}`}>
-                      <p className="text-xs text-navy-400 mb-1">Доставка</p>
+                      <p className="text-xs text-navy-400 mb-1">{t("delivery")}</p>
                       {offer.in_stock ? (
                         <p className="text-sm font-semibold text-teal-700 flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-teal-500 inline-block shrink-0" />
-                          В наличии
+                          {t("inStock")}
                         </p>
                       ) : (
                         <p className="text-sm font-semibold text-navy-600 flex items-center gap-1.5">
                           <Truck size={14} className="text-navy-400 shrink-0" />
-                          Под заказ
+                          {t("onOrder")}
                         </p>
                       )}
                       <p className="text-xs text-navy-500 mt-0.5">
-                        Отгрузка до {fmtShort(offer.delivery_datetime)}
+                        {t("shipBy", { date: fmtShort(offer.delivery_datetime) })}
                       </p>
                     </div>
                   </div>
 
                   {/* Badges */}
                   <div className="flex flex-wrap gap-2 mb-4">
-                    <Badge active={offer.is_new} icon={<Star size={11} />} label={offer.is_new ? "Новый" : "Б/У"} />
+                    <Badge active={offer.is_new} icon={<Star size={11} />} label={offer.is_new ? t("conditionNew") : t("conditionUsed")} />
                     {offer.warranty_months > 0 && (
-                      <Badge active icon={<ShieldCheck size={11} />} label={`Гарантия ${offer.warranty_months} мес.`} />
+                      <Badge active icon={<ShieldCheck size={11} />} label={t("warranty", { months: offer.warranty_months })} />
                     )}
                     {offer.includes_vat && (
-                      <Badge active icon={<CheckCircle2 size={11} />} label="НДС включён" />
+                      <Badge active icon={<CheckCircle2 size={11} />} label={t("vatIncluded")} />
                     )}
                     {offer.payment_cash && (
-                      <Badge active icon={<Banknote size={11} />} label="Наличные" />
+                      <Badge active icon={<Banknote size={11} />} label={t("paymentCash")} />
                     )}
                     {offer.payment_cashless && (
-                      <Badge active icon={<CreditCard size={11} />} label="Безнал" />
+                      <Badge active icon={<CreditCard size={11} />} label={t("paymentCashless")} />
                     )}
                     {offer.allows_pickup && (
-                      <Badge active icon={<Package size={11} />} label="Самовывоз" />
+                      <Badge active icon={<Package size={11} />} label={t("allowsPickup")} />
                     )}
                   </div>
 
@@ -253,7 +256,7 @@ export default async function RequestDetailPage({ params }: Props) {
                   {!isActive && !isAccepted && req.status === "completed" && (
                     <p className="text-xs text-navy-400 flex items-center gap-1.5 mt-1">
                       <XCircle size={12} />
-                      Не выбрано
+                      {t("notSelected")}
                     </p>
                   )}
                 </CardBody>
