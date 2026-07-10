@@ -1,13 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { X, Trash2, Minus, Plus, ShoppingCart, ArrowRight } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQty, clearCart, itemCount } = useCart();
+  const t = useTranslations("cart");
 
   return (
     <>
@@ -30,7 +32,7 @@ export function CartDrawer() {
           <div className="flex items-center gap-2">
             <ShoppingCart size={18} className="text-navy-600" />
             <span className="font-display font-semibold text-navy-800">
-              Запрос цен
+              {t("title")}
             </span>
             {itemCount > 0 && (
               <span className="text-xs font-mono bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded-full">
@@ -41,7 +43,7 @@ export function CartDrawer() {
           <button
             onClick={closeCart}
             className="p-1.5 rounded-lg text-navy-400 hover:bg-navy-50 transition-colors"
-            aria-label="Закрыть"
+            aria-label={t("close")}
           >
             <X size={18} />
           </button>
@@ -52,12 +54,12 @@ export function CartDrawer() {
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-3 text-navy-400 px-6">
               <ShoppingCart size={40} strokeWidth={1.2} />
-              <p className="font-display font-semibold text-navy-600">Корзина пуста</p>
+              <p className="font-display font-semibold text-navy-600">{t("emptyTitle")}</p>
               <p className="text-sm text-center text-navy-400">
-                Добавьте товары из каталога, чтобы запросить цену у поставщиков
+                {t("emptyDesc")}
               </p>
               <Button variant="outline" size="sm" onClick={closeCart} asChild>
-                <Link href="/catalog">Перейти в каталог</Link>
+                <Link href="/catalog">{t("toCatalog")}</Link>
               </Button>
             </div>
           ) : (
@@ -110,7 +112,7 @@ export function CartDrawer() {
                         <button
                           onClick={() => updateQty(item.productId, item.quantity - 1)}
                           className="px-2 py-1 text-navy-500 hover:bg-navy-50 transition-colors"
-                          aria-label="Уменьшить"
+                          aria-label={t("decreaseQty")}
                         >
                           <Minus size={12} />
                         </button>
@@ -120,7 +122,7 @@ export function CartDrawer() {
                         <button
                           onClick={() => updateQty(item.productId, item.quantity + 1)}
                           className="px-2 py-1 text-navy-500 hover:bg-navy-50 transition-colors"
-                          aria-label="Увеличить"
+                          aria-label={t("increaseQty")}
                         >
                           <Plus size={12} />
                         </button>
@@ -128,7 +130,7 @@ export function CartDrawer() {
                       <button
                         onClick={() => removeItem(item.productId)}
                         className="p-1.5 rounded-lg text-navy-300 hover:text-red-500 hover:bg-red-50 transition-colors"
-                        aria-label="Удалить"
+                        aria-label={t("removeItem")}
                       >
                         <Trash2 size={14} />
                       </button>
@@ -144,13 +146,13 @@ export function CartDrawer() {
         {items.length > 0 && (
           <div className="border-t border-navy-100 px-5 py-4 space-y-3 shrink-0">
             <div className="flex items-center justify-between text-sm text-navy-500">
-              <span>Товаров в запросе:</span>
-              <span className="font-mono font-medium text-navy-800">{itemCount} шт.</span>
+              <span>{t("itemsCount")}</span>
+              <span className="font-mono font-medium text-navy-800">{itemCount} {t("pcs")}</span>
             </div>
 
             <Button variant="primary" size="lg" className="w-full" asChild>
               <Link href="/rfq/new" onClick={closeCart}>
-                Отправить запрос цен
+                {t("submit")}
                 <ArrowRight size={16} />
               </Link>
             </Button>
@@ -159,7 +161,7 @@ export function CartDrawer() {
               onClick={clearCart}
               className="w-full text-xs text-navy-400 hover:text-red-500 transition-colors py-1"
             >
-              Очистить корзину
+              {t("clear")}
             </button>
           </div>
         )}
