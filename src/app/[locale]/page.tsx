@@ -1,23 +1,21 @@
-import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { ArrowRight, Package, Send, ShieldCheck } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-const CATEGORIES = [
-  { slug: "navigation",    label: "Навигация",              emoji: "🧭" },
-  { slug: "anchoring",     label: "Якорное снаряжение",     emoji: "⚓" },
-  { slug: "deck-hardware", label: "Палубное оборудование",  emoji: "🔩" },
-  { slug: "mooring",       label: "Швартовка",              emoji: "🪢" },
-  { slug: "engines",       label: "Двигатели",              emoji: "⚙️" },
-  { slug: "electrical",    label: "Электрика",              emoji: "⚡" },
-  { slug: "safety",        label: "Безопасность",           emoji: "🦺" },
-  { slug: "rigging",       label: "Такелаж",                emoji: "🎿" },
-];
+const CATEGORY_SLUGS = [
+  "navigation", "anchoring", "deck-hardware", "mooring",
+  "engines", "electrical", "safety", "rigging",
+] as const;
 
 const BRANDS = ["Garmin", "Raymarine", "Maxwell", "Lewmar", "Vetus", "Plastimo", "Navico", "Furuno"];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const t = await getTranslations("home");
+  const tCat = await getTranslations("categories");
+
   return (
     <div>
       {/* Hero */}
@@ -25,24 +23,24 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-4 py-16 sm:py-24">
           <div className="max-w-xl">
             <Badge variant="category" className="mb-4">
-              Маркетплейс морских запчастей
+              {t("badge")}
             </Badge>
             <h1 className="font-display text-4xl sm:text-5xl font-bold leading-tight mb-4">
-              Найдите нужную деталь. Получите лучшую цену.
+              {t("heroTitle")}
             </h1>
             <p className="text-navy-200 text-lg leading-relaxed mb-8">
-              Запросите коммерческое предложение у проверенных поставщиков. Сравните цены, выберите лучшее.
+              {t("heroDesc")}
             </p>
             <div className="flex flex-wrap gap-3">
               <Button size="lg" variant="secondary" asChild>
                 <Link href="/catalog">
                   <Package size={18} />
-                  Смотреть каталог
+                  {t("viewCatalog")}
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
                 <Link href="/how" className="text-white border-white/30 hover:bg-white/10">
-                  Как это работает
+                  {t("howItWorks")}
                   <ArrowRight size={18} />
                 </Link>
               </Button>
@@ -55,41 +53,25 @@ export default function HomePage() {
       <section className="border-b border-navy-100 bg-white">
         <div className="max-w-6xl mx-auto px-4 py-12">
           <div className="grid sm:grid-cols-3 gap-6">
-            <Step
-              icon={<Package size={22} className="text-teal-600" />}
-              step="1"
-              title="Добавьте в корзину"
-              desc="Найдите нужные запчасти в каталоге и добавьте в список запроса."
-            />
-            <Step
-              icon={<Send size={22} className="text-teal-600" />}
-              step="2"
-              title="Отправьте запрос"
-              desc="Мы автоматически направим запрос релевантным поставщикам."
-            />
-            <Step
-              icon={<ShieldCheck size={22} className="text-teal-600" />}
-              step="3"
-              title="Выберите лучшее"
-              desc="Сравните предложения по цене, срокам и условиям гарантии."
-            />
+            <Step icon={<Package size={22} className="text-teal-600" />} step={`${t("step")} 1`} title={t("step1Title")} desc={t("step1Desc")} />
+            <Step icon={<Send size={22} className="text-teal-600" />} step={`${t("step")} 2`} title={t("step2Title")} desc={t("step2Desc")} />
+            <Step icon={<ShieldCheck size={22} className="text-teal-600" />} step={`${t("step")} 3`} title={t("step3Title")} desc={t("step3Desc")} />
           </div>
         </div>
       </section>
 
       {/* Categories */}
       <section className="max-w-6xl mx-auto px-4 py-12">
-        <h2 className="font-display text-2xl font-bold text-navy-900 mb-6">Категории</h2>
+        <h2 className="font-display text-2xl font-bold text-navy-900 mb-6">{t("categoriesTitle")}</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {CATEGORIES.map((cat) => (
+          {CATEGORY_SLUGS.map((slug) => (
             <Link
-              key={cat.slug}
-              href={`/catalog/${cat.slug}`}
+              key={slug}
+              href={`/catalog/${slug}`}
               className="group flex flex-col items-center justify-center gap-2 p-4 sm:p-6 rounded-xl bg-white border border-navy-100 hover:border-teal-300 hover:shadow-md transition-all text-center"
             >
-              <span className="text-2xl">{cat.emoji}</span>
               <span className="text-sm font-medium font-display text-navy-700 group-hover:text-navy-900 leading-tight">
-                {cat.label}
+                {tCat(slug)}
               </span>
             </Link>
           ))}
@@ -100,7 +82,7 @@ export default function HomePage() {
       <section className="border-t border-navy-100 bg-white">
         <div className="max-w-6xl mx-auto px-4 py-10">
           <p className="text-xs font-medium text-navy-400 uppercase tracking-wider text-center mb-6">
-            Популярные бренды
+            {t("popularBrands")}
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             {BRANDS.map((brand) => (
@@ -130,16 +112,12 @@ export default function HomePage() {
                 loading="eager"
               />
             </div>
-            <h3 className="font-display text-xl font-bold text-white mb-1">
-              Получайте целевые запросы
-            </h3>
-            <p className="text-navy-300 text-sm max-w-md">
-              Мы направляем запросы только тем поставщикам, у которых есть нужный бренд и категория. Никакого спама.
-            </p>
+            <h3 className="font-display text-xl font-bold text-white mb-1">{t("ctaTitle")}</h3>
+            <p className="text-navy-300 text-sm max-w-md">{t("ctaDesc")}</p>
           </div>
           <Button variant="secondary" size="lg" asChild>
             <Link href="/sellers">
-              Стать продавцом
+              {t("becomeSeller")}
               <ArrowRight size={18} />
             </Link>
           </Button>
@@ -149,24 +127,12 @@ export default function HomePage() {
   );
 }
 
-function Step({
-  icon,
-  step,
-  title,
-  desc,
-}: {
-  icon: React.ReactNode;
-  step: string;
-  title: string;
-  desc: string;
-}) {
+function Step({ icon, step, title, desc }: { icon: React.ReactNode; step: string; title: string; desc: string }) {
   return (
     <div className="flex gap-4">
-      <div className="shrink-0 w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
-        {icon}
-      </div>
+      <div className="shrink-0 w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">{icon}</div>
       <div>
-        <p className="text-xs font-mono text-teal-600 mb-0.5">Шаг {step}</p>
+        <p className="text-xs font-mono text-teal-600 mb-0.5">{step}</p>
         <h3 className="font-display font-semibold text-navy-900 text-sm mb-1">{title}</h3>
         <p className="text-xs text-navy-500 leading-relaxed">{desc}</p>
       </div>

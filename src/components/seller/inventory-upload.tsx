@@ -3,12 +3,11 @@
 import { useState, useRef } from "react";
 import { Upload, CheckCircle2, AlertCircle, FileSpreadsheet, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 import { upsertInventoryRows } from "@/lib/inventory-actions";
 import type { InventoryRow } from "@/lib/inventory-actions";
 import * as XLSX from "xlsx";
 
-// Normalize header names: lowercase, strip spaces/underscores/special chars
-// "Product Name" → "productname", "product_name" → "productname"
 function normalizeHeader(h: string) {
   return String(h).trim().toLowerCase().replace(/[^a-zа-яё0-9]/gi, "");
 }
@@ -17,10 +16,15 @@ function findCol(header: string[], names: string[]): number {
   return names.map((n) => header.indexOf(normalizeHeader(n))).find((i) => i >= 0) ?? -1;
 }
 
-// Parse a 2D array of rows (from CSV or Excel sheet) → InventoryRow[]
-function parseRows(rows2d: string[][]): { rows: InventoryRow[]; errors: string[] } {
+type ParseMessages = {
+  fileEmpty: string;
+  missingCols: string;
+  fileReadError: string;
+};
+
+function parseRows(rows2d: string[][], msgs: ParseMessages): { rows: InventoryRow[]; errors: string[] } {
   const dataRows = rows2d.filter((r) => r.some((c) => c?.toString().trim()));
-  if (dataRows.length < 2) return { rows: [], errors: ["Файл пустой или содержит только заголовок"] };
+  if (dataRows.length < 2) return { rows: [], errors: [msgs.fileEmpty] };
 
   const header = dataRows[0].map((h) => normalizeHeader(String(h ?? "")));
 
@@ -36,7 +40,7 @@ function parseRows(rows2d: string[][]): { rows: InventoryRow[]; errors: string[]
   const iCtry  = findCol(header, ["location_country", "country", "страна"]);
 
   if (iSku < 0 || iName < 0 || iQty < 0) {
-    return { rows: [], errors: ["Не найдены обязательные колонки: SKU, Название, Количество"] };
+    return { rows: [], errors: [msgs.missingCols] };
   }
 
   const rows: InventoryRow[] = [];
@@ -47,9 +51,9 @@ function parseRows(rows2d: string[][]): { rows: InventoryRow[]; errors: string[]
     const name = cols[iName]?.toString().trim();
     const qtyRaw = cols[iQty]?.toString().trim();
 
-    if (!sku || !name) { errors.push(`Строка ${li + 2}: пропущен SKU или название`); return; }
+    if (!sku || !name) { errors.push(`Row ${li + 2}: missing SKU or name`); return; }
     const quantity = parseInt(qtyRaw ?? "0", 10);
-    if (isNaN(quantity)) { errors.push(`Строка ${li + 2}: некорректное количество "${qtyRaw}"`); return; }
+    if (isNaN(quantity)) { errors.push(`Row ${li + 2}: invalid quantity "${qtyRaw}"`); return; }
 
     rows.push({
       sku,
@@ -68,8 +72,7 @@ function parseRows(rows2d: string[][]): { rows: InventoryRow[]; errors: string[]
   return { rows, errors };
 }
 
-// Read file as ArrayBuffer and parse CSV or Excel
-function parseFile(file: File): Promise<{ rows: InventoryRow[]; errors: string[] }> {
+function parseFile(file: File, msgs: ParseMessages): Promise<{ rows: InventoryRow[]; errors: string[] }> {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -78,9 +81,9 @@ function parseFile(file: File): Promise<{ rows: InventoryRow[]; errors: string[]
         const wb = XLSX.read(ab, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows2d = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, defval: "" });
-        resolve(parseRows(rows2d as string[][]));
+        resolve(parseRows(rows2d as string[][], msgs));
       } catch {
-        resolve({ rows: [], errors: ["Не удалось прочитать файл. Убедитесь, что это Excel (.xlsx/.xls) или CSV."] });
+        resolve({ rows: [], errors: [msgs.fileReadError] });
       }
     };
     reader.readAsArrayBuffer(file);
@@ -88,6 +91,13 @@ function parseFile(file: File): Promise<{ rows: InventoryRow[]; errors: string[]
 }
 
 export function InventoryUpload() {
+  const t = useTranslations("inventory");
+  const msgs: ParseMessages = {
+    fileEmpty: t("fileEmpty"),
+    missingCols: t("missingCols"),
+    fileReadError: t("fileReadError"),
+  };
+
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<InventoryRow[]>([]);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
@@ -98,14 +108,14 @@ export function InventoryUpload() {
   async function handleFile(f: File) {
     setFile(f);
     setResult(null);
-    const { rows, errors } = await parseFile(f);
+    const { rows, errors } = await parseFile(f, msgs);
     setPreview(rows.slice(0, 5));
     setParseErrors(errors);
   }
 
   async function handleUpload() {
     if (!file) return;
-    const { rows, errors } = await parseFile(file);
+    const { rows, errors } = await parseFile(file, msgs);
     if (errors.length && !rows.length) { setParseErrors(errors); return; }
 
     setUploading(true);
@@ -117,7 +127,6 @@ export function InventoryUpload() {
 
   return (
     <div className="space-y-5">
-      {/* Drop zone */}
       <div
         onClick={() => inputRef.current?.click()}
         onDragOver={(e) => e.preventDefault()}
@@ -125,9 +134,9 @@ export function InventoryUpload() {
         className="border-2 border-dashed border-navy-200 rounded-2xl p-8 text-center cursor-pointer hover:border-teal-400 hover:bg-teal-50/30 transition-all"
       >
         <FileSpreadsheet size={36} className="text-navy-300 mx-auto mb-3" />
-        <p className="text-sm font-medium text-navy-700">Перетащите CSV/Excel файл или нажмите для выбора</p>
-        <p className="text-xs text-navy-400 mt-1">Колонки: SKU, Product Name, Brand, Category, Photo URL, Quantity, Price, Currency, City, Country</p>
-        <p className="text-xs text-navy-400">Category и Photo URL — необязательные</p>
+        <p className="text-sm font-medium text-navy-700">{t("uploadDrop")}</p>
+        <p className="text-xs text-navy-400 mt-1">{t("uploadHint")}</p>
+        <p className="text-xs text-navy-400">{t("uploadOptional")}</p>
         <input
           ref={inputRef}
           type="file"
@@ -137,16 +146,14 @@ export function InventoryUpload() {
         />
       </div>
 
-      {/* Template download hint */}
       <div className="text-xs text-navy-400 flex items-center gap-1.5">
         <Upload size={12} />
-        Пример CSV:
+        {t("uploadExample")}
         <code className="bg-navy-50 px-1.5 py-0.5 rounded text-navy-600 font-mono">
           GRM-ECHOMAP94SV,Garmin ECHOMAP Ultra 94sv,Garmin,navigation,https://…/photo.jpg,3,1250.00,EUR,Antibes,France
         </code>
       </div>
 
-      {/* Selected file */}
       {file && (
         <div className="flex items-center gap-3 p-3 rounded-xl bg-navy-50 border border-navy-100">
           <FileSpreadsheet size={18} className="text-navy-500 shrink-0" />
@@ -160,7 +167,6 @@ export function InventoryUpload() {
         </div>
       )}
 
-      {/* Parse errors */}
       {parseErrors.length > 0 && (
         <div className="p-3 rounded-xl bg-red-50 border border-red-100 space-y-1">
           {parseErrors.map((e, i) => (
@@ -171,15 +177,14 @@ export function InventoryUpload() {
         </div>
       )}
 
-      {/* Preview */}
       {preview.length > 0 && (
         <div>
-          <p className="text-xs font-medium text-navy-500 mb-2">Предпросмотр (первые 5 строк):</p>
+          <p className="text-xs font-medium text-navy-500 mb-2">{t("preview")}</p>
           <div className="overflow-x-auto rounded-xl border border-navy-100">
             <table className="w-full text-xs">
               <thead className="bg-navy-50">
                 <tr>
-                  {["SKU", "Название", "Бренд", "Кол-во", "Цена", "Город"].map((h) => (
+                  {["SKU", t("previewName"), t("previewBrand"), t("previewQty"), t("previewPrice"), t("previewCity")].map((h) => (
                     <th key={h} className="px-3 py-2 text-left font-medium text-navy-500">{h}</th>
                   ))}
                 </tr>
@@ -201,11 +206,10 @@ export function InventoryUpload() {
         </div>
       )}
 
-      {/* Success */}
       {result?.count && (
         <div className="flex items-center gap-2 p-3 rounded-xl bg-teal-50 border border-teal-200 text-sm text-teal-700">
           <CheckCircle2 size={16} className="shrink-0" />
-          Загружено {result.count} позиций. Склад обновлён.
+          {t("uploadSuccess", { count: result.count })}
         </div>
       )}
       {result?.error && (
@@ -218,7 +222,7 @@ export function InventoryUpload() {
       {file && preview.length > 0 && !result?.count && (
         <Button variant="primary" size="md" loading={uploading} onClick={() => void handleUpload()}>
           <Upload size={15} />
-          Загрузить {preview.length >= 5 ? "все позиции" : `${preview.length} позиции`}
+          {t("uploadBtn")}
         </Button>
       )}
     </div>
