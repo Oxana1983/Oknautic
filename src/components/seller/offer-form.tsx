@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { submitOffer, withdrawOffer } from "@/lib/offer-actions";
 import type { OfferInput } from "@/lib/offer-actions";
 
@@ -79,6 +80,7 @@ function tomorrow() {
 
 export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPrice, inventoryCurrency }: Props) {
   const t = useTranslations("offerForm");
+  const router = useRouter();
   const isAccepted = existingOffer?.status === "accepted";
 
   const [form, setForm] = useState({
@@ -149,8 +151,9 @@ export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPri
   async function handleWithdraw() {
     if (!existingOffer) return;
     setWithdrawing(true);
-    await withdrawOffer(existingOffer.id, requestId);
+    const result = await withdrawOffer(existingOffer.id, requestId);
     setWithdrawing(false);
+    if (!result?.error) router.refresh();
   }
 
   return (
