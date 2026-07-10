@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { ArrowRight, Package, Send, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
