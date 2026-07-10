@@ -4,15 +4,17 @@ import { useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { CatalogFilters } from "./filters";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 
 export function MobileFiltersButton() {
+  const t = useTranslations("catalog");
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
         <SlidersHorizontal size={15} />
-        Фильтры
+        {t("filters")}
       </Button>
 
       {open && (
@@ -23,7 +25,7 @@ export function MobileFiltersButton() {
           />
           <aside className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-2xl max-h-[80vh] flex flex-col">
             <div className="flex items-center justify-between px-5 py-4 border-b border-navy-100">
-              <span className="font-display font-semibold text-navy-800">Фильтры</span>
+              <span className="font-display font-semibold text-navy-800">{t("filters")}</span>
               <button
                 onClick={() => setOpen(false)}
                 className="p-1.5 rounded-lg text-navy-400 hover:bg-navy-50"

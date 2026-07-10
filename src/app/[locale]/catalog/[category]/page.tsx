@@ -1,8 +1,9 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getTranslations } from "next-intl/server";
 import { CatalogFilters } from "@/components/catalog/filters";
 import { MobileFiltersButton } from "@/components/catalog/mobile-filters";
 import { ProductCard } from "@/components/catalog/product-card";
@@ -72,6 +73,7 @@ async function fetchByCategory(categorySlug: string, brandSlug?: string, q?: str
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {
+  const t = await getTranslations("catalog");
   const { category } = await params;
   const sp = await searchParams;
 
@@ -85,7 +87,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       <nav className="flex items-center gap-1.5 text-sm text-navy-400 mb-5">
         <Link href="/" className="hover:text-navy-700 transition-colors">Главная</Link>
         <ChevronRight size={14} />
-        <Link href="/catalog" className="hover:text-navy-700 transition-colors">Каталог</Link>
+        <Link href="/catalog" className="hover:text-navy-700 transition-colors">{t("title")}</Link>
         <ChevronRight size={14} />
         <span className="text-navy-700 font-medium">{cat.label}</span>
       </nav>
@@ -96,7 +98,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
             <span>{cat.emoji}</span>
             {cat.label}
           </h1>
-          <p className="text-sm text-navy-400 mt-0.5">{products.length} товаров</p>
+          <p className="text-sm text-navy-400 mt-0.5">{t("count", { count: products.length })}</p>
         </div>
         <Suspense>
           <MobileFiltersButton />
@@ -113,8 +115,8 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           {products.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-4xl mb-3">🔍</p>
-              <p className="font-display font-semibold text-navy-700 mb-1">Ничего не найдено</p>
-              <p className="text-sm text-navy-400">Попробуйте изменить фильтры</p>
+              <p className="font-display font-semibold text-navy-700 mb-1">{t("noResults")}</p>
+              <p className="text-sm text-navy-400">{t("noResultsHint")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4">

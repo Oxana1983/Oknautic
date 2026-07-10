@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { getTranslations } from "next-intl/server";
 import { CatalogFilters } from "@/components/catalog/filters";
 import { CatalogView } from "@/components/catalog/catalog-view";
 import type { Product } from "@/lib/mock-data";
@@ -49,7 +50,9 @@ const PHONE = "38269962980";
 const WA_URL = `https://wa.me/${PHONE}`;
 const TG_URL = "https://t.me/OksanaTivat";
 
-function NotFound({ query }: { query?: string }) {
+async function NotFound({ query }: { query?: string }) {
+  const t = await getTranslations("catalog");
+
   const text = query
     ? `Здравствуйте! Не могу найти товар в каталоге: "${query}". Можете помочь?`
     : "Здравствуйте! Не могу найти нужный товар в каталоге. Можете помочь?";
@@ -57,19 +60,19 @@ function NotFound({ query }: { query?: string }) {
   return (
     <div className="text-center py-16 px-4">
       <p className="text-5xl mb-4">🔍</p>
-      <p className="font-display font-semibold text-navy-800 text-lg mb-2">Ничего не найдено</p>
+      <p className="font-display font-semibold text-navy-800 text-lg mb-2">{t("noResults")}</p>
       {query ? (
         <p className="text-sm text-navy-400 mb-8">
-          По запросу <span className="font-medium text-navy-600">&ldquo;{query}&rdquo;</span> товаров не нашлось
+          {t("noResultsQuery", { query })}
         </p>
       ) : (
-        <p className="text-sm text-navy-400 mb-8">Попробуйте изменить фильтры или поисковый запрос</p>
+        <p className="text-sm text-navy-400 mb-8">{t("noResultsHint")}</p>
       )}
 
       {query && (
         <div className="max-w-sm mx-auto bg-white border border-navy-100 rounded-2xl p-6 shadow-sm">
-          <p className="text-sm font-semibold text-navy-800 mb-1">Не нашли нужную деталь?</p>
-          <p className="text-xs text-navy-400 mb-5">Свяжитесь с нашим консультантом — поможем найти и доставить</p>
+          <p className="text-sm font-semibold text-navy-800 mb-1">{t("notFoundTitle")}</p>
+          <p className="text-xs text-navy-400 mb-5">{t("notFoundDesc")}</p>
           <div className="flex flex-col gap-3">
             <a
               href={`${WA_URL}?text=${encodeURIComponent(text)}`}
@@ -101,14 +104,15 @@ function NotFound({ query }: { query?: string }) {
 }
 
 export default async function CatalogPage({ searchParams }: Props) {
+  const t = await getTranslations("catalog");
   const params = await searchParams;
   const products = await fetchProducts(params.brand, params.q);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-navy-900">Каталог</h1>
-        <p className="text-sm text-navy-400 mt-0.5">{products.length} товаров</p>
+        <h1 className="font-display text-2xl font-bold text-navy-900">{t("title")}</h1>
+        <p className="text-sm text-navy-400 mt-0.5">{t("count", { count: products.length })}</p>
       </div>
 
       <div className="flex gap-8">

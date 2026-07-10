@@ -1,0 +1,77 @@
+{
+  "nav": {
+    "searchPlaceholder": "Cerca per nome, SKU o marca...",
+    "searchPlaceholderMobile": "Cerca...",
+    "cart": "Carrello",
+    "account": "Account",
+    "sellerCabinet": "Pannello Venditore",
+    "myRequests": "Le Mie Richieste",
+    "signOut": "Esci",
+    "register": "Registrati",
+    "signIn": "Accedi",
+    "menu": "Menu",
+    "categories": "Categorie",
+    "allCategories": "Tutte le Categorie",
+    "closeMenu": "Chiudi menu",
+    "openMenu": "Apri menu"
+  },
+  "categories": {
+    "navigation": "Navigazione",
+    "anchoring": "Ancoraggio",
+    "deck-hardware": "Coperta",
+    "mooring": "Ormeggio",
+    "engines": "Motori",
+    "electrical": "Elettronica",
+    "safety": "Sicurezza",
+    "rigging": "Attrezzatura"
+  },
+  "footer": {
+    "buyers": "Per Acquirenti",
+    "sellers": "Per Venditori",
+    "company": "Azienda",
+    "catalog": "Catalogo Parti",
+    "submitRequest": "Invia Richiesta",
+    "cabinet": "Il Mio Account",
+    "becomeSeller": "Diventa Venditore",
+    "about": "Chi Siamo",
+    "how": "Come Funziona",
+    "contacts": "Contatti",
+    "help": "Aiuto",
+    "rights": "Tutti i diritti riservati.",
+    "privacy": "Informativa sulla Privacy",
+    "terms": "Termini di Utilizzo",
+    "description": "Marketplace B2B/B2C per professionisti del settore nautico. Parti, attrezzature, abbigliamento."
+  },
+  "catalog": {
+    "title": "Catalogo",
+    "count": "{count} articoli",
+    "noPhoto": "nessuna foto",
+    "requestPrice": "Richiedi Prezzo",
+    "addToCart": "Aggiungi",
+    "variants": "varianti",
+    "listView": "Lista",
+    "gridView": "Griglia",
+    "filters": "Filtri",
+    "noResults": "Nessun risultato",
+    "noResultsQuery": "Nessun risultato per \"{query}\"",
+    "noResultsHint": "Prova a modificare i filtri o la ricerca",
+    "notFoundTitle": "Non riesci a trovare quello che cerchi?",
+    "notFoundDesc": "Contatta il nostro consulente — ti aiuteremo a trovare e consegnare",
+    "allBrands": "Tutti i marchi"
+  },
+  "account": {
+    "myRequests": "Le Mie Richieste",
+    "profile": "Profilo",
+    "incoming": "In Arrivo",
+    "offers": "Offerte",
+    "inventory": "Magazzino",
+    "switchToBuyer": "Acquirente",
+    "switchToSeller": "Venditore",
+    "switchToBuyerMode": "Modalità Acquirente",
+    "switchToSellerMode": "Modalità Venditore",
+    "signOut": "Esci"
+  },
+  "localeSwitcher": {
+    "label": "Lingua"
+  }
+}

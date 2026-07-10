@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { FileText, User, Store, LogOut, Warehouse, ArrowLeftRight } from "lucide-react";
 import { signOut } from "@/lib/auth-actions";
 import { switchRole } from "@/lib/profile-actions";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 type Props = {
   displayName: string;
@@ -14,25 +15,26 @@ type Props = {
 };
 
 export function AccountSidebar({ displayName, email, role }: Props) {
+  const t = useTranslations("account");
   const pathname = usePathname();
 
   const customerLinks = [
-    { href: "/account/requests", label: "Мои запросы", icon: FileText },
-    { href: "/account/profile",  label: "Профиль",     icon: User },
+    { href: "/account/requests", label: t("myRequests"), icon: FileText },
+    { href: "/account/profile",  label: t("profile"),    icon: User },
   ];
 
   const sellerLinks = [
-    { href: "/account/incoming",  label: "Входящие",   icon: Store },
-    { href: "/account/offers",    label: "Предложения", icon: FileText },
-    { href: "/account/inventory", label: "Склад",       icon: Warehouse },
-    { href: "/account/profile",   label: "Профиль",     icon: User },
+    { href: "/account/incoming",  label: t("incoming"),   icon: Store },
+    { href: "/account/offers",    label: t("offers"),     icon: FileText },
+    { href: "/account/inventory", label: t("inventory"),  icon: Warehouse },
+    { href: "/account/profile",   label: t("profile"),    icon: User },
   ];
 
   const links = role === "seller" ? sellerLinks : customerLinks;
 
   return (
     <>
-      {/* ── Mobile: horizontal scrollable tab bar ── */}
+      {/* Mobile: horizontal scrollable tab bar */}
       <nav className="md:hidden mb-5 -mx-4 border-b border-navy-100 bg-white">
         <div className="flex overflow-x-auto scrollbar-none px-4 gap-1 py-2">
           {links.map(({ href, label, icon: Icon }) => {
@@ -59,7 +61,7 @@ export function AccountSidebar({ displayName, email, role }: Props) {
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-navy-500 hover:bg-navy-50 whitespace-nowrap transition-colors"
             >
               <ArrowLeftRight size={14} className="text-navy-400" />
-              {role === "seller" ? "Покупатель" : "Продавец"}
+              {role === "seller" ? t("switchToBuyer") : t("switchToSeller")}
             </button>
           </form>
           <form action={signOut} className="shrink-0">
@@ -68,13 +70,13 @@ export function AccountSidebar({ displayName, email, role }: Props) {
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 whitespace-nowrap transition-colors"
             >
               <LogOut size={14} />
-              Выйти
+              {t("signOut")}
             </button>
           </form>
         </div>
       </nav>
 
-      {/* ── Desktop: vertical sidebar ── */}
+      {/* Desktop: vertical sidebar */}
       <aside className="hidden md:block w-56 shrink-0 sticky top-24">
         {/* User card */}
         <div className="bg-white rounded-2xl border border-navy-100 p-4 mb-3">
@@ -94,7 +96,7 @@ export function AccountSidebar({ displayName, email, role }: Props) {
                 ? "bg-gold-100 text-gold-700"
                 : "bg-teal-50 text-teal-700"
             )}>
-              {role === "seller" ? "Продавец" : "Покупатель"}
+              {role === "seller" ? t("switchToSeller") : t("switchToBuyer")}
             </span>
           </div>
         </div>
@@ -125,7 +127,7 @@ export function AccountSidebar({ displayName, email, role }: Props) {
               className="w-full flex items-center gap-3 px-4 py-3 text-sm text-navy-500 hover:bg-navy-50 transition-colors border-b border-navy-50"
             >
               <ArrowLeftRight size={16} className="text-navy-400" />
-              {role === "seller" ? "Режим покупателя" : "Режим продавца"}
+              {role === "seller" ? t("switchToBuyerMode") : t("switchToSellerMode")}
             </button>
           </form>
           <form action={signOut}>
@@ -134,7 +136,7 @@ export function AccountSidebar({ displayName, email, role }: Props) {
               className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors"
             >
               <LogOut size={16} />
-              Выйти
+              {t("signOut")}
             </button>
           </form>
         </nav>

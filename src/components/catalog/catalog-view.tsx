@@ -2,17 +2,19 @@
 
 import { useState } from "react";
 import { LayoutGrid, LayoutList, ShoppingCart, Star } from "lucide-react";
-import Link from "next/link";
 import Image from "next/image";
+import { Link } from "@/i18n/navigation";
 import { ProductCard } from "./product-card";
 import { MobileFiltersButton } from "./mobile-filters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart-context";
 import { CATEGORIES } from "@/lib/mock-data";
+import { useTranslations } from "next-intl";
 import type { Product } from "@/lib/mock-data";
 
 function ProductCardList({ product }: { product: Product }) {
+  const t = useTranslations("catalog");
   const category = CATEGORIES.find((c) => c.slug === product.category);
   const { addItem } = useCart();
 
@@ -35,7 +37,7 @@ function ProductCardList({ product }: { product: Product }) {
                 <circle cx="8.5" cy="8.5" r="1.5"/>
                 <path d="m21 15-5-5L5 21"/>
               </svg>
-              <span className="text-[9px] font-mono">нет фото</span>
+              <span className="text-[9px] font-mono">{t("noPhoto")}</span>
             </div>
           )}
         </div>
@@ -60,7 +62,7 @@ function ProductCardList({ product }: { product: Product }) {
         </button>
         <Button variant="primary" size="sm" className="text-xs whitespace-nowrap" onClick={() => addItem(product)}>
           <ShoppingCart size={13} />
-          В корзину
+          {t("addToCart")}
         </Button>
       </div>
     </div>
@@ -68,6 +70,7 @@ function ProductCardList({ product }: { product: Product }) {
 }
 
 export function CatalogView({ products }: { products: Product[] }) {
+  const t = useTranslations("catalog");
   const [view, setView] = useState<"grid" | "list">("grid");
 
   return (
@@ -77,10 +80,10 @@ export function CatalogView({ products }: { products: Product[] }) {
         <button
           onClick={() => setView(view === "grid" ? "list" : "grid")}
           className="flex items-center gap-1.5 h-9 px-3 rounded-xl border border-navy-200 text-sm text-navy-600 hover:bg-navy-50 transition-colors"
-          aria-label="Переключить вид"
+          aria-label="Toggle view"
         >
           {view === "grid" ? <LayoutList size={15} /> : <LayoutGrid size={15} />}
-          {view === "grid" ? "Список" : "Сетка"}
+          {view === "grid" ? t("listView") : t("gridView")}
         </button>
         <div className="ml-auto">
           <MobileFiltersButton />
