@@ -43,9 +43,8 @@ export async function submitOffer(data: OfferInput): Promise<{ error?: string }>
 
   if (error) return { error: error.message };
 
-  revalidatePath(`/account/incoming/${data.quote_request_id}`);
-  revalidatePath("/account/incoming");
-  revalidatePath("/account/offers");
+  revalidatePath("/[locale]/account/incoming", "page");
+  revalidatePath("/[locale]/account/offers", "page");
   return {};
 }
 
@@ -65,8 +64,7 @@ export async function withdrawOffer(
 
   if (error) return { error: error.message };
 
-  revalidatePath(`/account/incoming/${requestId}`);
-  revalidatePath("/account/incoming");
-  revalidatePath("/account/offers");
+  revalidatePath("/[locale]/account/incoming", "page");
+  revalidatePath("/[locale]/account/offers", "page");
   return {};
 }
