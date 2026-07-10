@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Upload, Package } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
 import { InventoryUpload } from "@/components/seller/inventory-upload";
@@ -9,6 +10,7 @@ import { AddInventoryItem } from "@/components/seller/add-inventory-item";
 export const dynamic = "force-dynamic";
 
 export default async function InventoryPage() {
+  const t = await getTranslations("inventory");
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/account/inventory");
@@ -32,47 +34,39 @@ export default async function InventoryPage() {
 
   return (
     <div>
-      {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
-          <h1 className="font-display text-xl font-bold text-navy-900">Склад</h1>
-          <p className="text-sm text-navy-400 mt-0.5">
-            {total} позиций · {inStock} в наличии
-          </p>
+          <h1 className="font-display text-xl font-bold text-navy-900">{t("title")}</h1>
+          <p className="text-sm text-navy-400 mt-0.5">{t("stats", { total, inStock })}</p>
         </div>
         <AddInventoryItem />
       </div>
 
-      {/* Stats */}
       {total > 0 && (
         <div className="grid grid-cols-3 gap-3 mb-6">
-          <StatCard label="Всего позиций" value={total} />
-          <StatCard label="В наличии" value={inStock} green />
-          <StatCard label="Нет в наличии" value={total - inStock} />
+          <StatCard label={t("statTotal")} value={total} />
+          <StatCard label={t("statInStock")} value={inStock} green />
+          <StatCard label={t("statOutOfStock")} value={total - inStock} />
         </div>
       )}
 
-      {/* Upload section */}
       <Card className="mb-6">
         <CardBody className="p-5">
           <div className="flex items-center gap-2 mb-4">
             <Upload size={16} className="text-navy-400" />
-            <h2 className="font-display font-semibold text-navy-800">Загрузить прайс-лист</h2>
+            <h2 className="font-display font-semibold text-navy-800">{t("uploadTitle")}</h2>
           </div>
           <InventoryUpload />
         </CardBody>
       </Card>
 
-      {/* Inventory list */}
       {total === 0 ? (
         <Card>
           <CardBody className="py-16 flex flex-col items-center gap-3 text-center">
             <Package size={36} strokeWidth={1.2} className="text-navy-300" />
             <div>
-              <p className="font-display font-semibold text-navy-600">Склад пуст</p>
-              <p className="text-sm text-navy-400 mt-1">
-                Загрузите CSV-файл с вашими позициями выше. Покупатели, чьи запросы совпадают с вашим SKU, увидят вас в приоритете.
-              </p>
+              <p className="font-display font-semibold text-navy-600">{t("emptyTitle")}</p>
+              <p className="text-sm text-navy-400 mt-1">{t("emptyDesc")}</p>
             </div>
           </CardBody>
         </Card>

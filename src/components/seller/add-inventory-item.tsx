@@ -4,20 +4,15 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 import { upsertInventoryRows } from "@/lib/inventory-actions";
 
 const CURRENCIES = ["EUR", "USD", "GBP", "RUB", "TRY"];
 
-const CATEGORIES = [
-  { slug: "navigation",    label: "Навигация" },
-  { slug: "anchoring",     label: "Якорное" },
-  { slug: "deck-hardware", label: "Палуба" },
-  { slug: "mooring",       label: "Швартовка" },
-  { slug: "engines",       label: "Двигатели" },
-  { slug: "electrical",    label: "Электрика" },
-  { slug: "safety",        label: "Безопасность" },
-  { slug: "rigging",       label: "Такелаж" },
-];
+const CATEGORY_SLUGS = [
+  "navigation", "anchoring", "deck-hardware", "mooring",
+  "engines", "electrical", "safety", "rigging",
+] as const;
 
 const EMPTY = {
   sku: "", product_name: "", brand: "", category: "", quantity: "1",
@@ -26,6 +21,8 @@ const EMPTY = {
 };
 
 export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
+  const t = useTranslations("inventory");
+  const tCat = useTranslations("categories");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
@@ -40,10 +37,10 @@ export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!form.sku.trim()) { setError("Введите SKU"); return; }
-    if (!form.product_name.trim()) { setError("Введите название товара"); return; }
+    if (!form.sku.trim()) { setError(t("validationSku")); return; }
+    if (!form.product_name.trim()) { setError(t("validationName")); return; }
     const qty = parseInt(form.quantity, 10);
-    if (isNaN(qty) || qty < 0) { setError("Некорректное количество"); return; }
+    if (isNaN(qty) || qty < 0) { setError(t("validationQty")); return; }
 
     startTransition(async () => {
       const res = await upsertInventoryRows([{
@@ -80,27 +77,22 @@ export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
     <>
       <Button variant="primary" size="sm" onClick={() => setOpen(true)}>
         <Plus size={15} />
-        Добавить товар
+        {t("addItem")}
       </Button>
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
           <div className="absolute inset-0 bg-navy-950/40 backdrop-blur-sm" onClick={handleClose} />
 
-          {/* Modal */}
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-navy-100">
-              <h2 className="font-display font-semibold text-navy-900">Добавить товар на склад</h2>
+              <h2 className="font-display font-semibold text-navy-900">{t("addItemTitle")}</h2>
               <button onClick={handleClose} className="p-1.5 rounded-lg text-navy-400 hover:bg-navy-50 transition-colors">
                 <X size={18} />
               </button>
             </div>
 
-            {/* Form */}
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {/* SKU + Name */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-navy-600 mb-1">
@@ -115,7 +107,7 @@ export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-navy-600 mb-1">Бренд</label>
+                  <label className="block text-xs font-medium text-navy-600 mb-1">{t("brand")}</label>
                   <input
                     type="text"
                     value={form.brand}
@@ -128,7 +120,7 @@ export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
 
               <div>
                 <label className="block text-xs font-medium text-navy-600 mb-1">
-                  Название <span className="text-red-400">*</span>
+                  {t("name")} <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -140,24 +132,23 @@ export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-navy-600 mb-1">Категория</label>
+                <label className="block text-xs font-medium text-navy-600 mb-1">{t("category")}</label>
                 <select
                   value={form.category}
                   onChange={(e) => set("category", e.target.value)}
                   className="w-full h-9 px-3 rounded-lg border border-navy-200 text-sm bg-white focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400"
                 >
-                  <option value="">— не указана (по бренду) —</option>
-                  {CATEGORIES.map((c) => (
-                    <option key={c.slug} value={c.slug}>{c.label}</option>
+                  <option value="">{t("noCategoryLabel")}</option>
+                  {CATEGORY_SLUGS.map((slug) => (
+                    <option key={slug} value={slug}>{tCat(slug)}</option>
                   ))}
                 </select>
               </div>
 
-              {/* Qty + Price + Currency */}
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-navy-600 mb-1">
-                    Количество <span className="text-red-400">*</span>
+                    {t("quantity")} <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="number"
@@ -168,7 +159,7 @@ export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-navy-600 mb-1">Цена</label>
+                  <label className="block text-xs font-medium text-navy-600 mb-1">{t("price")}</label>
                   <input
                     type="number"
                     min={0}
@@ -180,7 +171,7 @@ export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-navy-600 mb-1">Валюта</label>
+                  <label className="block text-xs font-medium text-navy-600 mb-1">{t("currency")}</label>
                   <select
                     value={form.currency}
                     onChange={(e) => set("currency", e.target.value)}
@@ -191,11 +182,10 @@ export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
                 </div>
               </div>
 
-              {/* Condition */}
               <div>
-                <label className="block text-xs font-medium text-navy-600 mb-2">Состояние</label>
+                <label className="block text-xs font-medium text-navy-600 mb-2">{t("condition")}</label>
                 <div className="flex gap-2">
-                  {[{ v: "true", label: "Новый" }, { v: "false", label: "Б/У" }].map(({ v, label }) => (
+                  {[{ v: "true", label: t("conditionNew") }, { v: "false", label: t("conditionUsed") }].map(({ v, label }) => (
                     <button
                       key={v}
                       type="button"
@@ -212,9 +202,8 @@ export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
                 </div>
               </div>
 
-              {/* Photo URL */}
               <div>
-                <label className="block text-xs font-medium text-navy-600 mb-1">Фото (URL)</label>
+                <label className="block text-xs font-medium text-navy-600 mb-1">{t("photoUrl")}</label>
                 <input
                   type="url"
                   value={form.photo_url}
@@ -224,10 +213,9 @@ export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
                 />
               </div>
 
-              {/* Location */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-navy-600 mb-1">Город</label>
+                  <label className="block text-xs font-medium text-navy-600 mb-1">{t("city")}</label>
                   <input
                     type="text"
                     value={form.location_city}
@@ -237,7 +225,7 @@ export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-navy-600 mb-1">Страна</label>
+                  <label className="block text-xs font-medium text-navy-600 mb-1">{t("country")}</label>
                   <input
                     type="text"
                     value={form.location_country}
@@ -248,7 +236,6 @@ export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
                 </div>
               </div>
 
-              {/* Error */}
               {error && (
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-100 text-xs text-red-600">
                   <AlertCircle size={13} className="shrink-0" />
@@ -256,22 +243,20 @@ export function AddInventoryItem({ onAdded }: { onAdded?: () => void }) {
                 </div>
               )}
 
-              {/* Success */}
               {success && (
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-teal-50 border border-teal-200 text-xs text-teal-700">
                   <CheckCircle2 size={13} className="shrink-0" />
-                  Товар добавлен на склад и в каталог
+                  {t("addItemSuccess")}
                 </div>
               )}
 
-              {/* Actions */}
               <div className="flex gap-3 pt-1">
                 <Button type="button" variant="outline" size="md" className="flex-1" onClick={handleClose}>
-                  Отмена
+                  {t("cancel")}
                 </Button>
                 <Button type="submit" variant="primary" size="md" className="flex-1" loading={isPending}>
                   <Plus size={15} />
-                  Добавить
+                  {t("add")}
                 </Button>
               </div>
             </form>

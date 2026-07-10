@@ -2,30 +2,26 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { getTranslations, getLocale } from "next-intl/server";
 import { FileText, Package, ChevronRight, CheckCircle2, Clock, XCircle, Ban } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
 import { MarkAcceptedRead } from "@/components/seller/mark-accepted-read";
 
 export const dynamic = "force-dynamic";
 
-function fmt(iso: string) {
-  return new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "short", year: "numeric" });
+function fmt(iso: string, locale: string) {
+  return new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" });
 }
 
 function fmtPrice(price: number, currency: string) {
-  return `${price.toLocaleString("ru-RU")} ${currency}`;
+  return `${price.toLocaleString()} ${currency}`;
 }
 
 type OfferStatus = "pending" | "accepted" | "withdrawn" | "closed";
 
-const OFFER_BADGE: Record<OfferStatus, { label: string; cls: string; icon: React.ReactNode }> = {
-  pending:   { label: "Ожидает ответа",    cls: "bg-blue-50 text-blue-600",    icon: <Clock size={11} /> },
-  accepted:  { label: "Принято!",           cls: "bg-teal-50 text-teal-700",    icon: <CheckCircle2 size={11} /> },
-  withdrawn: { label: "Отозвано",           cls: "bg-navy-100 text-navy-400",   icon: <XCircle size={11} /> },
-  closed:    { label: "Закрыто покупателем", cls: "bg-navy-100 text-navy-500",   icon: <Ban size={11} /> },
-};
-
 export default async function MyOffersPage() {
+  const t = await getTranslations("offers");
+  const locale = await getLocale();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/account/offers");
@@ -44,7 +40,6 @@ export default async function MyOffersPage() {
     .eq("seller_id", user.id)
     .order("created_at", { ascending: false });
 
-  // Fetch quote_request details for each offer
   const requestIds = (offers ?? []).map((o) => o.quote_request_id);
   const { data: requests } =
     requestIds.length > 0
@@ -56,19 +51,26 @@ export default async function MyOffersPage() {
 
   const reqMap = Object.fromEntries((requests ?? []).map((r) => [r.id, r]));
 
+  const OFFER_BADGE: Record<OfferStatus, { label: string; cls: string; icon: React.ReactNode }> = {
+    pending:   { label: t("statusPending"),   cls: "bg-blue-50 text-blue-600",  icon: <Clock size={11} /> },
+    accepted:  { label: t("statusAccepted"),  cls: "bg-teal-50 text-teal-700",  icon: <CheckCircle2 size={11} /> },
+    withdrawn: { label: t("statusWithdrawn"), cls: "bg-navy-100 text-navy-400", icon: <XCircle size={11} /> },
+    closed:    { label: t("statusClosed"),    cls: "bg-navy-100 text-navy-500", icon: <Ban size={11} /> },
+  };
+
   return (
     <div>
       <MarkAcceptedRead />
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-xl font-bold text-navy-900">Мои предложения</h1>
+        <h1 className="font-display text-xl font-bold text-navy-900">{t("title")}</h1>
         {offers && offers.length > 0 && (
-          <span className="text-xs text-navy-400">{offers.length} всего</span>
+          <span className="text-xs text-navy-400">{t("total", { count: offers.length })}</span>
         )}
       </div>
 
       {error && (
         <div className="p-3 mb-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">
-          Ошибка загрузки: {error.message}
+          {t("loadError")} {error.message}
         </div>
       )}
 
@@ -79,13 +81,11 @@ export default async function MyOffersPage() {
               <FileText size={24} strokeWidth={1.2} className="text-navy-300" />
             </div>
             <div>
-              <p className="font-display font-semibold text-navy-700 mb-1">Предложений пока нет</p>
-              <p className="text-sm text-navy-400">
-                Откройте входящие запросы и отправьте своё первое предложение
-              </p>
+              <p className="font-display font-semibold text-navy-700 mb-1">{t("empty")}</p>
+              <p className="text-sm text-navy-400">{t("emptyDesc")}</p>
             </div>
             <Link href="/account/incoming" className="text-sm text-teal-600 hover:text-teal-700 font-medium">
-              Входящие запросы →
+              {t("goToIncoming")}
             </Link>
           </CardBody>
         </Card>
@@ -118,7 +118,7 @@ export default async function MyOffersPage() {
                         <div className="flex items-start justify-between gap-2">
                           <div>
                             <p className="text-sm font-semibold text-navy-800 leading-snug">
-                              {req?.product_name ?? "Запрос удалён"}
+                              {req?.product_name ?? t("requestDeleted")}
                             </p>
                             <p className="text-xs font-mono text-navy-400 mt-0.5">{req?.sku}</p>
                           </div>
@@ -130,11 +130,11 @@ export default async function MyOffersPage() {
                           <span className="font-semibold text-navy-800 text-sm">
                             {fmtPrice(offer.price_per_unit, offer.currency)}
                           </span>
-                          <span>{offer.is_new ? "Новый" : "Б/У"}</span>
+                          <span>{offer.is_new ? t("conditionNew") : t("conditionUsed")}</span>
                           {offer.warranty_months > 0 && (
-                            <span>Гарантия {offer.warranty_months} мес.</span>
+                            <span>{t("warranty", { months: offer.warranty_months })}</span>
                           )}
-                          <span className="ml-auto">{fmt(offer.created_at)}</span>
+                          <span className="ml-auto">{fmt(offer.created_at, locale)}</span>
                         </div>
                       </div>
                       <ChevronRight size={16} className="text-navy-300 shrink-0" />
