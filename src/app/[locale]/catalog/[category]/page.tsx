@@ -74,29 +74,32 @@ async function fetchByCategory(categorySlug: string, brandSlug?: string, q?: str
 
 export default async function CategoryPage({ params, searchParams }: Props) {
   const t = await getTranslations("catalog");
+  const tCat = await getTranslations("categories");
+  const tRfq = await getTranslations("rfq");
   const { category } = await params;
   const sp = await searchParams;
 
   const cat = CATEGORIES.find((c) => c.slug === category);
   if (!cat) notFound();
 
+  const catLabel = tCat(cat.slug as Parameters<typeof tCat>[0]);
   const products = await fetchByCategory(category, sp.brand, sp.q);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <nav className="flex items-center gap-1.5 text-sm text-navy-400 mb-5">
-        <Link href="/" className="hover:text-navy-700 transition-colors">Главная</Link>
+        <Link href="/" className="hover:text-navy-700 transition-colors">{tRfq("home")}</Link>
         <ChevronRight size={14} />
         <Link href="/catalog" className="hover:text-navy-700 transition-colors">{t("title")}</Link>
         <ChevronRight size={14} />
-        <span className="text-navy-700 font-medium">{cat.label}</span>
+        <span className="text-navy-700 font-medium">{catLabel}</span>
       </nav>
 
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold text-navy-900 flex items-center gap-2">
             <span>{cat.emoji}</span>
-            {cat.label}
+            {catLabel}
           </h1>
           <p className="text-sm text-navy-400 mt-0.5">{t("count", { count: products.length })}</p>
         </div>

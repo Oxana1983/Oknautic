@@ -57,7 +57,22 @@
     "noResultsHint": "Try changing filters or search query",
     "notFoundTitle": "Can't find what you need?",
     "notFoundDesc": "Contact our consultant — we'll help find and deliver",
-    "allBrands": "All brands"
+    "allBrands": "All brands",
+    "added": "Added",
+    "categoriesTitle": "Categories",
+    "brandsTitle": "Brands",
+    "contactQueryMsg": "Hello! I can't find a product in the catalog: \"{query}\". Can you help?",
+    "contactMsg": "Hello! I can't find what I'm looking for in the catalog. Can you help?"
+  },
+  "product": {
+    "trustedSuppliers": "Trusted suppliers",
+    "worldwideDelivery": "Worldwide delivery",
+    "chatWithSeller": "Chat with seller",
+    "howItWorksTitle": "How does a price request work?",
+    "howItWorksDesc": "Click «Request Price» — the item will be added to your cart. After submitting the request, suppliers will send offers with prices and lead times. You choose the best one.",
+    "relatedProducts": "Related products",
+    "viewAll": "View all →",
+    "noPhoto": "no photo"
   },
   "home": {
     "badge": "Marine Parts Marketplace",
@@ -229,7 +244,11 @@
     "paymentCash": "Cash",
     "paymentCashless": "Cashless",
     "allowsPickup": "Pickup",
-    "notSelected": "Not selected"
+    "notSelected": "Not selected",
+    "acceptOffer": "Accept offer",
+    "closeRequest": "Close request",
+    "closeRequestConfirm": "Close request?",
+    "yes": "Yes"
   },
   "incoming": {
     "title": "Incoming Requests",
