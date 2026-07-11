@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 import { useCart } from "@/lib/cart-context";
 import type { Product, VariantGroup } from "@/lib/mock-data";
 
@@ -13,6 +14,7 @@ export function AddToCartButton({
   product: Product;
   variantGroups?: VariantGroup[];
 }) {
+  const t = useTranslations("catalog");
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
 
@@ -69,12 +71,12 @@ export function AddToCartButton({
           {added ? (
             <>
               <Check size={18} className="text-teal-600" />
-              <span className="text-teal-600">Добавлено</span>
+              <span className="text-teal-600">{t("added")}</span>
             </>
           ) : (
             <>
               <ShoppingCart size={18} />
-              Запросить цену
+              {t("requestPrice")}
             </>
           )}
         </Button>

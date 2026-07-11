@@ -1,12 +1,17 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { CATEGORIES, BRANDS } from "@/lib/mock-data";
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function CatalogFilters() {
+  const t = useTranslations("catalog");
+  const tCat = useTranslations("categories");
+  const tNav = useTranslations("nav");
+
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -36,7 +41,7 @@ export function CatalogFilters() {
               href={activeBrand ? `/catalog?brand=${activeBrand}` : "/catalog"}
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-navy-100 text-navy-700 text-xs font-medium hover:bg-navy-200 transition-colors"
             >
-              {CATEGORIES.find((c) => c.slug === activeCategory)?.label}
+              {tCat(activeCategory as Parameters<typeof tCat>[0])}
               <X size={12} />
             </Link>
           )}
@@ -55,7 +60,7 @@ export function CatalogFilters() {
       {/* Categories */}
       <div className="mb-6">
         <p className="text-xs font-medium text-navy-400 uppercase tracking-wider mb-2 font-display">
-          Категории
+          {t("categoriesTitle")}
         </p>
         <ul className="space-y-0.5">
           <li>
@@ -68,7 +73,7 @@ export function CatalogFilters() {
                   : "text-navy-600 hover:bg-navy-50 hover:text-navy-900"
               )}
             >
-              Все категории
+              {tNav("allCategories")}
             </Link>
           </li>
           {CATEGORIES.map((cat) => (
@@ -83,7 +88,7 @@ export function CatalogFilters() {
                 )}
               >
                 <span>{cat.emoji}</span>
-                {cat.label}
+                {tCat(cat.slug as Parameters<typeof tCat>[0])}
               </Link>
             </li>
           ))}
@@ -93,7 +98,7 @@ export function CatalogFilters() {
       {/* Brands */}
       <div>
         <p className="text-xs font-medium text-navy-400 uppercase tracking-wider mb-2 font-display">
-          Бренды
+          {t("brandsTitle")}
         </p>
         <ul className="space-y-0.5">
           {BRANDS.map((brand) => (

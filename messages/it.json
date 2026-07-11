@@ -57,7 +57,22 @@
     "noResultsHint": "Prova a modificare i filtri o la ricerca",
     "notFoundTitle": "Non riesci a trovare quello che cerchi?",
     "notFoundDesc": "Contatta il nostro consulente — ti aiuteremo a trovare e consegnare",
-    "allBrands": "Tutti i marchi"
+    "allBrands": "Tutti i marchi",
+    "added": "Aggiunto",
+    "categoriesTitle": "Categorie",
+    "brandsTitle": "Marchi",
+    "contactQueryMsg": "Salve! Non riesco a trovare un prodotto nel catalogo: \"{query}\". Puoi aiutarmi?",
+    "contactMsg": "Salve! Non riesco a trovare quello che cerco nel catalogo. Puoi aiutarmi?"
+  },
+  "product": {
+    "trustedSuppliers": "Fornitori verificati",
+    "worldwideDelivery": "Consegna mondiale",
+    "chatWithSeller": "Chat con il venditore",
+    "howItWorksTitle": "Come funziona la richiesta di prezzo?",
+    "howItWorksDesc": "Clicca «Richiedi Prezzo» — l'articolo verrà aggiunto al carrello. Dopo aver inviato la richiesta, i fornitori invieranno offerte con prezzi e tempi di consegna. Scegli la migliore.",
+    "relatedProducts": "Prodotti correlati",
+    "viewAll": "Vedi tutti →",
+    "noPhoto": "nessuna foto"
   },
   "home": {
     "badge": "Marketplace Componenti Nautici",
@@ -229,7 +244,11 @@
     "paymentCash": "Contanti",
     "paymentCashless": "Bonifico",
     "allowsPickup": "Ritiro",
-    "notSelected": "Non selezionato"
+    "notSelected": "Non selezionato",
+    "acceptOffer": "Accetta offerta",
+    "closeRequest": "Chiudi richiesta",
+    "closeRequestConfirm": "Chiudere la richiesta?",
+    "yes": "Sì"
   },
   "incoming": {
     "title": "Richieste in Entrata",

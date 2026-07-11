@@ -54,8 +54,8 @@ async function NotFound({ query }: { query?: string }) {
   const t = await getTranslations("catalog");
 
   const text = query
-    ? `Здравствуйте! Не могу найти товар в каталоге: "${query}". Можете помочь?`
-    : "Здравствуйте! Не могу найти нужный товар в каталоге. Можете помочь?";
+    ? t("contactQueryMsg", { query })
+    : t("contactMsg");
 
   return (
     <div className="text-center py-16 px-4">

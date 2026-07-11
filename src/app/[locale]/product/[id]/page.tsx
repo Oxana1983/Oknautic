@@ -1,13 +1,13 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import Image from "next/image";
 import { ChevronRight, Share2, Star, ShieldCheck, Truck, MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody } from "@/components/ui/card";
+import { Link } from "@/i18n/navigation";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { ProductCard } from "@/components/catalog/product-card";
 import { createClient } from "@/lib/supabase/server";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { CATEGORIES } from "@/lib/mock-data";
 import type { Product } from "@/lib/mock-data";
 
@@ -65,6 +65,11 @@ async function fetchRelated(categorySlug: string, excludeId: string, locale: str
 export default async function ProductPage({ params }: Props) {
   const { id } = await params;
   const locale = await getLocale();
+  const t = await getTranslations("product");
+  const tCat = await getTranslations("categories");
+  const tRfq = await getTranslations("rfq");
+  const tCatalog = await getTranslations("catalog");
+
   const product = await fetchProduct(id, locale);
   if (!product) notFound();
 
@@ -75,14 +80,14 @@ export default async function ProductPage({ params }: Props) {
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-navy-400 mb-6 flex-wrap">
-        <Link href="/" className="hover:text-navy-700 transition-colors">Главная</Link>
+        <Link href="/" className="hover:text-navy-700 transition-colors">{tRfq("home")}</Link>
         <ChevronRight size={14} />
-        <Link href="/catalog" className="hover:text-navy-700 transition-colors">Каталог</Link>
+        <Link href="/catalog" className="hover:text-navy-700 transition-colors">{tCatalog("title")}</Link>
         <ChevronRight size={14} />
         {category && (
           <>
             <Link href={`/catalog/${category.slug}`} className="hover:text-navy-700 transition-colors">
-              {category.label}
+              {tCat(category.slug as Parameters<typeof tCat>[0])}
             </Link>
             <ChevronRight size={14} />
           </>
@@ -107,7 +112,7 @@ export default async function ProductPage({ params }: Props) {
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-navy-300">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-                <span className="text-xs font-mono text-navy-400">фото отсутствует</span>
+                <span className="text-xs font-mono text-navy-400">{t("noPhoto")}</span>
               </div>
             )}
           </div>
@@ -126,7 +131,7 @@ export default async function ProductPage({ params }: Props) {
         <div className="flex flex-col gap-5">
           <div className="flex flex-wrap gap-2">
             <Badge variant="brand">{product.brand}</Badge>
-            {category && <Badge variant="category">{category.label}</Badge>}
+            {category && <Badge variant="category">{tCat(category.slug as Parameters<typeof tCat>[0])}</Badge>}
           </div>
 
           <div>
@@ -148,16 +153,16 @@ export default async function ProductPage({ params }: Props) {
           </div>
 
           <div className="grid grid-cols-3 gap-3 pt-1">
-            <TrustItem icon={<ShieldCheck size={16} className="text-teal-600" />} label="Проверенные поставщики" />
-            <TrustItem icon={<Truck size={16} className="text-teal-600" />} label="Доставка по всему миру" />
-            <TrustItem icon={<MessageCircle size={16} className="text-teal-600" />} label="Чат с продавцом" />
+            <TrustItem icon={<ShieldCheck size={16} className="text-teal-600" />} label={t("trustedSuppliers")} />
+            <TrustItem icon={<Truck size={16} className="text-teal-600" />} label={t("worldwideDelivery")} />
+            <TrustItem icon={<MessageCircle size={16} className="text-teal-600" />} label={t("chatWithSeller")} />
           </div>
 
           <Card className="bg-navy-50 border-navy-100">
             <CardBody className="py-3 px-4">
-              <p className="text-xs font-display font-semibold text-navy-700 mb-1">Как работает запрос цены?</p>
+              <p className="text-xs font-display font-semibold text-navy-700 mb-1">{t("howItWorksTitle")}</p>
               <p className="text-xs text-navy-500 leading-relaxed">
-                Нажмите «Запросить цену» — товар попадёт в корзину. После отправки запроса поставщики пришлют предложения с ценой и сроками. Вы выбираете лучшее.
+                {t("howItWorksDesc")}
               </p>
             </CardBody>
           </Card>
@@ -168,10 +173,10 @@ export default async function ProductPage({ params }: Props) {
       {related.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display text-lg font-bold text-navy-900">Похожие товары</h2>
+            <h2 className="font-display text-lg font-bold text-navy-900">{t("relatedProducts")}</h2>
             {category && (
               <Link href={`/catalog/${category.slug}`} className="text-sm text-teal-600 hover:text-teal-700 font-medium">
-                Смотреть все →
+                {t("viewAll")}
               </Link>
             )}
           </div>
