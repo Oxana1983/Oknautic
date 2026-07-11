@@ -28,7 +28,7 @@ export async function Footer() {
       <div className="max-w-6xl mx-auto px-4 py-12">
         <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
           {/* Brand */}
-          <div>
+          <div className="col-span-2 lg:col-span-1">
             <Link href="/" className="inline-block mb-4">
               <Image
                 src="/logo.png"
