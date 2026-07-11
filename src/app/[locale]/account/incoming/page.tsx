@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Settings } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
-import { MarkInboxRead } from "@/components/seller/mark-inbox-read";
 import { IncomingList } from "@/components/seller/incoming-list";
 import type { IncomingItem } from "@/components/seller/incoming-list";
 
@@ -25,6 +24,7 @@ export default async function IncomingPage() {
 
   if (profile?.role !== "seller") redirect("/account/requests");
 
+  // Fallback baseline: requests before inbox_read_at are considered already seen
   const inboxReadAt = profile?.inbox_read_at ? new Date(profile.inbox_read_at) : null;
 
   // Get seller's inventory to filter requests
@@ -93,10 +93,30 @@ export default async function IncomingPage() {
 
   const offeredSet = new Set((myOffers ?? []).map((o) => o.quote_request_id));
 
+  // Per-request read status
+  const { data: readRows } =
+    allIds.length > 0
+      ? await supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from("seller_request_reads" as any)
+          .select("quote_request_id")
+          .eq("seller_id", user.id)
+          .in("quote_request_id", allIds)
+      : { data: [] };
+
+  const readSet = new Set(((readRows ?? []) as { quote_request_id: string }[]).map((r) => r.quote_request_id));
+
+  // isNew: not individually read AND not before the legacy inbox_read_at baseline
+  function isNew(r: { id: string; created_at: string }) {
+    if (readSet.has(r.id)) return false;
+    if (inboxReadAt && new Date(r.created_at) <= inboxReadAt) return false;
+    return true;
+  }
+
   const toItem = (r: typeof activeReqsFiltered[number], checkNew = false): IncomingItem => ({
     ...r,
     hasOffer: offeredSet.has(r.id),
-    isNew: checkNew && inboxReadAt ? new Date(r.created_at) > inboxReadAt : false,
+    isNew: checkNew ? isNew(r) : false,
   });
 
   const activeItems = activeReqsFiltered.map((r) => toItem(r, true));
@@ -109,8 +129,6 @@ export default async function IncomingPage() {
 
   return (
     <div>
-      <MarkInboxRead />
-
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-xl font-bold text-navy-900">{t("title")}</h1>
       </div>

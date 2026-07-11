@@ -3,6 +3,7 @@ import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
+import { markRequestRead } from "@/lib/notification-actions";
 import {
   ArrowLeft, Package, Calendar, MessageSquare,
   CheckCircle2, Mail, Phone, Send
@@ -38,6 +39,9 @@ export default async function IncomingDetailPage({ params }: Props) {
     .single();
 
   if (profile?.role !== "seller") redirect("/account/requests");
+
+  // Mark this request as read by this seller
+  void markRequestRead(id);
 
   const { data: req } = await supabase
     .from("quote_requests")
