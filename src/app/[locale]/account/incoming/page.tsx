@@ -104,7 +104,7 @@ export default async function IncomingPage() {
           .in("quote_request_id", allIds)
       : { data: [] };
 
-  const readSet = new Set(((readRows ?? []) as { quote_request_id: string }[]).map((r) => r.quote_request_id));
+  const readSet = new Set(((readRows ?? []) as unknown as { quote_request_id: string }[]).map((r) => r.quote_request_id));
 
   // isNew: not individually read AND not before the legacy inbox_read_at baseline
   function isNew(r: { id: string; created_at: string }) {
