@@ -93,6 +93,17 @@ export default async function IncomingPage() {
 
   const offeredSet = new Set((myOffers ?? []).map((o) => o.quote_request_id));
 
+  // Fetch current product names by SKU to override stale/localized stored names
+  const allSkus = [...new Set([
+    ...activeReqsFiltered.map((r) => r.sku),
+    ...(archivedReqs ?? []).map((r) => r.sku),
+  ].filter(Boolean))];
+  const { data: productNames } =
+    allSkus.length > 0
+      ? await supabase.from("products").select("sku, name").in("sku", allSkus)
+      : { data: [] };
+  const productNameMap = new Map((productNames ?? []).map((p) => [p.sku, p.name]));
+
   // Per-request read status
   const { data: readRows } =
     allIds.length > 0
@@ -115,6 +126,7 @@ export default async function IncomingPage() {
 
   const toItem = (r: typeof activeReqsFiltered[number], checkNew = false): IncomingItem => ({
     ...r,
+    product_name: productNameMap.get(r.sku) ?? r.product_name,
     hasOffer: offeredSet.has(r.id),
     isNew: checkNew ? isNew(r) : false,
   });

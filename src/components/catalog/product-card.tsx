@@ -12,6 +12,7 @@ import { CATEGORIES } from "@/lib/mock-data";
 
 export function ProductCard({ product }: { product: Product }) {
   const t = useTranslations("catalog");
+  const tCat = useTranslations("categories");
   const category = CATEGORIES.find((c) => c.slug === product.category);
   const { addItem } = useCart();
 
@@ -44,7 +45,7 @@ export function ProductCard({ product }: { product: Product }) {
       <div className="flex flex-col flex-1 p-4 gap-2">
         <div className="flex flex-wrap gap-1">
           <Badge variant="brand">{product.brand}</Badge>
-          {category && <Badge variant="category">{category.label}</Badge>}
+          {category && <Badge variant="category">{tCat(category.slug as Parameters<typeof tCat>[0])}</Badge>}
         </div>
 
         <Link href={`/product/${product.id}`} className="block">
