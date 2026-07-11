@@ -1,7 +1,7 @@
 "use client";
 
-import { usePathname, useSearchParams, useRouter } from "@/i18n/navigation";
-import { Link } from "@/i18n/navigation";
+import { usePathname, useRouter, Link } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { CATEGORIES, BRANDS } from "@/lib/mock-data";
 import { X } from "lucide-react";
