@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { markInboxRead } from "@/lib/notification-actions";
 
 type Counts = { requests: number; accepted: number };
 
@@ -23,31 +22,48 @@ export function SellerBell() {
       .select("inbox_read_at, accepted_read_at")
       .single();
 
-    // New incoming requests — only for products this seller carries in inventory
+    // New incoming requests — count those not yet individually read
     let requestCount = 0;
-    if (profile?.inbox_read_at) {
-      const { data: inventory } = await supabase
-        .from("seller_inventory")
-        .select("sku, product_id")
-        .eq("seller_id", user.id);
+    const { data: inventory } = await supabase
+      .from("seller_inventory")
+      .select("sku, product_id")
+      .eq("seller_id", user.id);
 
-      const skus = [...new Set((inventory ?? []).map((i) => i.sku))];
-      const productIds = [...new Set(
-        (inventory ?? []).map((i) => i.product_id).filter((id): id is string => !!id)
-      )];
+    const skus = [...new Set((inventory ?? []).map((i) => i.sku))];
+    const productIds = [...new Set(
+      (inventory ?? []).map((i) => i.product_id).filter((id): id is string => !!id)
+    )];
 
-      if (skus.length > 0 || productIds.length > 0) {
-        const orParts: string[] = [];
-        if (skus.length > 0) orParts.push(`sku.in.(${skus.map((s) => `"${s}"`).join(",")})`);
-        if (productIds.length > 0) orParts.push(`product_id.in.(${productIds.join(",")})`);
+    if (skus.length > 0 || productIds.length > 0) {
+      const orParts: string[] = [];
+      if (skus.length > 0) orParts.push(`sku.in.(${skus.map((s) => `"${s}"`).join(",")})`);
+      if (productIds.length > 0) orParts.push(`product_id.in.(${productIds.join(",")})`);
 
-        const { count } = await supabase
-          .from("quote_requests")
-          .select("*", { count: "exact", head: true })
-          .gt("created_at", profile.inbox_read_at)
-          .neq("status", "deleted")
-          .or(orParts.join(","));
-        requestCount = count ?? 0;
+      // All matching requests
+      let query = supabase
+        .from("quote_requests")
+        .select("id, created_at")
+        .eq("status", "in_progress")
+        .or(orParts.join(","));
+
+      // Legacy baseline: skip requests older than inbox_read_at
+      if (profile?.inbox_read_at) {
+        query = query.gt("created_at", profile.inbox_read_at);
+      }
+
+      const { data: allRequests } = await query;
+      const allIds = (allRequests ?? []).map((r) => r.id);
+
+      if (allIds.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: readRows } = await (supabase as any)
+          .from("seller_request_reads")
+          .select("quote_request_id")
+          .eq("seller_id", user.id)
+          .in("quote_request_id", allIds);
+
+        const readSet = new Set(((readRows ?? []) as { quote_request_id: string }[]).map((r) => r.quote_request_id));
+        requestCount = allIds.filter((id) => !readSet.has(id)).length;
       }
     }
 
@@ -93,13 +109,10 @@ export function SellerBell() {
 
   const total = counts.requests + counts.accepted;
 
-  async function handleClick() {
-    // If there are accepted offers pending → go to My Offers first
+  function handleClick() {
     if (counts.accepted > 0 && counts.requests === 0) {
       router.push("/account/offers");
     } else {
-      await markInboxRead();
-      setCounts((c) => ({ ...c, requests: 0 }));
       router.push("/account/incoming");
     }
   }

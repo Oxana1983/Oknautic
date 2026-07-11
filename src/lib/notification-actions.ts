@@ -34,3 +34,17 @@ export async function markAcceptedRead(): Promise<void> {
     .update({ accepted_read_at: new Date().toISOString() })
     .eq("id", user.id);
 }
+
+export async function markRequestRead(requestId: string): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .from("seller_request_reads" as any)
+    .upsert(
+      { seller_id: user.id, quote_request_id: requestId },
+      { onConflict: "seller_id,quote_request_id" }
+    );
+}
