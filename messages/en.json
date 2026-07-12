@@ -122,7 +122,10 @@
     "roleSeller": "Seller",
     "roleCustomer": "Buyer",
     "save": "Save",
-    "saved": "Saved"
+    "saved": "Saved",
+    "location": "Location",
+    "locationPlaceholder": "Enter city...",
+    "locationHint": "Used to autofill city in requests"
   },
   "inventory": {
     "title": "Inventory",

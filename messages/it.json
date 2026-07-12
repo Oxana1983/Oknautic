@@ -122,7 +122,10 @@
     "roleSeller": "Venditore",
     "roleCustomer": "Acquirente",
     "save": "Salva",
-    "saved": "Salvato"
+    "saved": "Salvato",
+    "location": "Posizione",
+    "locationPlaceholder": "Inserisci città...",
+    "locationHint": "Utilizzato per il completamento automatico nelle richieste"
   },
   "inventory": {
     "title": "Magazzino",
