@@ -52,6 +52,15 @@ export default async function IncomingDetailPage({ params }: Props) {
 
   if (!req) notFound();
 
+  // Resolve current product name from products table (overrides stale Russian stored name)
+  let resolvedProductName = req.product_name;
+  {
+    const { data: product } = req.product_id
+      ? await supabase.from("products").select("name").eq("id", req.product_id).maybeSingle()
+      : await supabase.from("products").select("name").eq("sku", req.sku).maybeSingle();
+    if (product?.name) resolvedProductName = product.name;
+  }
+
   const { data: existingOffer } = await supabase
     .from("offers")
     .select("*")
@@ -116,7 +125,7 @@ export default async function IncomingDetailPage({ params }: Props) {
       </Link>
 
       <h1 className="font-display text-xl font-bold text-navy-900 mb-6">
-        {req.product_name}
+        {resolvedProductName}
       </h1>
 
       <div className="grid lg:grid-cols-[1fr_380px] gap-6 items-start">
