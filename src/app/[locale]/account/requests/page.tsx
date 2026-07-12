@@ -67,8 +67,20 @@ export default async function RequestsPage() {
     countMap[o.quote_request_id] = (countMap[o.quote_request_id] ?? 0) + 1;
   }
 
+  // Resolve current product names from products table
+  const allSkus = [...new Set([
+    ...activeReqsFiltered.map((r) => r.sku),
+    ...(archivedReqs ?? []).map((r) => r.sku),
+  ].filter(Boolean))];
+  const { data: productNames } =
+    allSkus.length > 0
+      ? await supabase.from("products").select("sku, name").in("sku", allSkus)
+      : { data: [] };
+  const productNameMap = new Map((productNames ?? []).map((p) => [p.sku, p.name]));
+
   const toItem = (r: typeof activeReqsFiltered[number]): BuyerRequestItem => ({
     ...r,
+    product_name: productNameMap.get(r.sku) ?? r.product_name,
     offerCount: countMap[r.id] ?? 0,
   });
 
