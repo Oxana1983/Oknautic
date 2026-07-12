@@ -108,7 +108,7 @@ export default async function MyOffersPage() {
             const badge = OFFER_BADGE[effectiveStatus] ?? OFFER_BADGE.pending;
 
             return (
-              <Link key={offer.id} href={`/account/incoming/${offer.quote_request_id}`}>
+              <Link key={offer.id} href={`/account/incoming/${offer.quote_request_id}?from=offers`}>
                 <Card className={`hover:border-teal-200 hover:shadow-sm transition-all ${
                   effectiveStatus === "accepted" ? "border-teal-200 bg-teal-50/20" :
                   effectiveStatus === "closed"   ? "opacity-60" : ""

@@ -290,7 +290,8 @@
     "yourOffer": "Ваше предложение",
     "createOffer": "Создать предложение",
     "offerWithdrawnMsg": "Вы отозвали предложение по этому запросу",
-    "requestClosedByBuyer": "Запрос закрыт покупателем"
+    "requestClosedByBuyer": "Запрос закрыт покупателем",
+    "backToOffers": "Мои предложения"
   },
   "offerForm": {
     "accepted": "Ваше предложение принято покупателем",

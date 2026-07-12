@@ -13,14 +13,16 @@ import { OfferForm } from "@/components/seller/offer-form";
 
 export const dynamic = "force-dynamic";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ from?: string }> };
 
 function cleanPhone(phone: string) {
   return phone.replace(/\D/g, "");
 }
 
-export default async function IncomingDetailPage({ params }: Props) {
+export default async function IncomingDetailPage({ params, searchParams }: Props) {
   const { id } = await params;
+  const { from } = await searchParams;
+  const backHref = from === "offers" ? "/account/offers" : "/account/incoming";
   const t = await getTranslations("incoming");
   const locale = await getLocale();
 
@@ -117,11 +119,11 @@ export default async function IncomingDetailPage({ params }: Props) {
   return (
     <div>
       <Link
-        href="/account/incoming"
+        href={backHref}
         className="inline-flex items-center gap-1.5 text-sm text-navy-400 hover:text-navy-700 transition-colors mb-6"
       >
         <ArrowLeft size={14} />
-        {t("title")}
+        {from === "offers" ? t("backToOffers") : t("title")}
       </Link>
 
       <h1 className="font-display text-xl font-bold text-navy-900 mb-6">
