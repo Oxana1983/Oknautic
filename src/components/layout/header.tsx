@@ -25,7 +25,7 @@ const CATEGORY_SLUGS = [
   "rigging",
 ] as const;
 
-export function Header({ user, role = "customer" }: { user: SupabaseUser | null; role?: string }) {
+export function Header({ user, role = "customer", firstName }: { user: SupabaseUser | null; role?: string; firstName?: string | null }) {
   const t = useTranslations("nav");
   const tCat = useTranslations("categories");
 
@@ -65,7 +65,8 @@ export function Header({ user, role = "customer" }: { user: SupabaseUser | null;
     return () => clearTimeout(timer);
   }, [pathname]);
 
-  const displayName = user?.user_metadata?.first_name
+  const displayName = firstName
+    ?? user?.user_metadata?.first_name
     ?? user?.email?.split("@")[0]
     ?? t("account");
 
