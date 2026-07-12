@@ -14,7 +14,7 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("first_name, last_name, phone, role")
+    .select("first_name, last_name, phone, role, city, country, lat, lng")
     .eq("id", user.id)
     .single();
 
@@ -30,6 +30,10 @@ export default async function ProfilePage() {
               last_name: profile?.last_name ?? "",
               phone: profile?.phone ?? "",
               role: profile?.role ?? "customer",
+              city: profile?.city ?? null,
+              country: profile?.country ?? null,
+              lat: profile?.lat ?? null,
+              lng: profile?.lng ?? null,
             }}
           />
         </CardBody>

@@ -4,7 +4,15 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-type ProfileInput = { first_name: string; last_name: string; phone: string };
+type ProfileInput = {
+  first_name: string;
+  last_name: string;
+  phone: string;
+  city?: string | null;
+  country?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+};
 
 export async function updateProfile(
   data: ProfileInput
@@ -19,6 +27,10 @@ export async function updateProfile(
       first_name: data.first_name.trim() || null,
       last_name: data.last_name.trim() || null,
       phone: data.phone.trim() || null,
+      city: data.city ?? null,
+      country: data.country ?? null,
+      lat: data.lat ?? null,
+      lng: data.lng ?? null,
     })
     .eq("id", user.id);
 

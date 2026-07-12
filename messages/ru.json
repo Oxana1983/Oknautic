@@ -122,7 +122,10 @@
     "roleSeller": "Продавец",
     "roleCustomer": "Покупатель",
     "save": "Сохранить",
-    "saved": "Сохранено"
+    "saved": "Сохранено",
+    "location": "Местоположение",
+    "locationPlaceholder": "Введите город...",
+    "locationHint": "Используется для автозаполнения в запросах"
   },
   "inventory": {
     "title": "Склад",

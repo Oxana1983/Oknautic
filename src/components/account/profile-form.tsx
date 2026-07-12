@@ -5,10 +5,22 @@ import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import { updateProfile } from "@/lib/profile-actions";
+import { CityPicker } from "@/components/account/city-picker";
+
+type Location = { city: string; country: string; lat: number; lng: number };
 
 type Props = {
   email: string;
-  initialData: { first_name: string; last_name: string; phone: string; role: string };
+  initialData: {
+    first_name: string;
+    last_name: string;
+    phone: string;
+    role: string;
+    city: string | null;
+    country: string | null;
+    lat: number | null;
+    lng: number | null;
+  };
 };
 
 const inputCls =
@@ -21,6 +33,11 @@ export function ProfileForm({ email, initialData }: Props) {
     last_name: initialData.last_name,
     phone: initialData.phone,
   });
+  const [location, setLocation] = useState<Location | null>(
+    initialData.city && initialData.country && initialData.lat && initialData.lng
+      ? { city: initialData.city, country: initialData.country, lat: initialData.lat, lng: initialData.lng }
+      : null
+  );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
@@ -28,7 +45,13 @@ export function ProfileForm({ email, initialData }: Props) {
   async function handleSave() {
     setSaving(true);
     setError("");
-    const result = await updateProfile(form);
+    const result = await updateProfile({
+      ...form,
+      city: location?.city ?? null,
+      country: location?.country ?? null,
+      lat: location?.lat ?? null,
+      lng: location?.lng ?? null,
+    });
     setSaving(false);
     if (result?.error) { setError(result.error); return; }
     setSaved(true);
@@ -73,6 +96,12 @@ export function ProfileForm({ email, initialData }: Props) {
           type="tel"
           className={inputCls}
         />
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-navy-600 mb-1.5">{t("location")}</label>
+        <CityPicker value={location} onChange={(v) => setLocation(v)} />
+        <p className="text-[11px] text-navy-400 mt-1">{t("locationHint")}</p>
       </div>
 
       <div>

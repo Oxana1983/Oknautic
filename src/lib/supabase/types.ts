@@ -707,9 +707,11 @@ export type Database = {
           created_at: string
           currency: string
           description: string | null
+          description_i18n: Json
           id: string
           is_active: boolean
           name: string
+          name_i18n: Json
           photos: string[]
           sku: string
           updated_at: string
@@ -721,9 +723,11 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string | null
+          description_i18n?: Json
           id?: string
           is_active?: boolean
           name: string
+          name_i18n?: Json
           photos?: string[]
           sku: string
           updated_at?: string
@@ -735,9 +739,11 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string | null
+          description_i18n?: Json
           id?: string
           is_active?: boolean
           name?: string
+          name_i18n?: Json
           photos?: string[]
           sku?: string
           updated_at?: string
@@ -762,6 +768,8 @@ export type Database = {
       profiles: {
         Row: {
           accepted_read_at: string | null
+          city: string | null
+          country: string | null
           created_at: string
           email_notifications_offers: boolean
           email_notifications_quotes: boolean
@@ -769,6 +777,8 @@ export type Database = {
           id: string
           inbox_read_at: string | null
           last_name: string | null
+          lat: number | null
+          lng: number | null
           offers_read_at: string | null
           phone: string | null
           role: string
@@ -776,6 +786,8 @@ export type Database = {
         }
         Insert: {
           accepted_read_at?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           email_notifications_offers?: boolean
           email_notifications_quotes?: boolean
@@ -783,6 +795,8 @@ export type Database = {
           id: string
           inbox_read_at?: string | null
           last_name?: string | null
+          lat?: number | null
+          lng?: number | null
           offers_read_at?: string | null
           phone?: string | null
           role?: string
@@ -790,6 +804,8 @@ export type Database = {
         }
         Update: {
           accepted_read_at?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           email_notifications_offers?: boolean
           email_notifications_quotes?: boolean
@@ -797,6 +813,8 @@ export type Database = {
           id?: string
           inbox_read_at?: string | null
           last_name?: string | null
+          lat?: number | null
+          lng?: number | null
           offers_read_at?: string | null
           phone?: string | null
           role?: string
@@ -1120,6 +1138,29 @@ export type Database = {
             columns: ["seller_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seller_request_reads: {
+        Row: {
+          quote_request_id: string
+          seller_id: string
+        }
+        Insert: {
+          quote_request_id: string
+          seller_id: string
+        }
+        Update: {
+          quote_request_id?: string
+          seller_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_request_reads_quote_request_id_fkey"
+            columns: ["quote_request_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
             referencedColumns: ["id"]
           },
         ]
