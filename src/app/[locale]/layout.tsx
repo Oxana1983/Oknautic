@@ -57,7 +57,7 @@ export default async function LocaleLayout({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = user
-    ? await supabase.from("profiles").select("role").eq("id", user.id).single()
+    ? await supabase.from("profiles").select("role, first_name").eq("id", user.id).single()
     : { data: null };
 
   return (
@@ -68,7 +68,7 @@ export default async function LocaleLayout({
       <body className="min-h-full flex flex-col bg-sand-50">
         <NextIntlClientProvider messages={messages}>
           <CartProvider>
-            <Header user={user} role={profile?.role ?? "customer"} />
+            <Header user={user} role={profile?.role ?? "customer"} firstName={profile?.first_name ?? null} />
             <CartDrawer />
             <main className="flex-1">{children}</main>
             <Footer />
