@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { FileText, User, Store, LogOut, Warehouse, ArrowLeftRight } from "lucide-react";
 import { signOut } from "@/lib/auth-actions";
@@ -17,6 +18,14 @@ type Props = {
 export function AccountSidebar({ displayName, email, role }: Props) {
   const t = useTranslations("account");
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const fromParam = searchParams.get("from");
+
+  function isActive(href: string) {
+    if (fromParam === "offers" && href === "/account/offers") return true;
+    if (fromParam === "offers" && href === "/account/incoming") return false;
+    return pathname.startsWith(href);
+  }
 
   const customerLinks = [
     { href: "/account/requests", label: t("myRequests"), icon: FileText },
@@ -38,7 +47,7 @@ export function AccountSidebar({ displayName, email, role }: Props) {
       <nav className="md:hidden mb-5 -mx-4 border-b border-navy-100 bg-white">
         <div className="flex overflow-x-auto scrollbar-none px-4 gap-1 py-2">
           {links.map(({ href, label, icon: Icon }) => {
-            const active = pathname.startsWith(href);
+            const active = isActive(href);
             return (
               <Link
                 key={href}
@@ -104,7 +113,7 @@ export function AccountSidebar({ displayName, email, role }: Props) {
         {/* Nav */}
         <nav className="bg-white rounded-2xl border border-navy-100 overflow-hidden">
           {links.map(({ href, label, icon: Icon }) => {
-            const active = pathname.startsWith(href);
+            const active = isActive(href);
             return (
               <Link
                 key={href}
