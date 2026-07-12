@@ -49,7 +49,17 @@ export default async function MyOffersPage() {
           .in("id", requestIds)
       : { data: [] };
 
-  const reqMap = Object.fromEntries((requests ?? []).map((r) => [r.id, r]));
+  // Look up current product names from products table to override stale Russian names
+  const allSkus = [...new Set((requests ?? []).map((r) => r.sku).filter(Boolean))];
+  const { data: productNames } =
+    allSkus.length > 0
+      ? await supabase.from("products").select("sku, name").in("sku", allSkus)
+      : { data: [] };
+  const productNameMap = new Map((productNames ?? []).map((p) => [p.sku, p.name]));
+
+  const reqMap = Object.fromEntries(
+    (requests ?? []).map((r) => [r.id, { ...r, product_name: productNameMap.get(r.sku) ?? r.product_name }])
+  );
 
   const OFFER_BADGE: Record<OfferStatus, { label: string; cls: string; icon: React.ReactNode }> = {
     pending:   { label: t("statusPending"),   cls: "bg-blue-50 text-blue-600",  icon: <Clock size={11} /> },
