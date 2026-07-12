@@ -290,7 +290,8 @@
     "yourOffer": "Your Offer",
     "createOffer": "Create Offer",
     "offerWithdrawnMsg": "You withdrew your offer for this request",
-    "requestClosedByBuyer": "Request closed by buyer"
+    "requestClosedByBuyer": "Request closed by buyer",
+    "backToOffers": "My Offers"
   },
   "offerForm": {
     "accepted": "Your offer was accepted by the buyer",

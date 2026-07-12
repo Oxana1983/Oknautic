@@ -290,7 +290,8 @@
     "yourOffer": "La Tua Offerta",
     "createOffer": "Crea Offerta",
     "offerWithdrawnMsg": "Hai ritirato la tua offerta per questa richiesta",
-    "requestClosedByBuyer": "Richiesta chiusa dall'acquirente"
+    "requestClosedByBuyer": "Richiesta chiusa dall'acquirente",
+    "backToOffers": "Le mie offerte"
   },
   "offerForm": {
     "accepted": "La tua offerta è stata accettata dall'acquirente",
