@@ -50,6 +50,15 @@ export default async function RequestDetailPage({ params }: Props) {
 
   if (!req) notFound();
 
+  // Resolve current product name from products table
+  let resolvedProductName = req.product_name;
+  {
+    const { data: product } = req.product_id
+      ? await supabase.from("products").select("name").eq("id", req.product_id).maybeSingle()
+      : await supabase.from("products").select("name").eq("sku", req.sku).maybeSingle();
+    if (product?.name) resolvedProductName = product.name;
+  }
+
   const { data: offersRaw } = await supabase
     .from("offers")
     .select("*")
@@ -94,7 +103,7 @@ export default async function RequestDetailPage({ params }: Props) {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
-          <h1 className="font-display text-xl font-bold text-navy-900 leading-snug">{req.product_name}</h1>
+          <h1 className="font-display text-xl font-bold text-navy-900 leading-snug">{resolvedProductName}</h1>
           <p className="text-xs font-mono text-navy-400 mt-0.5">{req.sku}</p>
         </div>
         <span className={`text-xs font-medium px-3 py-1 rounded-full border shrink-0 ${STATUS_STYLE[req.status] ?? "bg-navy-100 text-navy-500 border-navy-200"}`}>
