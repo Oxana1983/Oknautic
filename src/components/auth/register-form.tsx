@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock, User, AlertCircle, ShoppingBag, Store } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { signUp } from "@/lib/auth-actions";
 import { Button } from "@/components/ui/button";
 
@@ -26,6 +27,8 @@ export function RegisterForm() {
   const defaultRole = searchParams.get("role") === "seller" ? "seller" : "customer";
   const [role, setRole] = useState<"customer" | "seller">(defaultRole);
 
+  const t = useTranslations("auth");
+
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [sellerTermsAccepted, setSellerTermsAccepted] = useState(false);
   const [marketingConsent, setMarketingConsent] = useState(false);
@@ -34,8 +37,8 @@ export function RegisterForm() {
 
   return (
     <div className="bg-white rounded-2xl border border-navy-100 shadow-sm p-8">
-      <h1 className="font-display text-2xl font-bold text-navy-900 mb-1">Регистрация</h1>
-      <p className="text-sm text-navy-500 mb-6">Создайте аккаунт OKnautic</p>
+      <h1 className="font-display text-2xl font-bold text-navy-900 mb-1">{t("registerTitle")}</h1>
+      <p className="text-sm text-navy-500 mb-6">{t("registerSubtitle")}</p>
 
       {state?.error && (
         <div className="flex items-start gap-2 p-3 rounded-xl bg-red-50 border border-red-100 mb-5">
@@ -47,7 +50,7 @@ export function RegisterForm() {
       <form action={action} className="space-y-4">
         {/* Role picker */}
         <div>
-          <p className="text-xs font-medium text-navy-600 mb-2">Тип аккаунта</p>
+          <p className="text-xs font-medium text-navy-600 mb-2">{t("accountType")}</p>
           <div className="grid grid-cols-2 gap-3">
             {(["customer", "seller"] as const).map((r) => {
               const isActive = role === r;
@@ -66,7 +69,7 @@ export function RegisterForm() {
                     ? <ShoppingBag size={20} className={isActive ? "text-teal-500" : "text-navy-400"} />
                     : <Store size={20} className={isActive ? "text-teal-500" : "text-navy-400"} />
                   }
-                  {r === "customer" ? "Покупатель" : "Продавец"}
+                  {r === "customer" ? t("buyer") : t("seller")}
                 </button>
               );
             })}
@@ -78,7 +81,7 @@ export function RegisterForm() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="first_name" className="flex items-center gap-1.5 text-xs font-medium text-navy-600 mb-1.5">
-              <User size={12} />Имя
+              <User size={12} />{t("firstName")}
             </label>
             <input
               id="first_name"
@@ -93,7 +96,7 @@ export function RegisterForm() {
           </div>
           <div>
             <label htmlFor="last_name" className="block text-xs font-medium text-navy-600 mb-1.5">
-              Фамилия
+              {t("lastName")}
             </label>
             <input
               id="last_name"
@@ -127,7 +130,7 @@ export function RegisterForm() {
 
         <div>
           <label htmlFor="password" className="flex items-center gap-1.5 text-xs font-medium text-navy-600 mb-1.5">
-            <Lock size={12} />Пароль * <span className="text-navy-400 font-normal">(минимум 6 символов)</span>
+            <Lock size={12} />{t("password")} * <span className="text-navy-400 font-normal">{t("passwordMin")}</span>
           </label>
           <input
             id="password"
@@ -153,9 +156,9 @@ export function RegisterForm() {
               className={checkboxCls}
             />
             <span className="text-xs text-navy-600 leading-relaxed">
-              Я согласен с{" "}
+              {t("agreeTerms")}{" "}
               <Link href="/terms-of-use" target="_blank" className="underline hover:text-navy-900">
-                Условиями использования
+                {t("termsOfUse")}
               </Link>{" "}
               <span className="text-red-500">*</span>
             </span>
@@ -172,9 +175,9 @@ export function RegisterForm() {
                 className={checkboxCls}
               />
               <span className="text-xs text-navy-600 leading-relaxed">
-                Я согласен с{" "}
+                {t("agreeSellerTerms")}{" "}
                 <Link href="/seller-terms" target="_blank" className="underline hover:text-navy-900">
-                  Условиями для продавцов
+                  {t("sellerTermsLabel")}
                 </Link>{" "}
                 <span className="text-red-500">*</span>
               </span>
@@ -183,9 +186,9 @@ export function RegisterForm() {
 
           {/* Privacy Policy — static notice, no checkbox */}
           <p className="text-xs text-navy-400 leading-relaxed pl-0.5">
-            Создавая аккаунт, вы подтверждаете, что ознакомились с{" "}
+            {t("privacyNotice")}{" "}
             <Link href="/privacy-policy" target="_blank" className="underline hover:text-navy-600">
-              Политикой конфиденциальности
+              {t("privacyPolicy")}
             </Link>.
           </p>
 
@@ -199,7 +202,7 @@ export function RegisterForm() {
               className={checkboxCls}
             />
             <span className="text-xs text-navy-500 leading-relaxed">
-              Я хочу получать новости, обновления продуктов и маркетинговые сообщения от OKnautic. Отписаться можно в любой момент.
+              {t("marketingConsent")}
             </span>
           </label>
         </div>
@@ -212,7 +215,7 @@ export function RegisterForm() {
           loading={isPending}
           disabled={!canSubmit || isPending}
         >
-          {isPending ? "Создаём аккаунт..." : "Создать аккаунт"}
+          {isPending ? t("creatingAccount") : t("createAccount")}
         </Button>
       </form>
     </div>
