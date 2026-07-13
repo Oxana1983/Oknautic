@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ShoppingCart, Star } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -72,9 +72,6 @@ export function ProductCard({ product }: { product: Product }) {
           <ShoppingCart size={14} />
           {t("requestPrice")}
         </Button>
-        <button className="shrink-0 p-2 rounded-lg text-navy-400 hover:text-gold-500 hover:bg-gold-50 transition-colors">
-          <Star size={16} />
-        </button>
       </div>
     </div>
   );
