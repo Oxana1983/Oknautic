@@ -14,10 +14,6 @@ export default function PrivacyPage() {
         <p className="text-sm text-navy-400">OKnautic.com · Last updated: 13 July 2026</p>
       </div>
 
-      <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 mb-10 text-sm text-amber-800 leading-relaxed">
-        ⚠️ <strong>DRAFT</strong> — for legal review. Placeholders in [BRACKETS] must be completed. This document must be reviewed by a lawyer qualified in Montenegrin law and GDPR before publication.
-      </div>
-
       <div className="prose prose-navy max-w-none space-y-10 text-navy-700 text-[15px] leading-relaxed">
 
         <section>
