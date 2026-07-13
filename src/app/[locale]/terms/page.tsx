@@ -108,7 +108,7 @@ export default function TermsPage() {
           <ul className="space-y-2 list-none pl-0">
             {[
               "A submitted Quote Request is distributed to Sellers whose declared brands and categories match the requested product; the request details, including delivery location and date, become visible to those Sellers.",
-              "Offers received are visible in the Customer's account. Confirming an Offer ("Order") signals the Customer's intent to purchase on the Offer's terms; the parties then finalise payment and delivery directly, including via the Platform chat.",
+              "Offers received are visible in the Customer's account. Confirming an Offer (\"Order\") signals the Customer's intent to purchase on the Offer's terms; the parties then finalise payment and delivery directly, including via the Platform chat.",
               "Chat may be initiated only by the Customer and only in connection with a Quote Request. Chat must not be used for unlawful content, spam, harassment, or sharing content unrelated to the request. We may review chat content to investigate abuse, fraud or violations of these Terms, as described in the Privacy Policy.",
             ].map((item) => (
               <li key={item} className="flex gap-2">
