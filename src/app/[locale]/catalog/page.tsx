@@ -58,7 +58,7 @@ async function NotFound({ query }: { query?: string }) {
     : t("contactMsg");
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center text-center py-6 px-4">
+    <div className="flex-1 flex flex-col items-center text-center pt-8 pb-4 px-4">
       <p className="text-5xl mb-4">🔍</p>
       <p className="font-display font-semibold text-navy-800 text-lg mb-2">{t("noResults")}</p>
       {query ? (
