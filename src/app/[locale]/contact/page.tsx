@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { Mail, MessageSquare, Clock } from "lucide-react";
+import { Mail, Clock } from "lucide-react";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { ContactForm } from "@/components/contact/contact-form";
@@ -58,23 +58,6 @@ export default async function ContactPage() {
                   className="text-sm font-medium text-navy-800 hover:text-teal-600 transition-colors"
                 >
                   {t("emailValue")}
-                </a>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-600 shrink-0">
-                <MessageSquare size={16} />
-              </div>
-              <div>
-                <p className="text-xs text-navy-400 mb-0.5">{t("telegramLabel")} / {t("whatsappLabel")}</p>
-                <a
-                  href="https://t.me/oknautic"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-medium text-navy-800 hover:text-teal-600 transition-colors"
-                >
-                  {t("telegramValue")}
                 </a>
               </div>
             </div>
