@@ -58,7 +58,7 @@ async function NotFound({ query }: { query?: string }) {
     : t("contactMsg");
 
   return (
-    <div className="flex-1 flex flex-col items-center text-center pt-8 pb-4 px-4">
+    <div className="text-center py-12 px-4">
       <p className="text-5xl mb-4">🔍</p>
       <p className="font-display font-semibold text-navy-800 text-lg mb-2">{t("noResults")}</p>
       {query ? (
@@ -116,18 +116,18 @@ export default async function CatalogPage({ searchParams }: Props) {
         <p className="text-sm text-navy-400 mt-0.5">{t("count", { count: products.length })}</p>
       </div>
 
-      <div className="flex gap-8">
-        <div className="hidden lg:block w-52 shrink-0">
-          <Suspense>
-            <CatalogFilters />
-          </Suspense>
-        </div>
-        {products.length === 0 ? (
-          <NotFound query={params.q} />
-        ) : (
+      {products.length === 0 ? (
+        <NotFound query={params.q} />
+      ) : (
+        <div className="flex gap-8">
+          <div className="hidden lg:block w-52 shrink-0">
+            <Suspense>
+              <CatalogFilters />
+            </Suspense>
+          </div>
           <CatalogView products={products} />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
