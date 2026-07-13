@@ -91,12 +91,21 @@ export async function Footer() {
           <p className="text-xs text-navy-400">
             © 2026 OKnautic. {t("rights")}
           </p>
-          <div className="flex gap-4">
-            <Link href="/privacy" className="text-xs text-navy-400 hover:text-white transition-colors">
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <Link href="/terms-of-use" className="text-xs text-navy-400 hover:text-white transition-colors">
+              {t("terms")}
+            </Link>
+            <Link href="/seller-terms" className="text-xs text-navy-400 hover:text-white transition-colors">
+              {t("sellerTerms")}
+            </Link>
+            <Link href="/privacy-policy" className="text-xs text-navy-400 hover:text-white transition-colors">
               {t("privacy")}
             </Link>
-            <Link href="/terms" className="text-xs text-navy-400 hover:text-white transition-colors">
-              {t("terms")}
+            <Link href="/legal-notice" className="text-xs text-navy-400 hover:text-white transition-colors">
+              {t("legalNotice")}
+            </Link>
+            <Link href="/contact" className="text-xs text-navy-400 hover:text-white transition-colors">
+              {t("contacts")}
             </Link>
           </div>
         </div>

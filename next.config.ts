@@ -11,6 +11,17 @@ const nextConfig: NextConfig = {
         destination: "/",
         permanent: true,
       },
+      // Canonical legal page paths
+      {
+        source: "/:locale/terms",
+        destination: "/:locale/terms-of-use",
+        permanent: true,
+      },
+      {
+        source: "/:locale/privacy",
+        destination: "/:locale/privacy-policy",
+        permanent: true,
+      },
     ];
   },
   images: {

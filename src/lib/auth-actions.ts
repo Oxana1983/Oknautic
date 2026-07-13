@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 
 type AuthState = { error: string } | null;
 
@@ -23,7 +23,7 @@ export async function signUp(
   formData: FormData
 ): Promise<AuthState> {
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email: formData.get("email") as string,
     password: formData.get("password") as string,
     options: {
@@ -44,6 +44,19 @@ export async function signUp(
     }
     return { error: error.message };
   }
+
+  // Store consent fields on the profile (created synchronously by DB trigger)
+  const userId = data?.user?.id;
+  if (userId) {
+    const adminSupabase = createAdminClient();
+    const now = new Date().toISOString();
+    await adminSupabase.from("profiles").update({
+      terms_accepted_at: formData.get("terms_accepted") === "on" ? now : null,
+      seller_terms_accepted_at: formData.get("seller_terms_accepted") === "on" ? now : null,
+      marketing_consent: formData.get("marketing_consent") === "on",
+    }).eq("id", userId);
+  }
+
   redirect("/");
 }
 
