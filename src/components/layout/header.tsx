@@ -210,7 +210,7 @@ export function Header({ user, role = "customer", firstName }: { user: SupabaseU
             {/* Insurance link — desktop only */}
             <Link
               href="/insurance"
-              className="hidden lg:flex items-center px-3 h-8 ml-1 rounded-lg text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors whitespace-nowrap"
+              className="hidden lg:flex items-center px-3 h-8 ml-1 rounded-lg text-sm font-medium text-rose-700 hover:text-rose-800 hover:bg-rose-50 transition-colors whitespace-nowrap"
             >
               {t("insurance")}
             </Link>
