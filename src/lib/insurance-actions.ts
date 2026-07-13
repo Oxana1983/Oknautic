@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
 
 const FROM = "OKnautic <noreply@oknautic.com>";
@@ -64,7 +64,8 @@ export async function submitInsuranceLead(
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: inserted, error: dbError } = await supabase
+  const adminSupabase = createAdminClient();
+  const { data: inserted, error: dbError } = await adminSupabase
     .from("insurance_leads")
     .insert({
       user_id: user?.id ?? null,
