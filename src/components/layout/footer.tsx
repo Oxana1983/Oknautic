@@ -20,7 +20,6 @@ export async function Footer() {
       { href: "/how",        label: t("how") },
       { href: "/insurance",  label: t("insurance") },
       { href: "/contact",    label: t("contacts") },
-      { href: "/help",       label: t("help") },
     ],
   };
 
