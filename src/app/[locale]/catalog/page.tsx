@@ -111,22 +111,23 @@ export default async function CatalogPage({ searchParams }: Props) {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-navy-900">{t("title")}</h1>
-        <p className="text-sm text-navy-400 mt-0.5">{t("count", { count: products.length })}</p>
-      </div>
-
       {products.length === 0 ? (
         <NotFound query={params.q} />
       ) : (
-        <div className="flex gap-8">
-          <div className="hidden lg:block w-52 shrink-0">
-            <Suspense>
-              <CatalogFilters />
-            </Suspense>
+        <>
+          <div className="mb-6">
+            <h1 className="font-display text-2xl font-bold text-navy-900">{t("title")}</h1>
+            <p className="text-sm text-navy-400 mt-0.5">{t("count", { count: products.length })}</p>
           </div>
-          <CatalogView products={products} />
-        </div>
+          <div className="flex gap-8">
+            <div className="hidden lg:block w-52 shrink-0">
+              <Suspense>
+                <CatalogFilters />
+              </Suspense>
+            </div>
+            <CatalogView products={products} />
+          </div>
+        </>
       )}
     </div>
   );
