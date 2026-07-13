@@ -104,9 +104,6 @@ export async function Footer() {
             <Link href="/legal-notice" className="text-xs text-navy-400 hover:text-white transition-colors">
               {t("legalNotice")}
             </Link>
-            <Link href="/contact" className="text-xs text-navy-400 hover:text-white transition-colors">
-              {t("contacts")}
-            </Link>
           </div>
         </div>
       </div>
