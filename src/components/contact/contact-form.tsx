@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { CheckCircle2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { submitContactMessage } from "@/lib/contact-actions";
@@ -16,6 +16,7 @@ type Prefill = { name: string; email: string; phone: string } | null;
 
 export function ContactForm({ prefill }: { prefill?: Prefill }) {
   const t = useTranslations("contact");
+  const locale = useLocale();
 
   const [form, setForm] = useState({
     name: prefill?.name ?? "",
@@ -49,7 +50,7 @@ export function ContactForm({ prefill }: { prefill?: Prefill }) {
 
     setSubmitting(true);
     setSubmitError("");
-    const result = await submitContactMessage(form);
+    const result = await submitContactMessage({ ...form, locale });
     setSubmitting(false);
 
     if (result.error) { setSubmitError(result.error); return; }

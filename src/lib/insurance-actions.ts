@@ -38,9 +38,87 @@ export type InsuranceFormData = {
   phone?: string;
   comment?: string;
   consent: boolean;
-  // Honeypot
+  // Meta
+  locale?: string;
   _hp?: string;
 };
+
+const T = {
+  ru: {
+    adminBadge: "OKnautic · Страхование",
+    adminTitle: "Новая заявка на расчёт страховки",
+    adminSubject: (desc: string) => `Новая заявка на страхование — ${desc}`,
+    supabaseNote: (id: string) => `Просмотрите заявку в Supabase: insurance_leads, id = ${id}`,
+    fName: "Имя", fEmail: "Email", fPhone: "Телефон",
+    fVesselType: "Тип судна", fBrandModel: "Марка / Модель", fYearBuilt: "Год постройки",
+    fLength: "Длина (м)", fHull: "Материал корпуса", fValue: "Стоимость (EUR)",
+    fFlag: "Страна флага", fNavArea: "Район плавания", fHomePort: "Порт приписки",
+    fUsage: "Использование", fSeason: "Сезонность",
+    fExp: "Стаж (лет)", fLicense: "Есть лицензия", fClaims: "Страховые случаи (5 лет)",
+    fClaimsDetails: "Описание случаев", fCoverage: "Покрытие", fDeductible: "Франшиза",
+    fInsurer: "Текущий страховщик", fPolicyEnd: "Окончание полиса",
+    fComment: "Комментарий", fLeadId: "ID заявки",
+    yes: "Да", no: "Нет",
+    clientSubject: (id: string) => `Заявка на страхование принята — ${id}`,
+    clientTitle: "Заявка принята!",
+    clientGreeting: (name: string) => `Здравствуйте, <strong>${name}</strong>!`,
+    clientBody: "Мы получили вашу заявку на расчёт страховки и передали её нашему страховому брокеру. Ожидайте ответа в течение <strong>24 часов</strong>.",
+    clientAppNumLabel: "Номер заявки",
+    clientNote: "Если у вас возникнут вопросы — ответьте на это письмо или свяжитесь с нами через сайт.",
+    clientFooter: "OKnautic — маркетплейс морских запчастей и услуг",
+  },
+  en: {
+    adminBadge: "OKnautic · Insurance",
+    adminTitle: "New insurance quote request",
+    adminSubject: (desc: string) => `New insurance application — ${desc}`,
+    supabaseNote: (id: string) => `View in Supabase: insurance_leads, id = ${id}`,
+    fName: "Name", fEmail: "Email", fPhone: "Phone",
+    fVesselType: "Vessel type", fBrandModel: "Make / Model", fYearBuilt: "Year built",
+    fLength: "Length (m)", fHull: "Hull material", fValue: "Value (EUR)",
+    fFlag: "Flag country", fNavArea: "Navigation area", fHomePort: "Home port",
+    fUsage: "Usage", fSeason: "Season",
+    fExp: "Experience (years)", fLicense: "Has license", fClaims: "Claims (last 5 years)",
+    fClaimsDetails: "Claims details", fCoverage: "Coverage", fDeductible: "Deductible",
+    fInsurer: "Current insurer", fPolicyEnd: "Policy renewal",
+    fComment: "Comment", fLeadId: "Lead ID",
+    yes: "Yes", no: "No",
+    clientSubject: (id: string) => `Insurance application received — ${id}`,
+    clientTitle: "Application received!",
+    clientGreeting: (name: string) => `Dear <strong>${name}</strong>,`,
+    clientBody: "We have received your insurance quote request and forwarded it to our insurance broker. You will receive a response within <strong>24 hours</strong>.",
+    clientAppNumLabel: "Application number",
+    clientNote: "If you have any questions, reply to this email or contact us through the website.",
+    clientFooter: "OKnautic — marine parts & services marketplace",
+  },
+  it: {
+    adminBadge: "OKnautic · Assicurazione",
+    adminTitle: "Nuova richiesta di preventivo assicurativo",
+    adminSubject: (desc: string) => `Nuova richiesta assicurativa — ${desc}`,
+    supabaseNote: (id: string) => `Vedi in Supabase: insurance_leads, id = ${id}`,
+    fName: "Nome", fEmail: "Email", fPhone: "Telefono",
+    fVesselType: "Tipo imbarcazione", fBrandModel: "Marca / Modello", fYearBuilt: "Anno costruzione",
+    fLength: "Lunghezza (m)", fHull: "Materiale scafo", fValue: "Valore (EUR)",
+    fFlag: "Paese bandiera", fNavArea: "Area di navigazione", fHomePort: "Porto base",
+    fUsage: "Utilizzo", fSeason: "Stagione",
+    fExp: "Esperienza (anni)", fLicense: "Ha patente", fClaims: "Sinistri (ultimi 5 anni)",
+    fClaimsDetails: "Dettagli sinistri", fCoverage: "Copertura", fDeductible: "Franchigia",
+    fInsurer: "Assicuratore attuale", fPolicyEnd: "Scadenza polizza",
+    fComment: "Commento", fLeadId: "ID richiesta",
+    yes: "Sì", no: "No",
+    clientSubject: (id: string) => `Richiesta assicurativa ricevuta — ${id}`,
+    clientTitle: "Richiesta ricevuta!",
+    clientGreeting: (name: string) => `Gentile <strong>${name}</strong>,`,
+    clientBody: "Abbiamo ricevuto la sua richiesta di preventivo assicurativo e l'abbiamo inoltrata al nostro broker. Riceverà una risposta entro <strong>24 ore</strong>.",
+    clientAppNumLabel: "Numero richiesta",
+    clientNote: "Per qualsiasi domanda, risponda a questa email o contatti tramite il sito.",
+    clientFooter: "OKnautic — marketplace di ricambi e servizi nautici",
+  },
+} as const;
+
+type Locale = keyof typeof T;
+function tr(locale?: string) {
+  return T[(locale as Locale) in T ? (locale as Locale) : "ru"];
+}
 
 function validateData(data: InsuranceFormData): string | null {
   if (data._hp) return "Bot detected";
@@ -72,7 +150,7 @@ export async function submitInsuranceLead(
       full_name: data.full_name.trim(),
       email: data.email.trim().toLowerCase(),
       phone: data.phone?.trim() || null,
-      preferred_language: null,
+      preferred_language: data.locale ?? null,
       vessel_type: data.vessel_type,
       brand: data.brand?.trim() || null,
       model: data.model?.trim() || null,
@@ -113,42 +191,42 @@ async function sendEmails(data: InsuranceFormData, leadId: string) {
   if (!process.env.RESEND_API_KEY) return;
 
   const resend = new Resend(process.env.RESEND_API_KEY);
+  const t = tr(data.locale);
   const shortId = leadId.slice(0, 8).toUpperCase();
 
-  const vesselDesc = `${data.vessel_type}${data.length_m ? `, ${data.length_m}м` : ""}, €${Number(data.vessel_value_eur).toLocaleString("ru")}`;
-  const subject = `Новая заявка на страхование — ${vesselDesc}`;
+  const vesselDesc = `${data.vessel_type}${data.length_m ? `, ${data.length_m}m` : ""}, €${Number(data.vessel_value_eur).toLocaleString()}`;
 
-  const allFields = [
-    ["Имя", data.full_name],
-    ["Email", data.email],
-    ["Телефон", data.phone || "—"],
+  const allFields: [string, string][] = [
+    [t.fName, data.full_name],
+    [t.fEmail, data.email],
+    [t.fPhone, data.phone || "—"],
     ["---", ""],
-    ["Тип судна", data.vessel_type],
-    ["Марка / Модель", [data.brand, data.model].filter(Boolean).join(" ") || "—"],
-    ["Год постройки", data.year_built || "—"],
-    ["Длина (м)", data.length_m || "—"],
-    ["Материал корпуса", data.hull_material || "—"],
-    ["Стоимость (EUR)", `€${Number(data.vessel_value_eur).toLocaleString("ru")}`],
-    ["Страна флага", data.flag_country || "—"],
+    [t.fVesselType, data.vessel_type],
+    [t.fBrandModel, [data.brand, data.model].filter(Boolean).join(" ") || "—"],
+    [t.fYearBuilt, data.year_built || "—"],
+    [t.fLength, data.length_m || "—"],
+    [t.fHull, data.hull_material || "—"],
+    [t.fValue, `€${Number(data.vessel_value_eur).toLocaleString()}`],
+    [t.fFlag, data.flag_country || "—"],
     ["---", ""],
-    ["Район плавания", data.navigation_area],
-    ["Порт приписки", data.home_port || "—"],
-    ["Использование", data.usage_type],
-    ["Сезонность", data.season],
+    [t.fNavArea, data.navigation_area],
+    [t.fHomePort, data.home_port || "—"],
+    [t.fUsage, data.usage_type],
+    [t.fSeason, data.season],
     ["---", ""],
-    ["Стаж (лет)", data.skipper_experience_years || "—"],
-    ["Есть лицензия", data.has_license ? "Да" : "Нет"],
-    ["Страховые случаи (5 лет)", data.claims_last_5_years ? "Да" : "Нет"],
-    ["Описание случаев", data.claims_details || "—"],
+    [t.fExp, data.skipper_experience_years || "—"],
+    [t.fLicense, data.has_license ? t.yes : t.no],
+    [t.fClaims, data.claims_last_5_years ? t.yes : t.no],
+    [t.fClaimsDetails, data.claims_details || "—"],
     ["---", ""],
-    ["Покрытие", data.coverage_types.join(", ") || "—"],
-    ["Франшиза", data.deductible_preference || "—"],
-    ["Текущий страховщик", data.current_insurer || "—"],
-    ["Окончание полиса", data.policy_renewal_date || "—"],
+    [t.fCoverage, data.coverage_types.join(", ") || "—"],
+    [t.fDeductible, data.deductible_preference || "—"],
+    [t.fInsurer, data.current_insurer || "—"],
+    [t.fPolicyEnd, data.policy_renewal_date || "—"],
     ["---", ""],
-    ["Комментарий", data.comment || "—"],
-    ["ID заявки", shortId],
-  ] satisfies [string, string][];
+    [t.fComment, data.comment || "—"],
+    [t.fLeadId, shortId],
+  ];
 
   const rows = allFields
     .map(([k, v]) =>
@@ -166,23 +244,23 @@ async function sendEmails(data: InsuranceFormData, leadId: string) {
     await resend.emails.send({
       from: FROM,
       to: adminEmail,
-      subject,
+      subject: t.adminSubject(vesselDesc),
       html: `
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="${data.locale ?? "ru"}">
 <head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#f5f0e8;font-family:'Inter',Arial,sans-serif">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px">
     <tr><td align="center">
       <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #d8e9f5">
         <tr><td style="background:#0b1e35;padding:24px 32px">
-          <p style="margin:0;color:#7aafd8;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600">OKnautic · Страхование</p>
+          <p style="margin:0;color:#7aafd8;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600">${t.adminBadge}</p>
         </td></tr>
         <tr><td style="padding:28px 32px">
-          <p style="margin:0 0 6px;font-size:20px;font-weight:700;color:#0b1e35">Новая заявка на расчёт страховки</p>
+          <p style="margin:0 0 6px;font-size:20px;font-weight:700;color:#0b1e35">${t.adminTitle}</p>
           <p style="margin:0 0 20px;font-size:13px;color:#4a85c2">${vesselDesc}</p>
           <table cellpadding="0" cellspacing="0" style="width:100%">${rows}</table>
-          <p style="margin:20px 0 0;font-size:11px;color:#7aafd8">Просмотрите заявку в Supabase: insurance_leads, id = ${leadId}</p>
+          <p style="margin:20px 0 0;font-size:11px;color:#7aafd8">${t.supabaseNote(leadId)}</p>
         </td></tr>
       </table>
     </td></tr>
@@ -192,14 +270,13 @@ async function sendEmails(data: InsuranceFormData, leadId: string) {
     }).catch((err) => console.error("Admin insurance email failed:", err));
   }
 
-  // Confirmation to client
   await resend.emails.send({
     from: FROM,
     to: data.email,
-    subject: `Заявка на страхование принята — ${shortId}`,
+    subject: t.clientSubject(shortId),
     html: `
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="${data.locale ?? "ru"}">
 <head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#f5f0e8;font-family:'Inter',Arial,sans-serif">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px">
@@ -207,29 +284,24 @@ async function sendEmails(data: InsuranceFormData, leadId: string) {
       <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #9de6e6">
         <tr><td style="background:#073b3b;padding:24px 32px">
           <p style="margin:0 0 4px;color:#5dd0d0;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600">OKnautic</p>
-          <p style="margin:0;color:#ffffff;font-size:18px;font-weight:700">Заявка принята!</p>
+          <p style="margin:0;color:#ffffff;font-size:18px;font-weight:700">${t.clientTitle}</p>
         </td></tr>
         <tr><td style="padding:28px 32px">
-          <p style="margin:0 0 16px;font-size:15px;color:#0b1e35">Здравствуйте, <strong>${data.full_name}</strong>!</p>
-          <p style="margin:0 0 16px;font-size:14px;color:#0b1e35;line-height:1.6">
-            Мы получили вашу заявку на расчёт страховки и передали её нашему страховому брокеру.
-            Ожидайте ответа в течение <strong>24 часов</strong>.
-          </p>
+          <p style="margin:0 0 16px;font-size:15px;color:#0b1e35">${t.clientGreeting(data.full_name)}</p>
+          <p style="margin:0 0 16px;font-size:14px;color:#0b1e35;line-height:1.6">${t.clientBody}</p>
           <table style="background:#e6fafa;border-radius:12px;padding:16px 20px;margin-bottom:24px;width:100%;box-sizing:border-box" cellpadding="0" cellspacing="0">
             <tr>
-              <td style="font-size:11px;color:#4a85c2;text-transform:uppercase;letter-spacing:1px;padding-bottom:6px">Номер заявки</td>
+              <td style="font-size:11px;color:#4a85c2;text-transform:uppercase;letter-spacing:1px;padding-bottom:6px">${t.clientAppNumLabel}</td>
             </tr>
             <tr>
               <td style="font-size:22px;font-weight:700;color:#073b3b;font-family:monospace">${shortId}</td>
             </tr>
           </table>
-          <p style="margin:0;font-size:13px;color:#4a85c2">
-            Если у вас возникнут вопросы — ответьте на это письмо или свяжитесь с нами через сайт.
-          </p>
+          <p style="margin:0;font-size:13px;color:#4a85c2">${t.clientNote}</p>
         </td></tr>
         <tr><td style="padding:16px 32px;border-top:1px solid #ccf4f4">
           <p style="margin:0;font-size:11px;color:#7aafd8">
-            <a href="${BASE_URL}" style="color:#0e9494">OKnautic</a> — маркетплейс морских запчастей и услуг
+            <a href="${BASE_URL}" style="color:#0e9494">OKnautic</a> — ${t.clientFooter}
           </p>
         </td></tr>
       </table>

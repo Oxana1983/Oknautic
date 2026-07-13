@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { CheckCircle2, ChevronRight, ChevronLeft, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { submitInsuranceLead, type InsuranceFormData } from "@/lib/insurance-actions";
@@ -80,6 +80,7 @@ function StepDots({ current, total }: { current: number; total: number }) {
 
 export function InsuranceForm() {
   const t = useTranslations("insurance");
+  const locale = useLocale();
 
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<Errors>({});
@@ -163,7 +164,7 @@ export function InsuranceForm() {
 
     setSubmitting(true);
     setSubmitError("");
-    const result = await submitInsuranceLead(form as InsuranceFormData);
+    const result = await submitInsuranceLead({ ...(form as InsuranceFormData), locale });
     setSubmitting(false);
 
     if (result.error) {
