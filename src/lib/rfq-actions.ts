@@ -42,7 +42,8 @@ export async function submitRfq(
           ? (item.selectedVariants as Record<string, string>)
           : null,
         quantity: item.quantity,
-        delivery_location: "TBD",
+        delivery_area: "TBD",
+        delivery_address: "",
         delivery_datetime: new Date(
           Date.now() + 30 * 24 * 60 * 60 * 1000
         ).toISOString(),

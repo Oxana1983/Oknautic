@@ -908,9 +908,12 @@ export type Database = {
           last_name: string | null
           lat: number | null
           lng: number | null
+          marketing_consent: boolean
           offers_read_at: string | null
           phone: string | null
           role: string
+          seller_terms_accepted_at: string | null
+          terms_accepted_at: string | null
           updated_at: string
         }
         Insert: {
@@ -926,9 +929,12 @@ export type Database = {
           last_name?: string | null
           lat?: number | null
           lng?: number | null
+          marketing_consent?: boolean
           offers_read_at?: string | null
           phone?: string | null
           role?: string
+          seller_terms_accepted_at?: string | null
+          terms_accepted_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -944,7 +950,10 @@ export type Database = {
           last_name?: string | null
           lat?: number | null
           lng?: number | null
+          marketing_consent?: boolean
           offers_read_at?: string | null
+          seller_terms_accepted_at?: string | null
+          terms_accepted_at?: string | null
           phone?: string | null
           role?: string
           updated_at?: string
@@ -963,7 +972,8 @@ export type Database = {
           created_at: string
           customer_id: string
           delivery_datetime: string
-          delivery_location: string
+          delivery_address: string | null
+          delivery_area: string
           id: string
           product_id: string | null
           product_name: string
@@ -985,8 +995,9 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           customer_id: string
+          delivery_address?: string | null
+          delivery_area: string
           delivery_datetime: string
-          delivery_location: string
           id?: string
           product_id?: string | null
           product_name: string
@@ -1008,8 +1019,9 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           customer_id?: string
+          delivery_address?: string | null
+          delivery_area?: string
           delivery_datetime?: string
-          delivery_location?: string
           id?: string
           product_id?: string | null
           product_name?: string

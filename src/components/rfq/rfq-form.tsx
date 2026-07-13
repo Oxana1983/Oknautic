@@ -415,6 +415,13 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
                   onChange={(v) => setForm((f) => ({ ...f, comment: v }))}
                 />
 
+                <div className="rounded-xl bg-navy-50 border border-navy-100 px-4 py-3 text-[11px] text-navy-500 leading-relaxed">
+                  Your request, including the requested products, quantities, delivery area and requested delivery
+                  date, will be shared with matching independent Sellers so that they can prepare quotations. Your
+                  name and exact delivery address are shared with a Seller only when you contact them or confirm
+                  their offer. Please do not include unnecessary personal or sensitive information in your request.
+                </div>
+
                 <Button
                   type="submit"
                   variant="primary"
@@ -427,7 +434,7 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
 
                 <p className="text-[11px] text-navy-400 text-center leading-relaxed">
                   {t("termsPrefix")}{" "}
-                  <Link href="/terms" className="underline hover:text-navy-600">
+                  <Link href="/terms-of-use" className="underline hover:text-navy-600">
                     {t("termsLink")}
                   </Link>
                 </p>
