@@ -79,7 +79,7 @@ export function ContactForm({ prefill }: { prefill?: Prefill }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3">
       {/* Honeypot */}
       <input
         type="text" name="_hp" value={form._hp}
@@ -87,7 +87,7 @@ export function ContactForm({ prefill }: { prefill?: Prefill }) {
         tabIndex={-1} aria-hidden style={{ display: "none" }}
       />
 
-      <div className="grid sm:grid-cols-2 gap-4">
+      <div className="grid sm:grid-cols-2 gap-3">
         {/* Message — spans full height on left */}
         <div className="flex flex-col sm:row-span-3">
           <label htmlFor="message" className={labelCls}>{t("message")}</label>
@@ -98,7 +98,7 @@ export function ContactForm({ prefill }: { prefill?: Prefill }) {
             placeholder={t("messagePlaceholder")}
             className={
               inputCls +
-              " flex-1 resize-none h-48 sm:h-full" +
+              " flex-1 resize-none h-36 sm:h-full" +
               (errors.message ? " border-red-300 bg-red-50" : "")
             }
           />
