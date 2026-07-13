@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Mail, MessageSquare, Clock } from "lucide-react";
 import type { Metadata } from "next";
+import { createClient } from "@/lib/supabase/server";
 import { ContactForm } from "@/components/contact/contact-form";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -10,6 +11,24 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ContactPage() {
   const t = await getTranslations("contact");
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let prefill: { name: string; email: string; phone: string } | null = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("first_name, last_name, phone")
+      .eq("id", user.id)
+      .single();
+
+    prefill = {
+      name: [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || "",
+      email: user.email ?? "",
+      phone: profile?.phone ?? "",
+    };
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12 sm:py-16">
@@ -75,7 +94,7 @@ export default async function ContactPage() {
         {/* Right: form */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-navy-100 shadow-sm p-6 sm:p-8">
           <h2 className="font-display text-lg font-bold text-navy-900 mb-6">{t("formTitle")}</h2>
-          <ContactForm />
+          <ContactForm prefill={prefill} />
         </div>
       </div>
     </div>

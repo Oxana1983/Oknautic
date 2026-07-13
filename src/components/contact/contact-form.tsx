@@ -12,10 +12,18 @@ const labelCls = "block text-xs font-medium text-navy-600 mb-1.5";
 
 type Errors = { name?: string; email?: string; message?: string };
 
-export function ContactForm() {
+type Prefill = { name: string; email: string; phone: string } | null;
+
+export function ContactForm({ prefill }: { prefill?: Prefill }) {
   const t = useTranslations("contact");
 
-  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "", _hp: "" });
+  const [form, setForm] = useState({
+    name: prefill?.name ?? "",
+    email: prefill?.email ?? "",
+    phone: prefill?.phone ?? "",
+    message: "",
+    _hp: "",
+  });
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
