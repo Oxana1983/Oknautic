@@ -49,6 +49,7 @@ async function fetchProducts(locale: string, brandSlug?: string, q?: string): Pr
 const PHONE = "38269962980";
 const WA_URL = `https://wa.me/${PHONE}`;
 const TG_URL = "https://t.me/OksanaTivat";
+const EMAIL = "info@oknautic.com";
 
 async function NotFound({ query }: { query?: string }) {
   const t = await getTranslations("catalog");
@@ -95,6 +96,15 @@ async function NotFound({ query }: { query?: string }) {
                 <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.820 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.800-.943-.602-.332-1.133.337-1.79.23-.23 4.238-3.882 4.316-4.21.01-.036.018-.17-.063-.241-.08-.071-.196-.046-.282-.028-.12.027-2.044 1.298-5.774 3.81-.547.377-1.042.56-1.485.552-.49-.01-1.43-.277-2.13-.504-.858-.28-1.54-.428-1.48-.904.032-.25.367-.505 1.003-.767 3.93-1.713 6.55-2.842 7.862-3.389 3.743-1.553 4.52-1.822 5.02-1.83z"/>
               </svg>
               Telegram
+            </a>
+            <a
+              href={`mailto:${EMAIL}?subject=${encodeURIComponent(text)}`}
+              className="flex items-center justify-center gap-2.5 h-10 rounded-xl bg-navy-700 text-white text-sm font-medium hover:bg-navy-800 transition-colors"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/>
+              </svg>
+              {EMAIL}
             </a>
           </div>
         </div>
