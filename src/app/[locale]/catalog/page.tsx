@@ -116,18 +116,18 @@ export default async function CatalogPage({ searchParams }: Props) {
         <p className="text-sm text-navy-400 mt-0.5">{t("count", { count: products.length })}</p>
       </div>
 
-      <div className="flex gap-8">
-        <div className="hidden lg:block w-52 shrink-0">
-          <Suspense>
-            <CatalogFilters />
-          </Suspense>
-        </div>
-        {products.length === 0 ? (
-          <NotFound query={params.q} />
-        ) : (
+      {products.length === 0 ? (
+        <NotFound query={params.q} />
+      ) : (
+        <div className="flex gap-8">
+          <div className="hidden lg:block w-52 shrink-0">
+            <Suspense>
+              <CatalogFilters />
+            </Suspense>
+          </div>
           <CatalogView products={products} />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
