@@ -88,7 +88,7 @@ export function RegisterForm() {
               name="first_name"
               type="text"
               autoComplete="given-name"
-              placeholder="Иван"
+              placeholder={t("firstNamePlaceholder")}
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               className={inputCls}
@@ -103,7 +103,7 @@ export function RegisterForm() {
               name="last_name"
               type="text"
               autoComplete="family-name"
-              placeholder="Иванов"
+              placeholder={t("lastNamePlaceholder")}
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               className={inputCls}
