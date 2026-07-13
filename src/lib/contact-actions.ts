@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
 
 const FROM = "OKnautic <noreply@oknautic.com>";
@@ -22,7 +22,7 @@ export async function submitContactMessage(
   if (!data.email?.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) return { error: "email invalid" };
   if (!data.message?.trim()) return { error: "message required" };
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: inserted, error: dbError } = await supabase
     .from("contact_messages")
