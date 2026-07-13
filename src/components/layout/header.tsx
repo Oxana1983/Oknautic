@@ -207,6 +207,14 @@ export function Header({ user, role = "customer", firstName }: { user: SupabaseU
               </>
             )}
 
+            {/* Insurance link — desktop only */}
+            <Link
+              href="/insurance"
+              className="hidden lg:flex items-center px-3 h-8 ml-1 rounded-lg text-sm font-medium text-teal-600 hover:text-teal-700 hover:bg-teal-50 transition-colors whitespace-nowrap"
+            >
+              {t("insurance")}
+            </Link>
+
             {/* Burger */}
             <button
               className="lg:hidden p-2 rounded-lg text-navy-500 hover:bg-navy-50 transition-colors"
@@ -258,14 +266,6 @@ export function Header({ user, role = "customer", firstName }: { user: SupabaseU
                 >
                   {t("allCategories")}
                   <ChevronDown size={14} />
-                </Link>
-              </li>
-              <li className="ml-auto">
-                <Link
-                  href="/insurance"
-                  className="flex items-center gap-1 px-3 h-10 text-sm font-medium text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded transition-colors whitespace-nowrap"
-                >
-                  {t("insurance")}
                 </Link>
               </li>
             </ul>
