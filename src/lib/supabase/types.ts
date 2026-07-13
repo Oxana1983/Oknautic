@@ -423,6 +423,105 @@ export type Database = {
           },
         ]
       }
+      insurance_leads: {
+        Row: {
+          admin_notes: string | null
+          brand: string | null
+          claims_details: string | null
+          claims_last_5_years: boolean | null
+          comment: string | null
+          coverage_types: string[] | null
+          created_at: string
+          current_insurer: string | null
+          deductible_preference: string | null
+          email: string
+          flag_country: string | null
+          full_name: string
+          has_license: boolean | null
+          home_port: string | null
+          hull_material: string | null
+          id: string
+          length_m: number | null
+          model: string | null
+          navigation_area: string | null
+          phone: string | null
+          policy_renewal_date: string | null
+          preferred_language: string | null
+          season: string | null
+          skipper_experience_years: number | null
+          status: string
+          usage_type: string | null
+          user_id: string | null
+          vessel_type: string | null
+          vessel_value_eur: number
+          year_built: number | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          brand?: string | null
+          claims_details?: string | null
+          claims_last_5_years?: boolean | null
+          comment?: string | null
+          coverage_types?: string[] | null
+          created_at?: string
+          current_insurer?: string | null
+          deductible_preference?: string | null
+          email: string
+          flag_country?: string | null
+          full_name: string
+          has_license?: boolean | null
+          home_port?: string | null
+          hull_material?: string | null
+          id?: string
+          length_m?: number | null
+          model?: string | null
+          navigation_area?: string | null
+          phone?: string | null
+          policy_renewal_date?: string | null
+          preferred_language?: string | null
+          season?: string | null
+          skipper_experience_years?: number | null
+          status?: string
+          usage_type?: string | null
+          user_id?: string | null
+          vessel_type?: string | null
+          vessel_value_eur: number
+          year_built?: number | null
+        }
+        Update: {
+          admin_notes?: string | null
+          brand?: string | null
+          claims_details?: string | null
+          claims_last_5_years?: boolean | null
+          comment?: string | null
+          coverage_types?: string[] | null
+          created_at?: string
+          current_insurer?: string | null
+          deductible_preference?: string | null
+          email?: string
+          flag_country?: string | null
+          full_name?: string
+          has_license?: boolean | null
+          home_port?: string | null
+          hull_material?: string | null
+          id?: string
+          length_m?: number | null
+          model?: string | null
+          navigation_area?: string | null
+          phone?: string | null
+          policy_renewal_date?: string | null
+          preferred_language?: string | null
+          season?: string | null
+          skipper_experience_years?: number | null
+          status?: string
+          usage_type?: string | null
+          user_id?: string | null
+          vessel_type?: string | null
+          vessel_value_eur?: number
+          year_built?: number | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           chat_id: string
