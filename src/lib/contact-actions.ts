@@ -37,7 +37,7 @@ export async function submitContactMessage(
 
   if (dbError) return { error: dbError.message };
 
-  void sendEmails(data);
+  await sendEmails(data);
 
   return { id: inserted.id as string };
 }

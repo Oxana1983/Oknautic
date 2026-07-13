@@ -102,7 +102,7 @@ export async function submitInsuranceLead(
 
   const leadId = inserted.id as string;
 
-  void sendEmails(data, leadId);
+  await sendEmails(data, leadId);
 
   revalidatePath("/insurance");
   return { id: leadId };
