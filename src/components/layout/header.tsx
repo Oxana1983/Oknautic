@@ -260,6 +260,14 @@ export function Header({ user, role = "customer", firstName }: { user: SupabaseU
                   <ChevronDown size={14} />
                 </Link>
               </li>
+              <li className="ml-auto">
+                <Link
+                  href="/insurance"
+                  className="flex items-center gap-1 px-3 h-10 text-sm font-medium text-navy-600 hover:text-navy-900 hover:bg-navy-50 rounded transition-colors whitespace-nowrap"
+                >
+                  {t("insurance")}
+                </Link>
+              </li>
             </ul>
           </div>
         </nav>
