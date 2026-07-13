@@ -16,10 +16,11 @@ export async function Footer() {
       { href: "/account/incoming", label: t("cabinet") },
     ],
     company: [
-      { href: "/about",   label: t("about") },
-      { href: "/how",     label: t("how") },
-      { href: "/contact", label: t("contacts") },
-      { href: "/help",    label: t("help") },
+      { href: "/about",      label: t("about") },
+      { href: "/how",        label: t("how") },
+      { href: "/insurance",  label: t("insurance") },
+      { href: "/contact",    label: t("contacts") },
+      { href: "/help",       label: t("help") },
     ],
   };
 

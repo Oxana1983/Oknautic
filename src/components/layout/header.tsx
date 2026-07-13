@@ -310,6 +310,16 @@ export function Header({ user, role = "customer", firstName }: { user: SupabaseU
 
               <div className="my-3 border-t border-navy-100" />
 
+              <Link
+                href="/insurance"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center px-5 py-2.5 text-sm text-navy-700 hover:bg-navy-50"
+              >
+                {t("insurance")}
+              </Link>
+
+              <div className="my-3 border-t border-navy-100" />
+
               <p className="px-5 text-xs font-medium text-navy-400 uppercase tracking-wider mb-1">
                 {t("account")}
               </p>
