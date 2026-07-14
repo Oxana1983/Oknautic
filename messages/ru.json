@@ -633,6 +633,23 @@
     "createAccount": "Создать аккаунт",
     "creatingAccount": "Создаём аккаунт...",
     "alreadyHaveAccount": "Уже есть аккаунт?",
-    "signInLink": "Войти"
+    "signInLink": "Войти",
+    "forgotPasswordTitle": "Забыли пароль?",
+    "forgotPasswordSubtitle": "Введите email — мы отправим ссылку для сброса пароля.",
+    "sendResetLink": "Отправить ссылку",
+    "sendingResetLink": "Отправляем...",
+    "checkYourEmail": "Проверьте почту",
+    "checkYourEmailDesc": "Мы отправили ссылку для сброса пароля на {email}. Письмо может прийти через минуту.",
+    "backToSignIn": "Вернуться к входу",
+    "resetPasswordTitle": "Новый пароль",
+    "resetPasswordSubtitle": "Введите новый пароль для вашего аккаунта.",
+    "newPassword": "Новый пароль",
+    "confirmPassword": "Подтвердите пароль",
+    "savePassword": "Сохранить пароль",
+    "savingPassword": "Сохраняем...",
+    "passwordUpdated": "Пароль обновлён",
+    "passwordUpdatedDesc": "Теперь вы можете войти с новым паролем.",
+    "passwordMismatch": "Пароли не совпадают",
+    "invalidResetLink": "Ссылка недействительна или устарела. Запросите новую."
   }
 }

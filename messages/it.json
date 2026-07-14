@@ -633,6 +633,23 @@
     "createAccount": "Crea account",
     "creatingAccount": "Creazione account...",
     "alreadyHaveAccount": "Hai già un account?",
-    "signInLink": "Accedi"
+    "signInLink": "Accedi",
+    "forgotPasswordTitle": "Password dimenticata?",
+    "forgotPasswordSubtitle": "Inserisci la tua email e ti invieremo un link per reimpostare la password.",
+    "sendResetLink": "Invia link",
+    "sendingResetLink": "Invio in corso...",
+    "checkYourEmail": "Controlla la tua email",
+    "checkYourEmailDesc": "Abbiamo inviato un link per reimpostare la password a {email}. Potrebbe richiedere un minuto.",
+    "backToSignIn": "Torna all'accesso",
+    "resetPasswordTitle": "Nuova password",
+    "resetPasswordSubtitle": "Inserisci una nuova password per il tuo account.",
+    "newPassword": "Nuova password",
+    "confirmPassword": "Conferma password",
+    "savePassword": "Salva password",
+    "savingPassword": "Salvataggio...",
+    "passwordUpdated": "Password aggiornata",
+    "passwordUpdatedDesc": "Ora puoi accedere con la tua nuova password.",
+    "passwordMismatch": "Le password non corrispondono",
+    "invalidResetLink": "Questo link non è valido o è scaduto. Richiedine uno nuovo."
   }
 }

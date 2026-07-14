@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { Mail, Lock, AlertCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
