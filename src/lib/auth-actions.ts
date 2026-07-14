@@ -65,3 +65,36 @@ export async function signOut() {
   await supabase.auth.signOut();
   redirect("/");
 }
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.oknautic.com";
+
+type ResetState = { error?: string; email?: string } | null;
+
+export async function requestPasswordReset(
+  _prev: ResetState,
+  formData: FormData
+): Promise<ResetState> {
+  const email = formData.get("email") as string;
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${BASE_URL}/reset-password`,
+  });
+  if (error) return { error: error.message };
+  return { email };
+}
+
+type UpdatePasswordState = { error?: string; success?: boolean } | null;
+
+export async function updatePassword(
+  _prev: UpdatePasswordState,
+  formData: FormData
+): Promise<UpdatePasswordState> {
+  const password = formData.get("password") as string;
+  const confirm = formData.get("confirm") as string;
+  if (password !== confirm) return { error: "mismatch" };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { error: error.message };
+  return { success: true };
+}

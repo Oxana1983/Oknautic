@@ -633,6 +633,23 @@
     "createAccount": "Create account",
     "creatingAccount": "Creating account...",
     "alreadyHaveAccount": "Already have an account?",
-    "signInLink": "Sign In"
+    "signInLink": "Sign In",
+    "forgotPasswordTitle": "Forgot password?",
+    "forgotPasswordSubtitle": "Enter your email and we'll send you a reset link.",
+    "sendResetLink": "Send reset link",
+    "sendingResetLink": "Sending...",
+    "checkYourEmail": "Check your email",
+    "checkYourEmailDesc": "We sent a password reset link to {email}. It may take a minute to arrive.",
+    "backToSignIn": "Back to sign in",
+    "resetPasswordTitle": "Set new password",
+    "resetPasswordSubtitle": "Enter a new password for your account.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "savePassword": "Save password",
+    "savingPassword": "Saving...",
+    "passwordUpdated": "Password updated",
+    "passwordUpdatedDesc": "You can now sign in with your new password.",
+    "passwordMismatch": "Passwords do not match",
+    "invalidResetLink": "This link is invalid or has expired. Please request a new one."
   }
 }
