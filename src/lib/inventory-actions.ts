@@ -70,6 +70,11 @@ export async function upsertInventoryRows(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Deduplicate by SKU — last occurrence wins (avoids "ON CONFLICT DO UPDATE affect row twice")
+  const dedupMap = new Map<string, InventoryRow>();
+  for (const r of rows) dedupMap.set(r.sku.trim(), r);
+  rows = Array.from(dedupMap.values());
+
   const skus = rows.map((r) => r.sku.trim());
 
   // ── Step 1: find products already in catalog (batched to avoid URL length limits) ──
