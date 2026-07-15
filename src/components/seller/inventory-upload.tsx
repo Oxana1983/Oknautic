@@ -29,17 +29,17 @@ function parseRows(rows2d: string[][], msgs: ParseMessages): { rows: InventoryRo
   const header = dataRows[0].map((h) => normalizeHeader(String(h ?? "")));
 
   const iSku   = findCol(header, ["sku", "артикул", "article"]);
-  const iName  = findCol(header, ["product_name", "name", "наименование", "название"]);
+  const iName  = findCol(header, ["product_name", "name", "наименование", "название", "productnamen", "productnameen"]);
   const iQty   = findCol(header, ["quantity", "qty", "количество", "кол"]);
   const iBrand = findCol(header, ["brand", "бренд", "производитель"]);
   const iCat   = findCol(header, ["category", "категория", "cat"]);
-  const iPhoto = findCol(header, ["photo_url", "photo", "image", "фото", "изображение", "url"]);
-  const iPrice = findCol(header, ["price", "цена"]);
+  const iPhoto = findCol(header, ["photo_url", "photo", "image", "фото", "изображение", "photourl"]);
+  const iPrice = findCol(header, ["price", "цена", "priceexclvat", "priceexcl", "priceexclvat"]);
   const iCur   = findCol(header, ["currency", "валюта"]);
   const iCity  = findCol(header, ["location_city", "city", "город", "порт"]);
   const iCtry  = findCol(header, ["location_country", "country", "страна"]);
 
-  if (iSku < 0 || iName < 0 || iQty < 0) {
+  if (iSku < 0 || iName < 0) {
     return { rows: [], errors: [msgs.missingCols] };
   }
 
@@ -49,10 +49,10 @@ function parseRows(rows2d: string[][], msgs: ParseMessages): { rows: InventoryRo
   dataRows.slice(1).forEach((cols, li) => {
     const sku = cols[iSku]?.toString().trim();
     const name = cols[iName]?.toString().trim();
-    const qtyRaw = cols[iQty]?.toString().trim();
+    const qtyRaw = iQty >= 0 ? cols[iQty]?.toString().trim() : "";
 
     if (!sku || !name) { errors.push(`Row ${li + 2}: missing SKU or name`); return; }
-    const quantity = parseInt(qtyRaw ?? "0", 10);
+    const quantity = qtyRaw ? parseInt(qtyRaw, 10) : 1;
     if (isNaN(quantity)) { errors.push(`Row ${li + 2}: invalid quantity "${qtyRaw}"`); return; }
 
     rows.push({
