@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { Pencil, Trash2, Check, X, ToggleLeft, ToggleRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { updateInventoryItem, deleteInventoryItem } from "@/lib/inventory-actions";
@@ -22,6 +22,8 @@ export function InventoryTable({ items: initial }: { items: Item[] }) {
   const t = useTranslations("inventory");
   const [items, setItems] = useState<Item[]>(initial);
   const [editing, setEditing] = useState<string | null>(null);
+
+  useEffect(() => { setItems(initial); }, [initial]);
   const [draft, setDraft] = useState<Partial<Item>>({});
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
