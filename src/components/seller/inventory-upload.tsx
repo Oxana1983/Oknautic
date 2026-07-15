@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Upload, CheckCircle2, AlertCircle, FileSpreadsheet, X } from "lucide-react";
+import { Upload, CheckCircle2, AlertCircle, FileSpreadsheet, X, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import { upsertInventoryRows } from "@/lib/inventory-actions";
 import type { InventoryRow } from "@/lib/inventory-actions";
 import * as XLSX from "xlsx";
+
+const MAX_PREVIEW_ROWS = 100;
 
 function normalizeHeader(h: string) {
   return String(h).trim().toLowerCase().replace(/[^a-zа-яё0-9]/gi, "");
@@ -34,7 +36,7 @@ function parseRows(rows2d: string[][], msgs: ParseMessages): { rows: InventoryRo
   const iBrand = findCol(header, ["brand", "бренд", "производитель"]);
   const iCat   = findCol(header, ["category", "категория", "cat"]);
   const iPhoto = findCol(header, ["photo_url", "photo", "image", "фото", "изображение", "photourl"]);
-  const iPrice = findCol(header, ["price", "цена", "priceexclvat", "priceexcl", "priceexclvat"]);
+  const iPrice = findCol(header, ["price", "цена", "priceexclvat", "priceexcl"]);
   const iCur   = findCol(header, ["currency", "валюта"]);
   const iCity  = findCol(header, ["location_city", "city", "город", "порт"]);
   const iCtry  = findCol(header, ["location_country", "country", "страна"]);
@@ -90,6 +92,122 @@ function parseFile(file: File, msgs: ParseMessages): Promise<{ rows: InventoryRo
   });
 }
 
+// ── Preview Modal ─────────────────────────────────────────────────────────────
+
+type PreviewModalProps = {
+  file: File;
+  rows: InventoryRow[];
+  parseErrors: string[];
+  onConfirm: () => Promise<void>;
+  onClose: () => void;
+  uploading: boolean;
+};
+
+function PreviewModal({ file, rows, parseErrors, onConfirm, onClose, uploading }: PreviewModalProps) {
+  const t = useTranslations("inventory");
+  const shown = rows.slice(0, MAX_PREVIEW_ROWS);
+  const hiddenCount = rows.length - shown.length;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/50 backdrop-blur-sm px-4 py-6">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-navy-100 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-teal-50 flex items-center justify-center">
+              <Eye size={18} className="text-teal-600" />
+            </div>
+            <div>
+              <p className="font-display font-semibold text-navy-900 text-sm">
+                {t("previewModalTitle", { count: rows.length })}
+              </p>
+              <p className="text-xs text-navy-400 truncate max-w-[320px]">{file.name}</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            disabled={uploading}
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-navy-400 hover:bg-navy-50 hover:text-navy-700 transition-colors disabled:opacity-40"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Parse errors banner */}
+        {parseErrors.length > 0 && (
+          <div className="mx-6 mt-4 flex items-start gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200 shrink-0">
+            <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-700">
+              {t("previewModalErrors", { count: parseErrors.length })}
+            </p>
+          </div>
+        )}
+
+        {/* Table */}
+        <div className="overflow-auto flex-1 mx-6 mt-4 rounded-xl border border-navy-100">
+          <table className="w-full text-xs">
+            <thead className="bg-navy-50 sticky top-0 z-10">
+              <tr>
+                {["#", "SKU", t("previewName"), t("previewBrand"), "Category", t("previewQty"), t("previewPrice"), "Currency"].map((h) => (
+                  <th key={h} className="px-3 py-2 text-left font-medium text-navy-500 whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-navy-50">
+              {shown.map((row, i) => (
+                <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-navy-50/40"}>
+                  <td className="px-3 py-1.5 text-navy-300">{i + 1}</td>
+                  <td className="px-3 py-1.5 font-mono text-navy-700 whitespace-nowrap">{row.sku}</td>
+                  <td className="px-3 py-1.5 text-navy-800 max-w-[240px] truncate">{row.product_name}</td>
+                  <td className="px-3 py-1.5 text-navy-500 whitespace-nowrap">{row.brand ?? "—"}</td>
+                  <td className="px-3 py-1.5 text-navy-500 max-w-[140px] truncate">{row.category ?? "—"}</td>
+                  <td className="px-3 py-1.5 text-navy-700 text-right">{row.quantity}</td>
+                  <td className="px-3 py-1.5 text-navy-700 text-right whitespace-nowrap">
+                    {row.price ? row.price.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—"}
+                  </td>
+                  <td className="px-3 py-1.5 text-navy-500">{row.currency ?? "EUR"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* "and N more" */}
+        {hiddenCount > 0 && (
+          <p className="text-xs text-center text-navy-400 mt-2 shrink-0">
+            {t("previewModalMore", { count: hiddenCount })}
+          </p>
+        )}
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-navy-100 shrink-0 mt-4">
+          <button
+            onClick={onClose}
+            disabled={uploading}
+            className="px-4 py-2 rounded-xl text-sm text-navy-600 hover:bg-navy-50 transition-colors disabled:opacity-40"
+          >
+            {t("cancel")}
+          </button>
+          <Button
+            variant="primary"
+            size="md"
+            loading={uploading}
+            onClick={onConfirm}
+          >
+            <Upload size={14} />
+            {uploading
+              ? t("previewModalUploading")
+              : t("previewModalConfirm", { count: rows.length })}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+
 export function InventoryUpload() {
   const t = useTranslations("inventory");
   const msgs: ParseMessages = {
@@ -99,34 +217,45 @@ export function InventoryUpload() {
   };
 
   const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<InventoryRow[]>([]);
+  const [parsedRows, setParsedRows] = useState<InventoryRow[]>([]);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
+  const [showModal, setShowModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState<{ count?: number; error?: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleFile(f: File) {
-    setFile(f);
     setResult(null);
+    setFile(f);
     const { rows, errors } = await parseFile(f, msgs);
-    setPreview(rows.slice(0, 5));
+    setParsedRows(rows);
     setParseErrors(errors);
+    // Open modal only if we have at least some valid rows or fatal parse errors
+    setShowModal(true);
   }
 
-  async function handleUpload() {
-    if (!file) return;
-    const { rows, errors } = await parseFile(file, msgs);
-    if (errors.length && !rows.length) { setParseErrors(errors); return; }
-
+  async function handleConfirm() {
+    if (!parsedRows.length) return;
     setUploading(true);
-    const res = await upsertInventoryRows(rows);
+    const res = await upsertInventoryRows(parsedRows);
     setUploading(false);
     setResult(res);
-    if (!res.error) { setFile(null); setPreview([]); }
+    if (!res.error) {
+      setShowModal(false);
+      setFile(null);
+      setParsedRows([]);
+      setParseErrors([]);
+    }
+  }
+
+  function handleClose() {
+    if (uploading) return;
+    setShowModal(false);
   }
 
   return (
     <div className="space-y-5">
+      {/* Drop zone */}
       <div
         onClick={() => inputRef.current?.click()}
         onDragOver={(e) => e.preventDefault()}
@@ -154,58 +283,7 @@ export function InventoryUpload() {
         </code>
       </div>
 
-      {file && (
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-navy-50 border border-navy-100">
-          <FileSpreadsheet size={18} className="text-navy-500 shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-navy-800 truncate">{file.name}</p>
-            <p className="text-xs text-navy-400">{(file.size / 1024).toFixed(1)} KB</p>
-          </div>
-          <button onClick={() => { setFile(null); setPreview([]); setParseErrors([]); }} className="text-navy-400 hover:text-red-500 transition-colors">
-            <X size={16} />
-          </button>
-        </div>
-      )}
-
-      {parseErrors.length > 0 && (
-        <div className="p-3 rounded-xl bg-red-50 border border-red-100 space-y-1">
-          {parseErrors.map((e, i) => (
-            <p key={i} className="text-xs text-red-600 flex items-start gap-1.5">
-              <AlertCircle size={12} className="shrink-0 mt-0.5" />{e}
-            </p>
-          ))}
-        </div>
-      )}
-
-      {preview.length > 0 && (
-        <div>
-          <p className="text-xs font-medium text-navy-500 mb-2">{t("preview")}</p>
-          <div className="overflow-x-auto rounded-xl border border-navy-100">
-            <table className="w-full text-xs">
-              <thead className="bg-navy-50">
-                <tr>
-                  {["SKU", t("previewName"), t("previewBrand"), t("previewQty"), t("previewPrice"), t("previewCity")].map((h) => (
-                    <th key={h} className="px-3 py-2 text-left font-medium text-navy-500">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-navy-50">
-                {preview.map((row, i) => (
-                  <tr key={i} className="bg-white">
-                    <td className="px-3 py-2 font-mono text-navy-700">{row.sku}</td>
-                    <td className="px-3 py-2 text-navy-800 max-w-[180px] truncate">{row.product_name}</td>
-                    <td className="px-3 py-2 text-navy-500">{row.brand ?? "—"}</td>
-                    <td className="px-3 py-2 font-medium text-navy-800">{row.quantity}</td>
-                    <td className="px-3 py-2 text-navy-500">{row.price ? `${row.price} ${row.currency}` : "—"}</td>
-                    <td className="px-3 py-2 text-navy-500">{row.location_city ?? "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
+      {/* Success banner */}
       {result?.count && (
         <div className="flex items-center gap-2 p-3 rounded-xl bg-teal-50 border border-teal-200 text-sm text-teal-700">
           <CheckCircle2 size={16} className="shrink-0" />
@@ -219,11 +297,16 @@ export function InventoryUpload() {
         </div>
       )}
 
-      {file && preview.length > 0 && !result?.count && (
-        <Button variant="primary" size="md" loading={uploading} onClick={() => void handleUpload()}>
-          <Upload size={15} />
-          {t("uploadBtn")}
-        </Button>
+      {/* Preview modal */}
+      {showModal && file && (
+        <PreviewModal
+          file={file}
+          rows={parsedRows}
+          parseErrors={parseErrors}
+          onConfirm={handleConfirm}
+          onClose={handleClose}
+          uploading={uploading}
+        />
       )}
     </div>
   );
