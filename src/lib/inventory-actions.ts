@@ -211,7 +211,7 @@ export async function upsertInventoryRows(
 
 export async function updateInventoryItem(
   id: string,
-  data: { quantity: number; price?: number; location_city?: string; location_country?: string; is_available: boolean }
+  data: { quantity: number; price?: number; currency?: string; location_city?: string; location_country?: string; is_available: boolean }
 ): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

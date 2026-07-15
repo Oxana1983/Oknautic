@@ -137,6 +137,7 @@
     "statTotal": "Totale Articoli",
     "statInStock": "Disponibili",
     "statOutOfStock": "Non Disponibili",
+    "filterPlaceholder": "Cerca per SKU, nome o marca...",
     "uploadTitle": "Carica Listino Prezzi",
     "uploadDrop": "Trascina il file CSV/Excel o clicca per selezionare",
     "uploadHint": "Colonne: SKU, Product Name, Brand, Category, Photo URL, Quantity, Price, Currency, City, Country",
