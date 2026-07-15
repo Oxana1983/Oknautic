@@ -104,7 +104,7 @@ export function Header({ user, role = "customer", firstName }: { user: SupabaseU
           )}
 
           {/* Right actions */}
-          <div className="flex items-center gap-1 ml-auto md:ml-0">
+          <div className="flex items-center gap-1 ml-auto">
             {/* Mobile search toggle */}
             {!isSeller && (
               <button
