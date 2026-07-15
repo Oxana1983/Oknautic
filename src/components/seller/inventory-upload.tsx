@@ -98,12 +98,13 @@ type PreviewModalProps = {
   file: File;
   rows: InventoryRow[];
   parseErrors: string[];
+  uploadError: string | null;
   onConfirm: () => Promise<void>;
   onClose: () => void;
   uploading: boolean;
 };
 
-function PreviewModal({ file, rows, parseErrors, onConfirm, onClose, uploading }: PreviewModalProps) {
+function PreviewModal({ file, rows, parseErrors, uploadError, onConfirm, onClose, uploading }: PreviewModalProps) {
   const t = useTranslations("inventory");
   const shown = rows.slice(0, MAX_PREVIEW_ROWS);
   const hiddenCount = rows.length - shown.length;
@@ -141,6 +142,14 @@ function PreviewModal({ file, rows, parseErrors, onConfirm, onClose, uploading }
             <p className="text-xs text-amber-700">
               {t("previewModalErrors", { count: parseErrors.length })}
             </p>
+          </div>
+        )}
+
+        {/* Upload error banner */}
+        {uploadError && (
+          <div className="mx-6 mt-3 flex items-start gap-2 p-3 rounded-xl bg-red-50 border border-red-100 shrink-0">
+            <AlertCircle size={14} className="text-red-500 shrink-0 mt-0.5" />
+            <p className="text-xs text-red-600">{uploadError}</p>
           </div>
         )}
 
@@ -221,30 +230,39 @@ export function InventoryUpload() {
   const [parseErrors, setParseErrors] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [result, setResult] = useState<{ count?: number; error?: string } | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [successCount, setSuccessCount] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleFile(f: File) {
-    setResult(null);
+    setUploadError(null);
+    setSuccessCount(null);
     setFile(f);
     const { rows, errors } = await parseFile(f, msgs);
     setParsedRows(rows);
     setParseErrors(errors);
-    // Open modal only if we have at least some valid rows or fatal parse errors
     setShowModal(true);
   }
 
   async function handleConfirm() {
     if (!parsedRows.length) return;
     setUploading(true);
-    const res = await upsertInventoryRows(parsedRows);
-    setUploading(false);
-    setResult(res);
-    if (!res.error) {
-      setShowModal(false);
-      setFile(null);
-      setParsedRows([]);
-      setParseErrors([]);
+    setUploadError(null);
+    try {
+      const res = await upsertInventoryRows(parsedRows);
+      if (res.error) {
+        setUploadError(res.error);
+      } else {
+        setSuccessCount(res.count ?? 0);
+        setShowModal(false);
+        setFile(null);
+        setParsedRows([]);
+        setParseErrors([]);
+      }
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : "Unknown error");
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -284,16 +302,10 @@ export function InventoryUpload() {
       </div>
 
       {/* Success banner */}
-      {result?.count && (
+      {successCount !== null && (
         <div className="flex items-center gap-2 p-3 rounded-xl bg-teal-50 border border-teal-200 text-sm text-teal-700">
           <CheckCircle2 size={16} className="shrink-0" />
-          {t("uploadSuccess", { count: result.count })}
-        </div>
-      )}
-      {result?.error && (
-        <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-600">
-          <AlertCircle size={16} className="shrink-0" />
-          {result.error}
+          {t("uploadSuccess", { count: successCount })}
         </div>
       )}
 
@@ -303,6 +315,7 @@ export function InventoryUpload() {
           file={file}
           rows={parsedRows}
           parseErrors={parseErrors}
+          uploadError={uploadError}
           onConfirm={handleConfirm}
           onClose={handleClose}
           uploading={uploading}
