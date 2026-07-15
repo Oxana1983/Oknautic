@@ -137,6 +137,7 @@
     "statTotal": "Всего позиций",
     "statInStock": "В наличии",
     "statOutOfStock": "Нет в наличии",
+    "filterPlaceholder": "Поиск по SKU, названию или бренду...",
     "uploadTitle": "Загрузить прайс-лист",
     "uploadDrop": "Перетащите CSV/Excel файл или нажмите для выбора",
     "uploadHint": "Колонки: SKU, Product Name, Brand, Category, Photo URL, Quantity, Price, Currency, City, Country",

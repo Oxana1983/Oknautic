@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
-import { Pencil, Trash2, Check, X, ToggleLeft, ToggleRight } from "lucide-react";
+import { Pencil, Trash2, Check, X, ToggleLeft, ToggleRight, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { updateInventoryItem, deleteInventoryItem } from "@/lib/inventory-actions";
+
+const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "NOK", "SEK", "DKK", "PLN", "AED"];
 
 type Item = {
   id: string;
@@ -21,18 +23,30 @@ type Item = {
 export function InventoryTable({ items: initial }: { items: Item[] }) {
   const t = useTranslations("inventory");
   const [items, setItems] = useState<Item[]>(initial);
+  const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
-
-  useEffect(() => { setItems(initial); }, [initial]);
   const [draft, setDraft] = useState<Partial<Item>>({});
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => { setItems(initial); }, [initial]);
+
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? items.filter(
+        (i) =>
+          i.sku.toLowerCase().includes(q) ||
+          i.product_name.toLowerCase().includes(q) ||
+          (i.brand ?? "").toLowerCase().includes(q)
+      )
+    : items;
 
   function startEdit(item: Item) {
     setEditing(item.id);
     setDraft({
       quantity: item.quantity,
       price: item.price ?? undefined,
+      currency: item.currency || "EUR",
       location_city: item.location_city ?? "",
       location_country: item.location_country ?? "",
       is_available: item.is_available,
@@ -50,6 +64,7 @@ export function InventoryTable({ items: initial }: { items: Item[] }) {
       const res = await updateInventoryItem(item.id, {
         quantity: Number(draft.quantity ?? 0),
         price: draft.price ? Number(draft.price) : undefined,
+        currency: draft.currency || "EUR",
         location_city: draft.location_city || undefined,
         location_country: draft.location_country || undefined,
         is_available: draft.is_available ?? item.is_available,
@@ -58,7 +73,13 @@ export function InventoryTable({ items: initial }: { items: Item[] }) {
       setItems((prev) =>
         prev.map((i) =>
           i.id === item.id
-            ? { ...i, ...draft, quantity: Number(draft.quantity ?? 0), price: draft.price ? Number(draft.price) : null }
+            ? {
+                ...i,
+                ...draft,
+                quantity: Number(draft.quantity ?? 0),
+                price: draft.price ? Number(draft.price) : null,
+                currency: draft.currency || "EUR",
+              }
             : i
         )
       );
@@ -76,176 +97,213 @@ export function InventoryTable({ items: initial }: { items: Item[] }) {
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div>
+      {/* Search bar */}
+      <div className="px-4 pt-4 pb-3 border-b border-navy-100">
+        <div className="relative max-w-sm">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-400 pointer-events-none" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t("filterPlaceholder")}
+            className="w-full h-9 pl-8 pr-3 rounded-xl border border-navy-200 bg-white text-sm text-navy-900 placeholder:text-navy-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400 transition"
+          />
+        </div>
+        {q && (
+          <p className="text-xs text-navy-400 mt-1.5">
+            {filtered.length} / {items.length}
+          </p>
+        )}
+      </div>
+
       {error && (
-        <div className="m-4 p-3 rounded-xl bg-red-50 border border-red-100 text-xs text-red-600">{error}</div>
+        <div className="mx-4 mt-3 p-3 rounded-xl bg-red-50 border border-red-100 text-xs text-red-600">{error}</div>
       )}
-      <table className="w-full text-sm">
-        <thead className="bg-navy-50 border-b border-navy-100">
-          <tr>
-            <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-36">SKU</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-navy-500">{t("tableName")}</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-24">{t("tableQty")}</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-32">{t("tablePrice")}</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-32">{t("tableCity")}</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-24">{t("tableStatus")}</th>
-            <th className="px-4 py-3 w-20" />
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-navy-50">
-          {items.map((item) => {
-            const isEditing = editing === item.id;
-            const qty = isEditing ? (draft.quantity ?? item.quantity) : item.quantity;
 
-            return (
-              <tr key={item.id} className={`bg-white hover:bg-navy-50/40 transition-colors ${isPending && isEditing ? "opacity-60" : ""}`}>
-                {/* SKU */}
-                <td className="px-4 py-3">
-                  <span className="font-mono text-xs text-navy-600">{item.sku}</span>
-                </td>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-navy-50 border-b border-navy-100">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-36">SKU</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-navy-500">{t("tableName")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-24">{t("tableQty")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-40">{t("tablePrice")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-32">{t("tableCity")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-navy-500 w-24">{t("tableStatus")}</th>
+              <th className="px-4 py-3 w-20" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-navy-50">
+            {filtered.map((item) => {
+              const isEditing = editing === item.id;
+              const qty = isEditing ? (draft.quantity ?? item.quantity) : item.quantity;
 
-                {/* Name */}
-                <td className="px-4 py-3">
-                  <p className="text-navy-800 font-medium text-xs leading-tight">{item.product_name}</p>
-                  {item.brand && <p className="text-[11px] text-navy-400">{item.brand}</p>}
-                </td>
+              return (
+                <tr key={item.id} className={`bg-white hover:bg-navy-50/40 transition-colors ${isPending && isEditing ? "opacity-60" : ""}`}>
+                  {/* SKU */}
+                  <td className="px-4 py-3">
+                    <span className="font-mono text-xs text-navy-600">{item.sku}</span>
+                  </td>
 
-                {/* Quantity */}
-                <td className="px-4 py-3">
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      min={0}
-                      value={draft.quantity ?? ""}
-                      onChange={(e) => setDraft((d) => ({ ...d, quantity: Number(e.target.value) }))}
-                      className="w-20 px-2 py-1 rounded-lg border border-navy-200 text-xs focus:outline-none focus:border-teal-400"
-                    />
-                  ) : (
-                    <span className={`text-sm font-semibold ${qty > 0 ? "text-navy-800" : "text-navy-300"}`}>
-                      {qty}
-                    </span>
-                  )}
-                </td>
+                  {/* Name */}
+                  <td className="px-4 py-3">
+                    <p className="text-navy-800 font-medium text-xs leading-tight">{item.product_name}</p>
+                    {item.brand && <p className="text-[11px] text-navy-400">{item.brand}</p>}
+                  </td>
 
-                {/* Price */}
-                <td className="px-4 py-3">
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      min={0}
-                      step={0.01}
-                      value={draft.price ?? ""}
-                      placeholder="—"
-                      onChange={(e) => setDraft((d) => ({ ...d, price: e.target.value ? Number(e.target.value) : undefined }))}
-                      className="w-28 px-2 py-1 rounded-lg border border-navy-200 text-xs focus:outline-none focus:border-teal-400"
-                    />
-                  ) : (
-                    <span className="text-xs text-navy-600">
-                      {item.price ? `${Number(item.price).toLocaleString()} ${item.currency}` : "—"}
-                    </span>
-                  )}
-                </td>
-
-                {/* Location */}
-                <td className="px-4 py-3">
-                  {isEditing ? (
-                    <div className="flex flex-col gap-1">
-                      <input
-                        type="text"
-                        value={draft.location_city ?? ""}
-                        placeholder={t("city")}
-                        onChange={(e) => setDraft((d) => ({ ...d, location_city: e.target.value }))}
-                        className="w-28 px-2 py-1 rounded-lg border border-navy-200 text-xs focus:outline-none focus:border-teal-400"
-                      />
-                      <input
-                        type="text"
-                        value={draft.location_country ?? ""}
-                        placeholder={t("country")}
-                        onChange={(e) => setDraft((d) => ({ ...d, location_country: e.target.value }))}
-                        className="w-28 px-2 py-1 rounded-lg border border-navy-200 text-xs focus:outline-none focus:border-teal-400"
-                      />
-                    </div>
-                  ) : (
-                    <span className="text-xs text-navy-500">
-                      {[item.location_city, item.location_country].filter(Boolean).join(", ") || "—"}
-                    </span>
-                  )}
-                </td>
-
-                {/* Status */}
-                <td className="px-4 py-3">
-                  {isEditing ? (
-                    <button
-                      type="button"
-                      onClick={() => setDraft((d) => ({ ...d, is_available: !d.is_available }))}
-                      className="flex items-center gap-1.5 text-xs"
-                    >
-                      {draft.is_available
-                        ? <ToggleRight size={18} className="text-teal-500" />
-                        : <ToggleLeft size={18} className="text-navy-300" />
-                      }
-                      <span className={draft.is_available ? "text-teal-600" : "text-navy-400"}>
-                        {draft.is_available ? t("statusAvailable") : t("statusHidden")}
-                      </span>
-                    </button>
-                  ) : (
-                    <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border ${
-                      item.is_available && item.quantity > 0
-                        ? "bg-teal-50 text-teal-700 border-teal-100"
-                        : "bg-navy-50 text-navy-400 border-navy-100"
-                    }`}>
-                      {item.is_available && item.quantity > 0 ? t("statusInStock") : item.quantity === 0 ? t("statusZero") : t("statusHidden")}
-                    </span>
-                  )}
-                </td>
-
-                {/* Actions */}
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-1 justify-end">
+                  {/* Quantity */}
+                  <td className="px-4 py-3">
                     {isEditing ? (
-                      <>
-                        <button
-                          onClick={() => saveEdit(item)}
-                          disabled={isPending}
-                          className="p-1.5 rounded-lg text-teal-600 hover:bg-teal-50 transition-colors"
-                          title={t("save")}
-                        >
-                          <Check size={14} />
-                        </button>
-                        <button
-                          onClick={cancelEdit}
-                          disabled={isPending}
-                          className="p-1.5 rounded-lg text-navy-400 hover:bg-navy-50 transition-colors"
-                          title={t("cancel")}
-                        >
-                          <X size={14} />
-                        </button>
-                      </>
+                      <input
+                        type="number"
+                        min={0}
+                        value={draft.quantity ?? ""}
+                        onChange={(e) => setDraft((d) => ({ ...d, quantity: Number(e.target.value) }))}
+                        className="w-20 px-2 py-1 rounded-lg border border-navy-200 text-xs focus:outline-none focus:border-teal-400"
+                      />
                     ) : (
-                      <>
-                        <button
-                          onClick={() => startEdit(item)}
-                          className="p-1.5 rounded-lg text-navy-400 hover:text-navy-700 hover:bg-navy-50 transition-colors"
-                          title={t("edit")}
-                        >
-                          <Pencil size={14} />
-                        </button>
-                        <button
-                          onClick={() => deleteItem(item.id)}
-                          className="p-1.5 rounded-lg text-navy-300 hover:text-red-500 hover:bg-red-50 transition-colors"
-                          title={t("deleteBtn")}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </>
+                      <span className={`text-sm font-semibold ${qty > 0 ? "text-navy-800" : "text-navy-300"}`}>
+                        {qty}
+                      </span>
                     )}
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                  </td>
+
+                  {/* Price + Currency */}
+                  <td className="px-4 py-3">
+                    {isEditing ? (
+                      <div className="flex gap-1 items-center">
+                        <input
+                          type="number"
+                          min={0}
+                          step={0.01}
+                          value={draft.price ?? ""}
+                          placeholder="—"
+                          onChange={(e) => setDraft((d) => ({ ...d, price: e.target.value ? Number(e.target.value) : undefined }))}
+                          className="w-24 px-2 py-1 rounded-lg border border-navy-200 text-xs focus:outline-none focus:border-teal-400"
+                        />
+                        <select
+                          value={draft.currency ?? "EUR"}
+                          onChange={(e) => setDraft((d) => ({ ...d, currency: e.target.value }))}
+                          className="h-[26px] px-1 rounded-lg border border-navy-200 text-xs text-navy-700 focus:outline-none focus:border-teal-400 bg-white"
+                        >
+                          {CURRENCIES.map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-navy-600">
+                        {item.price ? `${Number(item.price).toLocaleString()} ${item.currency}` : "—"}
+                      </span>
+                    )}
+                  </td>
+
+                  {/* Location */}
+                  <td className="px-4 py-3">
+                    {isEditing ? (
+                      <div className="flex flex-col gap-1">
+                        <input
+                          type="text"
+                          value={draft.location_city ?? ""}
+                          placeholder={t("city")}
+                          onChange={(e) => setDraft((d) => ({ ...d, location_city: e.target.value }))}
+                          className="w-28 px-2 py-1 rounded-lg border border-navy-200 text-xs focus:outline-none focus:border-teal-400"
+                        />
+                        <input
+                          type="text"
+                          value={draft.location_country ?? ""}
+                          placeholder={t("country")}
+                          onChange={(e) => setDraft((d) => ({ ...d, location_country: e.target.value }))}
+                          className="w-28 px-2 py-1 rounded-lg border border-navy-200 text-xs focus:outline-none focus:border-teal-400"
+                        />
+                      </div>
+                    ) : (
+                      <span className="text-xs text-navy-500">
+                        {[item.location_city, item.location_country].filter(Boolean).join(", ") || "—"}
+                      </span>
+                    )}
+                  </td>
+
+                  {/* Status */}
+                  <td className="px-4 py-3">
+                    {isEditing ? (
+                      <button
+                        type="button"
+                        onClick={() => setDraft((d) => ({ ...d, is_available: !d.is_available }))}
+                        className="flex items-center gap-1.5 text-xs"
+                      >
+                        {draft.is_available
+                          ? <ToggleRight size={18} className="text-teal-500" />
+                          : <ToggleLeft size={18} className="text-navy-300" />
+                        }
+                        <span className={draft.is_available ? "text-teal-600" : "text-navy-400"}>
+                          {draft.is_available ? t("statusAvailable") : t("statusHidden")}
+                        </span>
+                      </button>
+                    ) : (
+                      <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border ${
+                        item.is_available && item.quantity > 0
+                          ? "bg-teal-50 text-teal-700 border-teal-100"
+                          : "bg-navy-50 text-navy-400 border-navy-100"
+                      }`}>
+                        {item.is_available && item.quantity > 0 ? t("statusInStock") : item.quantity === 0 ? t("statusZero") : t("statusHidden")}
+                      </span>
+                    )}
+                  </td>
+
+                  {/* Actions */}
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1 justify-end">
+                      {isEditing ? (
+                        <>
+                          <button
+                            onClick={() => saveEdit(item)}
+                            disabled={isPending}
+                            className="p-1.5 rounded-lg text-teal-600 hover:bg-teal-50 transition-colors"
+                            title={t("save")}
+                          >
+                            <Check size={14} />
+                          </button>
+                          <button
+                            onClick={cancelEdit}
+                            disabled={isPending}
+                            className="p-1.5 rounded-lg text-navy-400 hover:bg-navy-50 transition-colors"
+                            title={t("cancel")}
+                          >
+                            <X size={14} />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => startEdit(item)}
+                            className="p-1.5 rounded-lg text-navy-400 hover:text-navy-700 hover:bg-navy-50 transition-colors"
+                            title={t("edit")}
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            onClick={() => deleteItem(item.id)}
+                            className="p-1.5 rounded-lg text-navy-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                            title={t("deleteBtn")}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        {filtered.length === 0 && q && (
+          <p className="text-center text-sm text-navy-400 py-10">{t("emptyTitle")}</p>
+        )}
+      </div>
     </div>
   );
 }

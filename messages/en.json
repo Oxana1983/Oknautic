@@ -137,6 +137,7 @@
     "statTotal": "Total Items",
     "statInStock": "In Stock",
     "statOutOfStock": "Out of Stock",
+    "filterPlaceholder": "Search by SKU, name or brand...",
     "uploadTitle": "Upload Price List",
     "uploadDrop": "Drag & drop CSV/Excel file or click to select",
     "uploadHint": "Columns: SKU, Product Name, Brand, Category, Photo URL, Quantity, Price, Currency, City, Country",
