@@ -8,7 +8,7 @@ import type { IncomingItem } from "@/components/seller/incoming-list";
 
 export const dynamic = "force-dynamic";
 
-const SELECT = "id, sku, product_name, product_photo, quantity, status, created_at, buyer_name";
+const SELECT = "id, sku, product_id, product_name, product_photo, quantity, status, created_at, buyer_name";
 
 export default async function IncomingPage() {
   const t = await getTranslations("incoming");
@@ -65,7 +65,7 @@ export default async function IncomingPage() {
   const activeReqsFiltered = (activeReqs ?? []).filter(
     (r) =>
       !allArchivedIds.has(r.id) &&
-      (sellerSkuSet.has(r.sku) || sellerProductIdSet.has(r.product_id))
+      (sellerSkuSet.has(r.sku) || (!!r.product_id && sellerProductIdSet.has(r.product_id)))
   );
 
   // Fetch archived requests by ID (any status)
