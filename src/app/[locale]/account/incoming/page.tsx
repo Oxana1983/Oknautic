@@ -49,22 +49,24 @@ export default async function IncomingPage() {
     new Set((archivedRows ?? []).filter((r) => !r.is_permanent).map((r) => r.quote_request_id))
   );
 
-  // Fetch active requests only for products this seller carries
+  // Fetch active requests and filter client-side (avoids URL length limit with many SKUs)
   const hasInventory = sellerSkus.length > 0 || sellerProductIds.length > 0;
-  const orParts: string[] = [];
-  if (sellerSkus.length > 0) orParts.push(`sku.in.(${sellerSkus.map((s) => `"${s}"`).join(",")})`);
-  if (sellerProductIds.length > 0) orParts.push(`product_id.in.(${sellerProductIds.join(",")})`);
+  const sellerSkuSet = new Set(sellerSkus);
+  const sellerProductIdSet = new Set(sellerProductIds);
 
   const { data: activeReqs, error } = hasInventory
     ? await supabase
         .from("quote_requests")
         .select(SELECT)
         .eq("status", "in_progress")
-        .or(orParts.join(","))
         .order("created_at", { ascending: false })
     : { data: [], error: null };
 
-  const activeReqsFiltered = (activeReqs ?? []).filter((r) => !allArchivedIds.has(r.id));
+  const activeReqsFiltered = (activeReqs ?? []).filter(
+    (r) =>
+      !allArchivedIds.has(r.id) &&
+      (sellerSkuSet.has(r.sku) || sellerProductIdSet.has(r.product_id))
+  );
 
   // Fetch archived requests by ID (any status)
   const { data: archivedReqs } =
