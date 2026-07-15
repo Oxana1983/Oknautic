@@ -55,6 +55,13 @@ function guessCategorySlug(brand?: string): string | null {
   return BRAND_CATEGORY_SLUG[brand.toLowerCase()] ?? null;
 }
 
+const CHUNK = 200;
+function chunks<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
 export async function upsertInventoryRows(
   rows: InventoryRow[]
 ): Promise<{ error?: string; count?: number }> {
@@ -65,15 +72,15 @@ export async function upsertInventoryRows(
 
   const skus = rows.map((r) => r.sku.trim());
 
-  // ── Step 1: find products already in catalog ──────────────────────────────
-  // Use admin client to see ALL products (including is_active=false)
-  const { data: existingProducts } = await admin
-    .from("products")
-    .select("id, sku")
-    .in("sku", skus);
+  // ── Step 1: find products already in catalog (batched to avoid URL length limits) ──
+  const existingProductsList: Array<{ id: string; sku: string }> = [];
+  for (const batch of chunks(skus, CHUNK)) {
+    const { data } = await admin.from("products").select("id, sku").in("sku", batch);
+    existingProductsList.push(...(data ?? []));
+  }
 
   const skuToProductId: Record<string, string> = Object.fromEntries(
-    (existingProducts ?? []).map((p) => [p.sku, p.id])
+    existingProductsList.map((p) => [p.sku, p.id])
   );
 
   // ── Step 2: for missing SKUs, get-or-create brands then products ──────────
@@ -134,7 +141,7 @@ export async function upsertInventoryRows(
       }
     }
 
-    // Create products — ignoreDuplicates prevents errors on race conditions
+    // Create products in batches — ignoreDuplicates prevents errors on race conditions
     const productsToInsert = newRows.map((r) => ({
       sku: r.sku.trim(),
       name: r.product_name.trim(),
@@ -146,13 +153,14 @@ export async function upsertInventoryRows(
       is_active: true,
     }));
 
-    const { data: createdProducts, error: productError } = await admin
-      .from("products")
-      .upsert(productsToInsert, { ignoreDuplicates: true, onConflict: "brand_id,sku" })
-      .select("id, sku");
-
-    if (productError) return { error: `Ошибка добавления в каталог: ${productError.message}` };
-    for (const p of createdProducts ?? []) skuToProductId[p.sku] = p.id;
+    for (const batch of chunks(productsToInsert, CHUNK)) {
+      const { data: createdProducts, error: productError } = await admin
+        .from("products")
+        .upsert(batch, { ignoreDuplicates: true, onConflict: "brand_id,sku" })
+        .select("id, sku");
+      if (productError) return { error: `Ошибка добавления в каталог: ${productError.message}` };
+      for (const p of createdProducts ?? []) skuToProductId[p.sku] = p.id;
+    }
 
     // For already-existing products — update photo if seller provided URL
     const photoUpdates = rows.filter(
@@ -184,11 +192,13 @@ export async function upsertInventoryRows(
     is_available: true,
   }));
 
-  const { error } = await supabase
-    .from("seller_inventory")
-    .upsert(payload, { onConflict: "seller_id,sku" });
+  for (const batch of chunks(payload, CHUNK)) {
+    const { error } = await supabase
+      .from("seller_inventory")
+      .upsert(batch, { onConflict: "seller_id,sku" });
+    if (error) return { error: error.message };
+  }
 
-  if (error) return { error: error.message };
   revalidatePath("/account/inventory");
   revalidatePath("/catalog");
   return { count: payload.length };
