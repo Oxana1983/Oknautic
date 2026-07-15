@@ -88,29 +88,33 @@ export function Header({ user, role = "customer", firstName }: { user: SupabaseU
           </Link>
 
           {/* Desktop search */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-4">
-            <div className="relative w-full">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-400" />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t("searchPlaceholder")}
-                className="w-full h-9 pl-9 pr-4 rounded-lg border border-navy-200 bg-navy-50 text-sm text-navy-900 placeholder:text-navy-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400 focus:bg-white transition"
-              />
-            </div>
-          </form>
+          {!isSeller && (
+            <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-4">
+              <div className="relative w-full">
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-400" />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={t("searchPlaceholder")}
+                  className="w-full h-9 pl-9 pr-4 rounded-lg border border-navy-200 bg-navy-50 text-sm text-navy-900 placeholder:text-navy-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400 focus:bg-white transition"
+                />
+              </div>
+            </form>
+          )}
 
           {/* Right actions */}
           <div className="flex items-center gap-1 ml-auto md:ml-0">
             {/* Mobile search toggle */}
-            <button
-              className="md:hidden p-2 rounded-lg text-navy-500 hover:bg-navy-50 transition-colors"
-              onClick={() => setSearchOpen((v) => !v)}
-              aria-label={t("searchPlaceholderMobile")}
-            >
-              <Search size={20} />
-            </button>
+            {!isSeller && (
+              <button
+                className="md:hidden p-2 rounded-lg text-navy-500 hover:bg-navy-50 transition-colors"
+                onClick={() => setSearchOpen((v) => !v)}
+                aria-label={t("searchPlaceholderMobile")}
+              >
+                <Search size={20} />
+              </button>
+            )}
 
             {/* Notification bell */}
             {user && isSeller && <SellerBell />}
@@ -120,18 +124,20 @@ export function Header({ user, role = "customer", firstName }: { user: SupabaseU
             <LocaleSwitcher />
 
             {/* Cart */}
-            <button
-              onClick={openCart}
-              className="relative p-2 rounded-lg text-navy-500 hover:bg-navy-50 transition-colors"
-              aria-label={t("cart")}
-            >
-              <ShoppingCart size={20} />
-              {itemCount > 0 && (
-                <span className="absolute top-1 right-1 min-w-4 h-4 bg-teal-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5">
-                  {itemCount}
-                </span>
-              )}
-            </button>
+            {!isSeller && (
+              <button
+                onClick={openCart}
+                className="relative p-2 rounded-lg text-navy-500 hover:bg-navy-50 transition-colors"
+                aria-label={t("cart")}
+              >
+                <ShoppingCart size={20} />
+                {itemCount > 0 && (
+                  <span className="absolute top-1 right-1 min-w-4 h-4 bg-teal-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5">
+                    {itemCount}
+                  </span>
+                )}
+              </button>
+            )}
 
             {/* Auth */}
             {user ? (
@@ -207,13 +213,15 @@ export function Header({ user, role = "customer", firstName }: { user: SupabaseU
               </>
             )}
 
-            {/* Insurance link — desktop only */}
-            <Link
-              href="/insurance"
-              className="hidden lg:flex items-center px-3 h-8 ml-1 rounded-lg text-sm font-medium text-rose-700 hover:text-rose-800 hover:bg-rose-50 transition-colors whitespace-nowrap"
-            >
-              {t("insurance")}
-            </Link>
+            {/* Insurance link — desktop only, buyers only */}
+            {!isSeller && (
+              <Link
+                href="/insurance"
+                className="hidden lg:flex items-center px-3 h-8 ml-1 rounded-lg text-sm font-medium text-rose-700 hover:text-rose-800 hover:bg-rose-50 transition-colors whitespace-nowrap"
+              >
+                {t("insurance")}
+              </Link>
+            )}
 
             {/* Burger */}
             <button
@@ -227,7 +235,7 @@ export function Header({ user, role = "customer", firstName }: { user: SupabaseU
         </div>
 
         {/* Mobile search bar */}
-        {searchOpen && (
+        {!isSeller && searchOpen && (
           <div className="md:hidden border-t border-navy-100 px-4 py-2">
             <form onSubmit={handleSearch}>
               <div className="relative">
@@ -246,31 +254,33 @@ export function Header({ user, role = "customer", firstName }: { user: SupabaseU
         )}
 
         {/* Desktop category nav */}
-        <nav className="hidden lg:block border-t border-navy-100 bg-white">
-          <div className="max-w-6xl mx-auto px-4">
-            <ul className="flex items-center gap-1 h-10 overflow-x-auto scrollbar-none">
-              {CATEGORIES.map((cat) => (
-                <li key={cat.slug}>
+        {!isSeller && (
+          <nav className="hidden lg:block border-t border-navy-100 bg-white">
+            <div className="max-w-6xl mx-auto px-4">
+              <ul className="flex items-center gap-1 h-10 overflow-x-auto scrollbar-none">
+                {CATEGORIES.map((cat) => (
+                  <li key={cat.slug}>
+                    <Link
+                      href={`/catalog/${cat.slug}`}
+                      className="flex items-center gap-1 px-3 h-10 text-sm font-medium text-navy-600 hover:text-navy-900 hover:bg-navy-50 rounded transition-colors whitespace-nowrap"
+                    >
+                      {cat.label}
+                    </Link>
+                  </li>
+                ))}
+                <li className="ml-2">
                   <Link
-                    href={`/catalog/${cat.slug}`}
-                    className="flex items-center gap-1 px-3 h-10 text-sm font-medium text-navy-600 hover:text-navy-900 hover:bg-navy-50 rounded transition-colors whitespace-nowrap"
+                    href="/catalog"
+                    className="flex items-center gap-1 px-3 h-10 text-sm font-medium text-teal-600 hover:text-teal-700 rounded transition-colors whitespace-nowrap"
                   >
-                    {cat.label}
+                    {t("allCategories")}
+                    <ChevronDown size={14} />
                   </Link>
                 </li>
-              ))}
-              <li className="ml-2">
-                <Link
-                  href="/catalog"
-                  className="flex items-center gap-1 px-3 h-10 text-sm font-medium text-teal-600 hover:text-teal-700 rounded transition-colors whitespace-nowrap"
-                >
-                  {t("allCategories")}
-                  <ChevronDown size={14} />
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </nav>
+              </ul>
+            </div>
+          </nav>
+        )}
       </header>
 
       {/* Mobile drawer */}
@@ -295,38 +305,42 @@ export function Header({ user, role = "customer", firstName }: { user: SupabaseU
             </div>
 
             <nav className="flex-1 overflow-y-auto py-3">
-              <p className="px-5 text-xs font-medium text-navy-400 uppercase tracking-wider mb-1">
-                {t("categories")}
-              </p>
-              {CATEGORIES.map((cat) => (
-                <Link
-                  key={cat.slug}
-                  href={`/catalog/${cat.slug}`}
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center px-5 py-2.5 text-sm text-navy-700 hover:bg-navy-50 hover:text-navy-900 transition-colors"
-                >
-                  {cat.label}
-                </Link>
-              ))}
-              <Link
-                href="/catalog"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center px-5 py-2.5 text-sm font-medium text-teal-600 hover:bg-teal-50"
-              >
-                {t("allCategories")} →
-              </Link>
+              {!isSeller && (
+                <>
+                  <p className="px-5 text-xs font-medium text-navy-400 uppercase tracking-wider mb-1">
+                    {t("categories")}
+                  </p>
+                  {CATEGORIES.map((cat) => (
+                    <Link
+                      key={cat.slug}
+                      href={`/catalog/${cat.slug}`}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center px-5 py-2.5 text-sm text-navy-700 hover:bg-navy-50 hover:text-navy-900 transition-colors"
+                    >
+                      {cat.label}
+                    </Link>
+                  ))}
+                  <Link
+                    href="/catalog"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center px-5 py-2.5 text-sm font-medium text-teal-600 hover:bg-teal-50"
+                  >
+                    {t("allCategories")} →
+                  </Link>
 
-              <div className="my-3 border-t border-navy-100" />
+                  <div className="my-3 border-t border-navy-100" />
 
-              <Link
-                href="/insurance"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center px-5 py-2.5 text-sm text-navy-700 hover:bg-navy-50"
-              >
-                {t("insurance")}
-              </Link>
+                  <Link
+                    href="/insurance"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center px-5 py-2.5 text-sm text-navy-700 hover:bg-navy-50"
+                  >
+                    {t("insurance")}
+                  </Link>
 
-              <div className="my-3 border-t border-navy-100" />
+                  <div className="my-3 border-t border-navy-100" />
+                </>
+              )}
 
               <p className="px-5 text-xs font-medium text-navy-400 uppercase tracking-wider mb-1">
                 {t("account")}
