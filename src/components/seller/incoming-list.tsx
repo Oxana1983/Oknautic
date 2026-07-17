@@ -53,6 +53,10 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
   const [isArchive, setIsArchive] = useState(defaultIsArchive);
   const [activeItems, setActiveItems] = useState<IncomingItem[]>(initActive);
   const [archiveItems, setArchiveItems] = useState<IncomingItem[]>(initArchive);
+
+  function markRead(id: string) {
+    setActiveItems((prev) => prev.map((i) => i.id === id ? { ...i, isNew: false } : i));
+  }
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[] | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -267,7 +271,7 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
                 </button>
 
                 {/* Card */}
-                <Link href={`/account/incoming/${req.id}`} className="flex-1 min-w-0">
+                <Link href={`/account/incoming/${req.id}`} className="flex-1 min-w-0" onClick={() => markRead(req.id)}>
                   <Card className={`hover:border-teal-200 hover:shadow-sm transition-all ${
                     isSelected ? "border-transparent shadow-none" : req.isNew ? "border-blue-200 bg-blue-50/30" : ""
                   }`}>
