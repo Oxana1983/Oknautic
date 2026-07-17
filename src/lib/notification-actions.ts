@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 export async function markInboxRead(): Promise<void> {
@@ -47,4 +48,6 @@ export async function markRequestRead(requestId: string): Promise<void> {
       { seller_id: user.id, quote_request_id: requestId },
       { onConflict: "seller_id,quote_request_id" }
     );
+
+  revalidatePath("/account/incoming");
 }
