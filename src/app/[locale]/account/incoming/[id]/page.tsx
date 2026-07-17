@@ -42,8 +42,8 @@ export default async function IncomingDetailPage({ params, searchParams }: Props
 
   if (profile?.role !== "seller") redirect("/account/requests");
 
-  // Mark this request as read by this seller
-  await markRequestRead(id);
+  // Mark this request as read by this seller (fire-and-forget, no revalidate during render)
+  void markRequestRead(id);
 
   const { data: req } = await supabase
     .from("quote_requests")

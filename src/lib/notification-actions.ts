@@ -48,6 +48,4 @@ export async function markRequestRead(requestId: string): Promise<void> {
       { seller_id: user.id, quote_request_id: requestId },
       { onConflict: "seller_id,quote_request_id" }
     );
-
-  revalidatePath("/account/incoming");
 }
