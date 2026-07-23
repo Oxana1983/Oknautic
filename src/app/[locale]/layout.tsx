@@ -36,7 +36,7 @@ const nunito = Nunito({
 
 export const metadata: Metadata = {
   title: "OKnautic — Yacht Parts Marketplace",
-  description: "B2B/B2C marketplace for marine equipment and yacht parts",
+  description: "B2B/B2C marketplace for yacht equipment and parts",
 };
 
 export default async function LocaleLayout({

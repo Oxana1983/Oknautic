@@ -88,7 +88,7 @@ const T = {
     clientBody: "We have received your insurance quote request and forwarded it to our insurance broker. You will receive a response within <strong>24 hours</strong>.",
     clientAppNumLabel: "Application number",
     clientNote: "If you have any questions, reply to this email or contact us through the website.",
-    clientFooter: "OKnautic — marine parts & services marketplace",
+    clientFooter: "OKnautic — yacht parts & services marketplace",
   },
   it: {
     adminBadge: "OKnautic · Assicurazione",

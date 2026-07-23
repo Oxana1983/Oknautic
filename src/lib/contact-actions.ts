@@ -40,7 +40,7 @@ const T = {
     clientGreeting: (name: string) => `Dear <strong>${name}</strong>,`,
     clientBody: "We received your message and will reply within one business day.",
     clientMsgLabel: "Your message",
-    clientFooter: "OKnautic — marine parts & services marketplace",
+    clientFooter: "OKnautic — yacht parts & services marketplace",
   },
   it: {
     adminSubject: (name: string) => `Nuovo messaggio dal sito — ${name}`,
