@@ -79,7 +79,7 @@
     "noPhoto": "no photo"
   },
   "home": {
-    "badge": "Marine Parts Marketplace",
+    "badge": "Yacht Parts Marketplace",
     "heroTitle": "Find the Part You Need. Get the Best Price.",
     "heroDesc": "Request quotes from verified suppliers. Compare prices, choose the best.",
     "viewCatalog": "Browse Catalog",
@@ -403,10 +403,10 @@
   },
   "how": {
     "metaTitle": "How it works — OKnautic",
-    "metaDesc": "A platform for finding marine parts and receiving quotes from verified suppliers.",
+    "metaDesc": "A platform for finding yacht parts and receiving quotes from verified suppliers.",
     "platform": "Platform",
     "title": "How it works",
-    "subtitle": "A simple way to find marine parts and get the best price from verified suppliers.",
+    "subtitle": "A simple way to find yacht parts and get the best price from verified suppliers.",
     "stepLabel": "Step",
     "buyersTitle": "For buyers",
     "buyersLetter": "B",
@@ -442,12 +442,12 @@
   },
   "about": {
     "metaTitle": "About — OKnautic",
-    "metaDesc": "OKnautic is a B2B marketplace for marine parts and yacht equipment. We connect buyers with verified suppliers.",
+    "metaDesc": "OKnautic is a B2B marketplace for yacht parts and equipment. We connect buyers with verified suppliers.",
     "tag": "About us",
-    "title": "A platform for the marine industry",
-    "subtitle": "OKnautic connects marine equipment buyers with verified suppliers — fast, transparent, and without unnecessary intermediaries.",
+    "title": "A platform for the yacht industry",
+    "subtitle": "OKnautic connects yacht equipment buyers with verified suppliers — fast, transparent, and without unnecessary intermediaries.",
     "missionTag": "Our mission",
-    "missionTitle": "We simplify finding marine parts",
+    "missionTitle": "We simplify finding yacht parts",
     "missionText1": "Finding spare parts and equipment for yachts and vessels is slow, inconvenient, and opaque. Buyers spend hours on calls and emails, while sellers are flooded with irrelevant enquiries.",
     "missionText2": "OKnautic changes that. A buyer submits one request and receives offers from suppliers who already have the item in stock. Sellers only see requests that match their inventory.",
     "forBuyersTitle": "For buyers",
