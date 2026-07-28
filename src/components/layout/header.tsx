@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
 import { ShoppingCart, User, Menu, X, ChevronDown, Search, LogOut, FileText } from "lucide-react";
+import { OKnauticLogo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart-context";
 import { signOut } from "@/lib/auth-actions";
@@ -77,14 +77,7 @@ export function Header({ user, role = "customer", firstName }: { user: SupabaseU
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-4">
           {/* Logo */}
           <Link href="/" className="shrink-0">
-            <Image
-              src="/logo.png"
-              alt="OKnautic"
-              width={120}
-              height={49}
-              priority
-              className="h-9 w-auto"
-            />
+            <OKnauticLogo className="h-9 w-auto" />
           </Link>
 
           {/* Desktop search */}

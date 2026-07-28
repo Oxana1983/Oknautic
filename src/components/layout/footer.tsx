@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { getTranslations } from "next-intl/server";
+import { OKnauticLogo } from "@/components/ui/logo";
 import { Link } from "@/i18n/navigation";
 
 export async function Footer() {
@@ -30,13 +30,7 @@ export async function Footer() {
           {/* Brand */}
           <div className="col-span-2 lg:col-span-1">
             <Link href="/" className="inline-block mb-4">
-              <Image
-                src="/logo.png"
-                alt="OKnautic"
-                width={120}
-                height={49}
-                className="h-9 w-auto brightness-0 invert"
-              />
+              <OKnauticLogo dark className="h-9 w-auto" />
             </Link>
             <p className="text-sm text-navy-200 leading-relaxed">
               {t("description")}
