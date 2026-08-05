@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { getTranslations } from "next-intl/server";
+import { OKnauticLogo } from "@/components/ui/logo";
 import { RegisterForm } from "@/components/auth/register-form";
 
 export default async function RegisterPage() {
@@ -12,7 +12,7 @@ export default async function RegisterPage() {
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-8">
           <Link href="/">
-            <Image src="/logo.png" alt="OKnautic" width={140} height={57} className="h-10 w-auto" />
+            <OKnauticLogo className="h-10 w-auto" />
           </Link>
         </div>
 

@@ -2,8 +2,8 @@
 
 import { useActionState } from "react";
 import { Link } from "@/i18n/navigation";
-import Image from "next/image";
 import { Mail, AlertCircle, CheckCircle2 } from "lucide-react";
+import { OKnauticLogo } from "@/components/ui/logo";
 import { useTranslations } from "next-intl";
 import { requestPasswordReset } from "@/lib/auth-actions";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-8">
           <Link href="/">
-            <Image src="/logo.png" alt="OKnautic" width={140} height={57} className="h-10 w-auto" />
+            <OKnauticLogo className="h-10 w-auto" />
           </Link>
         </div>
 

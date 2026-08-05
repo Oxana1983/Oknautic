@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { ArrowRight, Package, Send, ShieldCheck } from "lucide-react";
+import { OKnauticLogo } from "@/components/ui/logo";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
@@ -103,14 +103,7 @@ export default async function HomePage() {
         <div className="bg-navy-900 rounded-2xl px-6 py-10 sm:px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Image
-                src="/logo.png"
-                alt="OKnautic"
-                width={90}
-                height={36}
-                className="h-7 w-auto brightness-0 invert opacity-70"
-                loading="eager"
-              />
+              <OKnauticLogo dark className="h-7 w-auto opacity-80" />
             </div>
             <h3 className="font-display text-xl font-bold text-white mb-1">{t("ctaTitle")}</h3>
             <p className="text-navy-300 text-sm max-w-md">{t("ctaDesc")}</p>

@@ -3,8 +3,8 @@
 import { useEffect, useState, useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/navigation";
-import Image from "next/image";
 import { Lock, AlertCircle, CheckCircle2 } from "lucide-react";
+import { OKnauticLogo } from "@/components/ui/logo";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { updatePassword } from "@/lib/auth-actions";
@@ -38,7 +38,7 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-8">
           <Link href="/">
-            <Image src="/logo.png" alt="OKnautic" width={140} height={57} className="h-10 w-auto" />
+            <OKnauticLogo className="h-10 w-auto" />
           </Link>
         </div>
 
