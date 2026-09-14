@@ -129,7 +129,14 @@
     "saved": "Salvato",
     "location": "Posizione",
     "locationPlaceholder": "Inserisci città...",
-    "locationHint": "Utilizzato per il completamento automatico nelle richieste"
+    "locationHint": "Utilizzato per il completamento automatico nelle richieste",
+    "dangerZone": "Zona pericolosa",
+    "deleteAccountHint": "L'eliminazione dell'account è permanente. Tutti i tuoi dati verranno rimossi: profilo, richieste, prodotti, messaggi.",
+    "deleteAccount": "Elimina account",
+    "deleteAccountConfirmTitle": "Eliminare l'account?",
+    "deleteAccountConfirmBody": "Questa azione non può essere annullata. Tutti i tuoi dati verranno rimossi definitivamente.",
+    "deleteAccountConfirmButton": "Sì, elimina",
+    "cancel": "Annulla"
   },
   "inventory": {
     "title": "Magazzino",

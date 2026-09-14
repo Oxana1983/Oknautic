@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { ProfileForm } from "@/components/account/profile-form";
+import { DeleteAccountSection } from "@/components/account/delete-account-section";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,7 @@ export default async function ProfilePage() {
               lng: profile?.lng ?? null,
             }}
           />
+          <DeleteAccountSection />
         </CardBody>
       </Card>
     </div>

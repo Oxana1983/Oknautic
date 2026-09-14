@@ -3,10 +3,11 @@
 import { useActionState, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Mail, Lock, User, AlertCircle, ShoppingBag, Store } from "lucide-react";
+import { Mail, Lock, User, ShoppingBag, Store } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { signUp } from "@/lib/auth-actions";
 import { Button } from "@/components/ui/button";
+import { Toast } from "@/components/ui/toast";
 
 const inputCls =
   "w-full h-10 px-3 rounded-xl border border-navy-200 bg-white text-sm text-navy-900 placeholder:text-navy-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400 transition";
@@ -24,6 +25,17 @@ export function RegisterForm() {
   const [email, setEmail] = useState(searchParams.get("email") ?? "");
 
   const [state, action, isPending] = useActionState(signUp, null);
+
+  // Dismiss the toast automatically whenever a new submission produces a new
+  // state, without reaching for an effect (see React docs: "adjusting state
+  // when a prop changes").
+  const [dismissed, setDismissed] = useState(false);
+  const [lastState, setLastState] = useState(state);
+  if (state !== lastState) {
+    setLastState(state);
+    setDismissed(false);
+  }
+
   const defaultRole = searchParams.get("role") === "seller" ? "seller" : "customer";
   const [role, setRole] = useState<"customer" | "seller">(defaultRole);
 
@@ -40,11 +52,8 @@ export function RegisterForm() {
       <h1 className="font-display text-2xl font-bold text-navy-900 mb-1">{t("registerTitle")}</h1>
       <p className="text-sm text-navy-500 mb-6">{t("registerSubtitle")}</p>
 
-      {state?.error && (
-        <div className="flex items-start gap-2 p-3 rounded-xl bg-red-50 border border-red-100 mb-5">
-          <AlertCircle size={16} className="text-red-500 shrink-0 mt-0.5" />
-          <p className="text-sm text-red-600">{state.error}</p>
-        </div>
+      {state?.error && !dismissed && (
+        <Toast message={state.error} variant="error" onClose={() => setDismissed(true)} />
       )}
 
       <form action={action} className="space-y-4">

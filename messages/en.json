@@ -129,7 +129,14 @@
     "saved": "Saved",
     "location": "Location",
     "locationPlaceholder": "Enter city...",
-    "locationHint": "Used to autofill city in requests"
+    "locationHint": "Used to autofill city in requests",
+    "dangerZone": "Danger Zone",
+    "deleteAccountHint": "Deleting your account is permanent. All your data will be removed: profile, requests, products, messages.",
+    "deleteAccount": "Delete Account",
+    "deleteAccountConfirmTitle": "Delete account?",
+    "deleteAccountConfirmBody": "This action cannot be undone. All your data will be permanently removed.",
+    "deleteAccountConfirmButton": "Yes, delete",
+    "cancel": "Cancel"
   },
   "inventory": {
     "title": "Inventory",

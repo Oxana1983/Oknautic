@@ -129,7 +129,14 @@
     "saved": "Сохранено",
     "location": "Местоположение",
     "locationPlaceholder": "Введите город...",
-    "locationHint": "Используется для автозаполнения в запросах"
+    "locationHint": "Используется для автозаполнения в запросах",
+    "dangerZone": "Опасная зона",
+    "deleteAccountHint": "Удаление аккаунта необратимо. Будут удалены все ваши данные: профиль, заявки, товары, переписка.",
+    "deleteAccount": "Удалить аккаунт",
+    "deleteAccountConfirmTitle": "Удалить аккаунт?",
+    "deleteAccountConfirmBody": "Это действие нельзя отменить. Все ваши данные будут удалены безвозвратно.",
+    "deleteAccountConfirmButton": "Да, удалить",
+    "cancel": "Отмена"
   },
   "inventory": {
     "title": "Склад",

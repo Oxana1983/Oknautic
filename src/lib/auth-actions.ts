@@ -45,6 +45,14 @@ export async function signUp(
     return { error: error.message };
   }
 
+  // Supabase returns 200 with an empty `identities` array (no error) when the
+  // email already belongs to a confirmed account — this avoids leaking which
+  // emails are registered. Without this check the form silently redirects as
+  // if signup succeeded, even though no session was actually created.
+  if (data?.user?.identities?.length === 0) {
+    return { error: "Этот email уже зарегистрирован и подтверждён. Войдите в свой аккаунт." };
+  }
+
   // Store consent fields on the profile (created synchronously by DB trigger)
   const userId = data?.user?.id;
   if (userId) {
@@ -97,4 +105,19 @@ export async function updatePassword(
   const { error } = await supabase.auth.updateUser({ password });
   if (error) return { error: error.message };
   return { success: true };
+}
+
+export async function deleteAccount(): Promise<{ error: string } | void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  // Cascades through profiles -> carts, quote_requests, offers, chats,
+  // seller_inventory, etc. (all declared "on delete cascade" in 001_schema.sql).
+  const adminSupabase = createAdminClient();
+  const { error } = await adminSupabase.auth.admin.deleteUser(user.id);
+  if (error) return { error: error.message };
+
+  await supabase.auth.signOut();
+  redirect("/");
 }
