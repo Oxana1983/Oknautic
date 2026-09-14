@@ -5,6 +5,11 @@ import { routing } from './i18n/routing';
 
 const intlMiddleware = createIntlMiddleware(routing);
 
+// Only these routes read or depend on the auth session — everywhere else
+// (catalog, product pages, home, static content) skips the Supabase round
+// trip entirely, since it was adding a network call to every navigation.
+const AUTH_ROUTE_PATTERN = /^\/(ru|en|it)\/(account|login|register|forgot-password|reset-password)(\/|$)/;
+
 export async function middleware(request: NextRequest) {
   // Run next-intl locale routing first
   const intlResponse = intlMiddleware(request);
@@ -12,7 +17,13 @@ export async function middleware(request: NextRequest) {
   // Use the intl response as base (may be a redirect for locale detection)
   let response = intlResponse;
 
-  // Refresh Supabase session on every request
+  const { pathname } = request.nextUrl;
+  const needsAuthRefresh = AUTH_ROUTE_PATTERN.test(pathname) || pathname.startsWith('/auth/');
+  if (!needsAuthRefresh) {
+    return response;
+  }
+
+  // Refresh Supabase session (auth-dependent routes only)
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
