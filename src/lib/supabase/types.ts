@@ -952,10 +952,10 @@ export type Database = {
           lng?: number | null
           marketing_consent?: boolean
           offers_read_at?: string | null
-          seller_terms_accepted_at?: string | null
-          terms_accepted_at?: string | null
           phone?: string | null
           role?: string
+          seller_terms_accepted_at?: string | null
+          terms_accepted_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -971,9 +971,9 @@ export type Database = {
           category_id: string | null
           created_at: string
           customer_id: string
-          delivery_datetime: string
           delivery_address: string | null
           delivery_area: string
+          delivery_datetime: string
           id: string
           product_id: string | null
           product_name: string
@@ -1360,35 +1360,36 @@ export type Database = {
     Functions: {
       current_user_role: { Args: never; Returns: string }
       get_seller_quote_requests: {
-        Args: { p_ids?: string[] | null }
+        Args: { p_ids?: string[] }
         Returns: {
-          id: string
-          product_id: string | null
-          sku: string
-          product_name: string
-          product_photo: string | null
-          variant_attrs: Json | null
-          brand_id: string | null
-          category_id: string | null
-          quantity: number
-          delivery_area: string
-          delivery_address: string | null
-          delivery_datetime: string
-          additional_comment: string | null
-          status: string
-          accepted_offer_id: string | null
+          accepted_offer_id: string
+          additional_comment: string
+          brand_id: string
+          buyer_email: string
+          buyer_name: string
+          buyer_phone: string
+          category_id: string
           created_at: string
-          updated_at: string
-          buyer_name: string | null
-          buyer_phone: string | null
-          buyer_email: string | null
+          delivery_address: string
+          delivery_area: string
+          delivery_datetime: string
+          id: string
           is_legacy: boolean
+          product_id: string
+          product_name: string
+          product_photo: string
+          quantity: number
+          sku: string
+          status: string
+          updated_at: string
+          variant_attrs: Json
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
+      is_privileged_writer: { Args: never; Returns: boolean }
       is_request_routed_to_me: { Args: { p_qr_id: string }; Returns: boolean }
-      offerable_request_quantity: { Args: { p_qr_id: string }; Returns: number | null }
       is_seller: { Args: never; Returns: boolean }
+      offerable_request_quantity: { Args: { p_qr_id: string }; Returns: number }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
@@ -1409,12 +1410,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1438,11 +1439,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1463,11 +1464,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1488,11 +1489,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1505,11 +1506,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
