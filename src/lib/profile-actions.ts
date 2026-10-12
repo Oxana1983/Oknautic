@@ -55,3 +55,17 @@ export async function switchRole(currentRole: string) {
   revalidatePath("/", "layout");
   redirect(newRole === "seller" ? "/account/incoming" : "/account/requests");
 }
+
+// Remembers the UI language so emails to this user use it
+export async function rememberLocale(locale: string): Promise<void> {
+  if (locale !== "ru" && locale !== "en" && locale !== "it") return;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase
+    .from("profiles")
+    .update({ locale })
+    .eq("id", user.id)
+    .or(`locale.is.null,locale.neq.${locale}`);
+}

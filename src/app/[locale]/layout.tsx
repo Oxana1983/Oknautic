@@ -9,6 +9,7 @@ import { Footer } from "@/components/layout/footer";
 import { CartProvider } from "@/lib/cart-context";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { UnreadCountsProvider } from "@/components/notifications/unread-counts";
+import { LocaleSync } from "@/components/account/locale-sync";
 import { createClient } from "@/lib/supabase/server";
 import "../globals.css";
 
@@ -70,6 +71,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider messages={messages}>
           <CartProvider>
             <UnreadCountsProvider enabled={!!user}>
+              {user && <LocaleSync />}
               <Header user={user} role={profile?.role ?? "customer"} firstName={profile?.first_name ?? null} />
               <CartDrawer />
               <main className="flex-1">{children}</main>

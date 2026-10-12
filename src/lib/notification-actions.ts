@@ -95,7 +95,8 @@ export async function getUnreadCounts(): Promise<UnreadCounts> {
     .eq("buyer_id", user.id);
   let offersQuery = supabase
     .from("offers")
-    .select("id, quote_requests!inner(customer_id)", { count: "exact", head: true })
+    // FK hint required: offers↔quote_requests also linked via accepted_offer_id
+    .select("id, quote_requests!offers_quote_request_id_fkey!inner(customer_id)", { count: "exact", head: true })
     .eq("quote_requests.customer_id", user.id)
     .neq("status", "withdrawn");
   const archivedIds = (archived ?? []).map((a) => a.quote_request_id);
@@ -109,12 +110,15 @@ export async function getUnreadCounts(): Promise<UnreadCounts> {
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
 // readAt null = never opened → everything counts
-async function countSince<Q extends { gt: (col: string, v: string) => Q } & PromiseLike<{ count: number | null }>>(
+async function countSince<Q extends { gt: (col: string, v: string) => Q } & PromiseLike<{ count: number | null; status: number }>>(
   query: Q,
   column: string,
   readAt: string | null
 ): Promise<number> {
-  const { count } = await (readAt ? query.gt(column, readAt) : query);
+  // head requests carry no error body — check the status so a broken query
+  // doesn't silently look like "nothing unread"
+  const { count, status } = await (readAt ? query.gt(column, readAt) : query);
+  if (status >= 300) console.error(`getUnreadCounts: count query failed with HTTP ${status}`);
   return count ?? 0;
 }
 

@@ -905,6 +905,7 @@ export type Database = {
           first_name: string | null
           id: string
           inbox_read_at: string | null
+          locale: string | null
           last_name: string | null
           lat: number | null
           lng: number | null
@@ -926,6 +927,7 @@ export type Database = {
           first_name?: string | null
           id: string
           inbox_read_at?: string | null
+          locale?: string | null
           last_name?: string | null
           lat?: number | null
           lng?: number | null
@@ -947,6 +949,7 @@ export type Database = {
           first_name?: string | null
           id?: string
           inbox_read_at?: string | null
+          locale?: string | null
           last_name?: string | null
           lat?: number | null
           lng?: number | null

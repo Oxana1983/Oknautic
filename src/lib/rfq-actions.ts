@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { sendNewRequestEmail, sendOfferAcceptedEmail } from "@/lib/email";
+import { getLocale } from "next-intl/server";
+import { sendNewRequestEmail, sendOfferAcceptedEmail, toEmailLocale, type EmailLocale } from "@/lib/email";
 import type { CartItem } from "@/lib/cart-context";
 
 type RfqInput = {
@@ -63,15 +64,32 @@ export async function submitRfq(
   if (error) return { error: error.message };
 
   // Notify sellers whose inventory matches each new request.
-  // after() keeps the serverless function alive until emails are sent
-  after(() => notifyMatchingSellers(inserted ?? []));
+  // after() keeps the serverless function alive until emails are sent.
+  // Sellers get emails in their own language; the buyer's is the fallback.
+  const fallbackLocale = toEmailLocale(await getLocale());
+  after(() => notifyMatchingSellers(inserted ?? [], fallbackLocale));
 
   revalidatePath("/[locale]/account/requests", "page");
   return {};
 }
 
+type Admin = ReturnType<typeof createAdminClient>;
+
+// Catalog name in the recipient's language, else the name stored on the request
+async function localizedProductName(admin: Admin, sku: string, locale: EmailLocale, fallback: string) {
+  const { data: product } = await admin
+    .from("products")
+    .select("name, name_i18n")
+    .eq("sku", sku)
+    .limit(1)
+    .maybeSingle();
+  const i18n = (product?.name_i18n ?? {}) as Record<string, string>;
+  return i18n[locale] || product?.name || fallback;
+}
+
 async function notifyMatchingSellers(
-  requests: { id: string; sku: string; product_name: string; quantity: number }[]
+  requests: { id: string; sku: string; product_name: string; quantity: number }[],
+  fallbackLocale: EmailLocale
 ) {
   if (!requests.length) return;
   const admin = createAdminClient();
@@ -80,19 +98,20 @@ async function notifyMatchingSellers(
     // Find sellers who have this SKU in inventory with notifications enabled
     const { data: matches } = await admin
       .from("seller_inventory")
-      .select("seller_id, profiles!inner(email_notifications_quotes)")
+      .select("seller_id, profiles!inner(email_notifications_quotes, locale)")
       .eq("sku", req.sku)
       .eq("is_available", true)
       .gt("quantity", 0);
 
     for (const m of matches ?? []) {
-      const profile = m.profiles as { email_notifications_quotes: boolean } | null;
+      const profile = m.profiles as { email_notifications_quotes: boolean; locale: string | null } | null;
       if (!profile?.email_notifications_quotes) continue;
 
       const { data: { user: seller } } = await admin.auth.admin.getUserById(m.seller_id);
       if (seller?.email) {
-        await sendNewRequestEmail(seller.email, {
-          productName: req.product_name,
+        const locale = profile.locale ? toEmailLocale(profile.locale) : fallbackLocale;
+        await sendNewRequestEmail(seller.email, locale, {
+          productName: await localizedProductName(admin, req.sku, locale, req.product_name),
           sku: req.sku,
           quantity: req.quantity,
           requestId: req.id,
@@ -125,24 +144,25 @@ export async function acceptOffer(
   if (!updated?.length) return { error: "Запрос уже закрыт или не найден" };
 
   // Email the winning seller
-  after(() => notifySellerOfAcceptance(offerId, requestId));
+  const fallbackLocale = toEmailLocale(await getLocale());
+  after(() => notifySellerOfAcceptance(offerId, requestId, fallbackLocale));
 
   revalidatePath("/[locale]/account/requests/[id]", "page");
   revalidatePath("/[locale]/account/offers", "page");
   return {};
 }
 
-async function notifySellerOfAcceptance(offerId: string, requestId: string) {
+async function notifySellerOfAcceptance(offerId: string, requestId: string, fallbackLocale: EmailLocale) {
   const admin = createAdminClient();
 
   const { data: offer } = await admin
     .from("offers")
-    .select("seller_id, profiles!inner(email_notifications_offers)")
+    .select("seller_id, profiles!inner(email_notifications_offers, locale)")
     .eq("id", offerId)
     .single();
 
   if (!offer) return;
-  const profile = offer.profiles as { email_notifications_offers: boolean } | null;
+  const profile = offer.profiles as { email_notifications_offers: boolean; locale: string | null } | null;
   if (!profile?.email_notifications_offers) return;
 
   const { data: req } = await admin
@@ -156,10 +176,11 @@ async function notifySellerOfAcceptance(offerId: string, requestId: string) {
   const { data: { user: seller } } = await admin.auth.admin.getUserById(offer.seller_id);
   if (!seller?.email) return;
 
-  await sendOfferAcceptedEmail(seller.email, {
-    productName: req.product_name,
+  const locale = profile.locale ? toEmailLocale(profile.locale) : fallbackLocale;
+  await sendOfferAcceptedEmail(seller.email, locale, {
+    productName: await localizedProductName(admin, req.sku, locale, req.product_name),
     sku: req.sku,
-    buyerName: req.buyer_name ?? "Покупатель",
+    buyerName: req.buyer_name,
     buyerPhone: req.buyer_phone,
     buyerEmail: req.buyer_email,
     requestId,
