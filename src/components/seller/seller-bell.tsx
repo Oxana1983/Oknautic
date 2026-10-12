@@ -1,109 +1,16 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-
-type Counts = { requests: number; accepted: number };
+import { useUnreadCounts, UnreadBadge } from "@/components/notifications/unread-counts";
 
 export function SellerBell() {
-  const [counts, setCounts] = useState<Counts>({ requests: 0, accepted: 0 });
+  const { counts } = useUnreadCounts();
   const router = useRouter();
-
-  const fetchCounts = useCallback(async () => {
-    const supabase = createClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("inbox_read_at, accepted_read_at")
-      .single();
-
-    // New incoming requests — count those not yet individually read
-    let requestCount = 0;
-    const { data: inventory } = await supabase
-      .from("seller_inventory")
-      .select("sku, product_id")
-      .eq("seller_id", user.id);
-
-    const skus = [...new Set((inventory ?? []).map((i) => i.sku))];
-    const productIds = [...new Set(
-      (inventory ?? []).map((i) => i.product_id).filter((id): id is string => !!id)
-    )];
-
-    if (skus.length > 0 || productIds.length > 0) {
-      const skuSet = new Set(skus);
-      const productIdSet = new Set(productIds);
-      const inboxReadAt = profile?.inbox_read_at ? new Date(profile.inbox_read_at) : null;
-
-      // Sellers can't SELECT quote_requests directly — the RPC applies routing
-      const { data: routed } = await supabase.rpc("get_seller_quote_requests");
-      const allRequests = (routed ?? []).filter(
-        (r) =>
-          r.status === "in_progress" &&
-          (skuSet.has(r.sku) || (!!r.product_id && productIdSet.has(r.product_id))) &&
-          // Legacy baseline: skip requests older than inbox_read_at
-          (!inboxReadAt || new Date(r.created_at) > inboxReadAt)
-      );
-      const allIds = allRequests.map((r) => r.id);
-
-      if (allIds.length > 0) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: readRows } = await (supabase as any)
-          .from("seller_request_reads")
-          .select("quote_request_id")
-          .eq("seller_id", user.id)
-          .in("quote_request_id", allIds);
-
-        const readSet = new Set(((readRows ?? []) as { quote_request_id: string }[]).map((r) => r.quote_request_id));
-        requestCount = allIds.filter((id) => !readSet.has(id)).length;
-      }
-    }
-
-    // Accepted offers (buyer chose this seller's offer)
-    let acceptedCount = 0;
-    if (profile?.accepted_read_at) {
-      const { count } = await supabase
-        .from("offers")
-        .select("*", { count: "exact", head: true })
-        .eq("seller_id", user.id)
-        .eq("status", "accepted")
-        .gt("updated_at", profile.accepted_read_at);
-      acceptedCount = count ?? 0;
-    }
-
-    setCounts({ requests: requestCount, accepted: acceptedCount });
-  }, []);
-
-  useEffect(() => {
-    fetchCounts();
-
-    const supabase = createClient();
-
-    // New incoming requests: realtime INSERT events are filtered by RLS and
-    // sellers have no SELECT on quote_requests, so poll instead
-    const poll = setInterval(() => { void fetchCounts(); }, 60_000);
-
-    // Offer accepted (status UPDATE on offers table)
-    const offerChannel = supabase
-      .channel("seller-offers-accepted")
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "offers" },
-        () => { void fetchCounts(); })
-      .subscribe();
-
-    return () => {
-      clearInterval(poll);
-      void supabase.removeChannel(offerChannel);
-    };
-  }, [fetchCounts]);
-
-  const total = counts.requests + counts.accepted;
+  const total = counts.incoming + counts.accepted;
 
   function handleClick() {
-    if (counts.accepted > 0 && counts.requests === 0) {
+    if (counts.accepted > 0 && counts.incoming === 0) {
       router.push("/account/offers");
     } else {
       router.push("/account/incoming");
@@ -111,22 +18,18 @@ export function SellerBell() {
   }
 
   const label = [
-    counts.requests > 0 ? `${counts.requests} новых запросов` : "",
+    counts.incoming > 0 ? `${counts.incoming} новых запросов` : "",
     counts.accepted > 0 ? `${counts.accepted} предложений принято` : "",
   ].filter(Boolean).join(", ");
 
   return (
     <button
-      onClick={() => void handleClick()}
+      onClick={handleClick}
       className="relative p-2 rounded-lg text-navy-500 hover:bg-navy-50 transition-colors"
       aria-label={total > 0 ? label : "Уведомления"}
     >
       <Bell size={20} />
-      {total > 0 && (
-        <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
-          {total > 99 ? "99+" : total}
-        </span>
-      )}
+      <UnreadBadge count={total} className="absolute top-0.5 right-0.5" />
     </button>
   );
 }

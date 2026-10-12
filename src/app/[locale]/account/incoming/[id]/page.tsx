@@ -3,7 +3,7 @@ import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
-import { markRequestRead } from "@/lib/notification-actions";
+import { MarkRequestRead } from "@/components/seller/mark-request-read";
 import {
   ArrowLeft, Package, Calendar, MessageSquare,
   CheckCircle2, Mail, Phone, Send
@@ -41,9 +41,6 @@ export default async function IncomingDetailPage({ params, searchParams }: Props
     .single();
 
   if (profile?.role !== "seller") redirect("/account/requests");
-
-  // Mark this request as read by this seller (fire-and-forget, no revalidate during render)
-  void markRequestRead(id);
 
   // RPC applies seller routing; buyer contacts come back null until this
   // seller's offer is accepted
@@ -117,6 +114,8 @@ export default async function IncomingDetailPage({ params, searchParams }: Props
 
   return (
     <div>
+      {/* Marks the request as read, then refreshes the bell/sidebar counts */}
+      <MarkRequestRead requestId={req.id} />
       <Link
         href={backHref}
         className="inline-flex items-center gap-1.5 text-sm text-navy-400 hover:text-navy-700 transition-colors mb-6"

@@ -8,6 +8,7 @@ import { signOut } from "@/lib/auth-actions";
 import { switchRole } from "@/lib/profile-actions";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { useUnreadCounts, UnreadBadge } from "@/components/notifications/unread-counts";
 
 type Props = {
   displayName: string;
@@ -20,6 +21,7 @@ export function AccountSidebar({ displayName, email, role }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const fromParam = searchParams.get("from");
+  const { counts } = useUnreadCounts();
 
   function isActive(href: string) {
     if (fromParam === "offers" && href === "/account/offers") return true;
@@ -28,15 +30,15 @@ export function AccountSidebar({ displayName, email, role }: Props) {
   }
 
   const customerLinks = [
-    { href: "/account/requests", label: t("myRequests"), icon: FileText },
-    { href: "/account/profile",  label: t("profile"),    icon: User },
+    { href: "/account/requests", label: t("myRequests"), icon: FileText, badge: counts.offers },
+    { href: "/account/profile",  label: t("profile"),    icon: User,     badge: 0 },
   ];
 
   const sellerLinks = [
-    { href: "/account/incoming",  label: t("incoming"),   icon: Store },
-    { href: "/account/offers",    label: t("offers"),     icon: FileText },
-    { href: "/account/inventory", label: t("inventory"),  icon: Warehouse },
-    { href: "/account/profile",   label: t("profile"),    icon: User },
+    { href: "/account/incoming",  label: t("incoming"),   icon: Store,     badge: counts.incoming },
+    { href: "/account/offers",    label: t("offers"),     icon: FileText,  badge: counts.accepted },
+    { href: "/account/inventory", label: t("inventory"),  icon: Warehouse, badge: 0 },
+    { href: "/account/profile",   label: t("profile"),    icon: User,      badge: 0 },
   ];
 
   const links = role === "seller" ? sellerLinks : customerLinks;
@@ -46,7 +48,7 @@ export function AccountSidebar({ displayName, email, role }: Props) {
       {/* Mobile: horizontal scrollable tab bar */}
       <nav className="md:hidden mb-5 -mx-4 border-b border-navy-100 bg-white">
         <div className="flex overflow-x-auto scrollbar-none px-4 gap-1 py-2">
-          {links.map(({ href, label, icon: Icon }) => {
+          {links.map(({ href, label, icon: Icon, badge }) => {
             const active = isActive(href);
             return (
               <Link
@@ -61,6 +63,7 @@ export function AccountSidebar({ displayName, email, role }: Props) {
               >
                 <Icon size={14} className={active ? "text-teal-500" : "text-navy-400"} />
                 {label}
+                <UnreadBadge count={badge} />
               </Link>
             );
           })}
@@ -112,7 +115,7 @@ export function AccountSidebar({ displayName, email, role }: Props) {
 
         {/* Nav */}
         <nav className="bg-white rounded-2xl border border-navy-100 overflow-hidden">
-          {links.map(({ href, label, icon: Icon }) => {
+          {links.map(({ href, label, icon: Icon, badge }) => {
             const active = isActive(href);
             return (
               <Link
@@ -126,7 +129,8 @@ export function AccountSidebar({ displayName, email, role }: Props) {
                 )}
               >
                 <Icon size={16} className={active ? "text-teal-500" : "text-navy-400"} />
-                {label}
+                <span className="flex-1">{label}</span>
+                <UnreadBadge count={badge} />
               </Link>
             );
           })}

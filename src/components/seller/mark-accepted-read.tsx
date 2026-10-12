@@ -2,8 +2,10 @@
 
 import { useEffect } from "react";
 import { markAcceptedRead } from "@/lib/notification-actions";
+import { useUnreadCounts } from "@/components/notifications/unread-counts";
 
 export function MarkAcceptedRead() {
-  useEffect(() => { void markAcceptedRead(); }, []);
+  const { refresh } = useUnreadCounts();
+  useEffect(() => { void markAcceptedRead().then(refresh); }, [refresh]);
   return null;
 }

@@ -8,6 +8,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { CartProvider } from "@/lib/cart-context";
 import { CartDrawer } from "@/components/cart/cart-drawer";
+import { UnreadCountsProvider } from "@/components/notifications/unread-counts";
 import { createClient } from "@/lib/supabase/server";
 import "../globals.css";
 
@@ -68,10 +69,12 @@ export default async function LocaleLayout({
       <body className="min-h-full flex flex-col bg-sand-50">
         <NextIntlClientProvider messages={messages}>
           <CartProvider>
-            <Header user={user} role={profile?.role ?? "customer"} firstName={profile?.first_name ?? null} />
-            <CartDrawer />
-            <main className="flex-1">{children}</main>
-            <Footer />
+            <UnreadCountsProvider enabled={!!user}>
+              <Header user={user} role={profile?.role ?? "customer"} firstName={profile?.first_name ?? null} />
+              <CartDrawer />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </UnreadCountsProvider>
           </CartProvider>
         </NextIntlClientProvider>
       </body>
