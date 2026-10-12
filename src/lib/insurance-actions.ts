@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
+import { escapeHtml } from "@/lib/utils";
 
 const FROM = "OKnautic <noreply@oknautic.com>";
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.oknautic.com";
@@ -143,6 +144,17 @@ export async function submitInsuranceLead(
   const { data: { user } } = await supabase.auth.getUser();
 
   const adminSupabase = createAdminClient();
+
+  // The confirmation email goes to whatever address was typed in — cap it
+  // so the form can't be used to spam third parties from our domain
+  const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count: recent } = await adminSupabase
+    .from("insurance_leads")
+    .select("id", { count: "exact", head: true })
+    .eq("email", data.email.trim().toLowerCase())
+    .gte("created_at", since);
+  if ((recent ?? 0) >= 3) return { error: "too many requests" };
+
   const { data: inserted, error: dbError } = await adminSupabase
     .from("insurance_leads")
     .insert({
@@ -183,7 +195,7 @@ export async function submitInsuranceLead(
 
   await sendEmails(data, leadId);
 
-  revalidatePath("/insurance");
+  revalidatePath("/[locale]/insurance", "page");
   return { id: leadId };
 }
 
@@ -234,7 +246,7 @@ async function sendEmails(data: InsuranceFormData, leadId: string) {
         ? `<tr><td colspan="2" style="padding:4px 0;border-top:1px solid #d8e9f5;font-size:1px">&nbsp;</td></tr>`
         : `<tr>
             <td style="padding:4px 12px 4px 0;font-size:12px;color:#4a85c2;white-space:nowrap;vertical-align:top">${k}</td>
-            <td style="padding:4px 0;font-size:13px;color:#0b1e35;font-weight:500">${v}</td>
+            <td style="padding:4px 0;font-size:13px;color:#0b1e35;font-weight:500">${escapeHtml(v)}</td>
           </tr>`
     )
     .join("");
@@ -247,7 +259,7 @@ async function sendEmails(data: InsuranceFormData, leadId: string) {
       subject: t.adminSubject(vesselDesc),
       html: `
 <!DOCTYPE html>
-<html lang="${data.locale ?? "ru"}">
+<html lang="${escapeHtml(data.locale ?? "ru")}">
 <head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#f5f0e8;font-family:'Inter',Arial,sans-serif">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px">
@@ -258,7 +270,7 @@ async function sendEmails(data: InsuranceFormData, leadId: string) {
         </td></tr>
         <tr><td style="padding:28px 32px">
           <p style="margin:0 0 6px;font-size:20px;font-weight:700;color:#0b1e35">${t.adminTitle}</p>
-          <p style="margin:0 0 20px;font-size:13px;color:#4a85c2">${vesselDesc}</p>
+          <p style="margin:0 0 20px;font-size:13px;color:#4a85c2">${escapeHtml(vesselDesc)}</p>
           <table cellpadding="0" cellspacing="0" style="width:100%">${rows}</table>
           <p style="margin:20px 0 0;font-size:11px;color:#7aafd8">${t.supabaseNote(leadId)}</p>
         </td></tr>
@@ -276,7 +288,7 @@ async function sendEmails(data: InsuranceFormData, leadId: string) {
     subject: t.clientSubject(shortId),
     html: `
 <!DOCTYPE html>
-<html lang="${data.locale ?? "ru"}">
+<html lang="${escapeHtml(data.locale ?? "ru")}">
 <head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#f5f0e8;font-family:'Inter',Arial,sans-serif">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px">
@@ -287,7 +299,7 @@ async function sendEmails(data: InsuranceFormData, leadId: string) {
           <p style="margin:0;color:#ffffff;font-size:18px;font-weight:700">${t.clientTitle}</p>
         </td></tr>
         <tr><td style="padding:28px 32px">
-          <p style="margin:0 0 16px;font-size:15px;color:#0b1e35">${t.clientGreeting(data.full_name)}</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#0b1e35">${t.clientGreeting(escapeHtml(data.full_name))}</p>
           <p style="margin:0 0 16px;font-size:14px;color:#0b1e35;line-height:1.6">${t.clientBody}</p>
           <table style="background:#e6fafa;border-radius:12px;padding:16px 20px;margin-bottom:24px;width:100%;box-sizing:border-box" cellpadding="0" cellspacing="0">
             <tr>

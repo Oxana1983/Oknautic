@@ -30,7 +30,8 @@ export async function signUp(
       data: {
         first_name: formData.get("first_name") as string,
         last_name: formData.get("last_name") as string,
-        role: (formData.get("role") as string) ?? "customer",
+        // handle_new_user also whitelists this; never let "admin" through
+        role: formData.get("role") === "seller" ? "seller" : "customer",
       },
     },
   });
@@ -53,7 +54,9 @@ export async function signUp(
     return { error: "Этот email уже зарегистрирован и подтверждён. Войдите в свой аккаунт." };
   }
 
-  // Store consent fields on the profile (created synchronously by DB trigger)
+  // Store consent fields on the profile (created synchronously by DB trigger).
+  // Only if not yet set: signUp on an existing unconfirmed email returns that
+  // user too, and anyone could otherwise overwrite their consents.
   const userId = data?.user?.id;
   if (userId) {
     const adminSupabase = createAdminClient();
@@ -62,7 +65,7 @@ export async function signUp(
       terms_accepted_at: formData.get("terms_accepted") === "on" ? now : null,
       seller_terms_accepted_at: formData.get("seller_terms_accepted") === "on" ? now : null,
       marketing_consent: formData.get("marketing_consent") === "on",
-    }).eq("id", userId);
+    }).eq("id", userId).is("terms_accepted_at", null);
   }
 
   redirect("/");

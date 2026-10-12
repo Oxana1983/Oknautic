@@ -55,6 +55,17 @@ function guessCategorySlug(brand?: string): string | null {
   return BRAND_CATEGORY_SLUG[brand.toLowerCase()] ?? null;
 }
 
+function safePhotoUrl(url?: string): string | undefined {
+  const trimmed = url?.trim();
+  if (!trimmed) return undefined;
+  try {
+    const { protocol } = new URL(trimmed);
+    return protocol === "https:" || protocol === "http:" ? trimmed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 const CHUNK = 200;
 function chunks<T>(arr: T[], size: number): T[][] {
   const out: T[][] = [];
@@ -69,6 +80,17 @@ export async function upsertInventoryRows(
   const admin = createAdminClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  // The steps below write to the shared catalog with the admin client
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (profile?.role !== "seller") return { error: "Только для продавцов" };
+
+  // Only http(s) URLs are accepted as photos
+  rows = rows.map((r) => ({ ...r, photo_url: safePhotoUrl(r.photo_url) }));
 
   // Deduplicate by SKU — last occurrence wins (avoids "ON CONFLICT DO UPDATE affect row twice")
   const dedupMap = new Map<string, InventoryRow>();
@@ -167,16 +189,26 @@ export async function upsertInventoryRows(
       for (const p of createdProducts ?? []) skuToProductId[p.sku] = p.id;
     }
 
-    // For already-existing products — update photo if seller provided URL
-    const photoUpdates = rows.filter(
-      (r) => r.photo_url?.trim() && skuToProductId[r.sku.trim()]
-        && !newRows.find((n) => n.sku.trim() === r.sku.trim())
-    );
+  }
+
+  // For already-existing products — set the photo only if the catalog has
+  // none or just the picsum placeholder from migration 013 (one seller must
+  // not replace real photos everyone sees)
+  const newSkus = new Set(newRows.map((n) => n.sku.trim()));
+  const photoUpdates = rows.filter(
+    (r) => r.photo_url && skuToProductId[r.sku.trim()] && !newSkus.has(r.sku.trim())
+  );
+  if (photoUpdates.length > 0) {
+    const currentPhotos = new Map<string, string[]>();
+    for (const batch of chunks(photoUpdates.map((r) => skuToProductId[r.sku.trim()]), CHUNK)) {
+      const { data } = await admin.from("products").select("id, photos").in("id", batch);
+      for (const p of data ?? []) currentPhotos.set(p.id, p.photos ?? []);
+    }
     for (const r of photoUpdates) {
-      await admin
-        .from("products")
-        .update({ photos: [r.photo_url!.trim()] })
-        .eq("id", skuToProductId[r.sku.trim()]);
+      const productId = skuToProductId[r.sku.trim()];
+      const photos = currentPhotos.get(productId) ?? [];
+      if (!photos.every((url) => url.startsWith("https://picsum.photos/"))) continue;
+      await admin.from("products").update({ photos: [r.photo_url!] }).eq("id", productId);
     }
   }
 
@@ -204,8 +236,8 @@ export async function upsertInventoryRows(
     if (error) return { error: error.message };
   }
 
-  revalidatePath("/account/inventory");
-  revalidatePath("/catalog");
+  revalidatePath("/[locale]/account/inventory", "page");
+  revalidatePath("/[locale]/catalog", "layout");
   return { count: payload.length };
 }
 
@@ -224,7 +256,7 @@ export async function updateInventoryItem(
     .eq("seller_id", user.id);
 
   if (error) return { error: error.message };
-  revalidatePath("/account/inventory");
+  revalidatePath("/[locale]/account/inventory", "page");
   return {};
 }
 
@@ -240,6 +272,6 @@ export async function deleteInventoryItem(id: string): Promise<{ error?: string 
     .eq("seller_id", user.id);
 
   if (error) return { error: error.message };
-  revalidatePath("/account/inventory");
+  revalidatePath("/[locale]/account/inventory", "page");
   return {};
 }

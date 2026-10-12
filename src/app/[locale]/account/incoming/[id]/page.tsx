@@ -45,12 +45,10 @@ export default async function IncomingDetailPage({ params, searchParams }: Props
   // Mark this request as read by this seller (fire-and-forget, no revalidate during render)
   void markRequestRead(id);
 
-  const { data: req } = await supabase
-    .from("quote_requests")
-    .select("*")
-    .eq("id", id)
-    .neq("status", "deleted")
-    .maybeSingle();
+  // RPC applies seller routing; buyer contacts come back null until this
+  // seller's offer is accepted
+  const { data: reqs } = await supabase.rpc("get_seller_quote_requests", { p_ids: [id] });
+  const req = reqs?.[0];
 
   if (!req) notFound();
 
@@ -103,18 +101,19 @@ export default async function IncomingDetailPage({ params, searchParams }: Props
     req.accepted_offer_id === existingOffer.id &&
     existingOffer.status === "accepted";
 
-  // Buyer name: prefer new field, fall back to parsing legacy additional_comment
+  // Buyer name: prefer new field, fall back to parsing legacy additional_comment.
+  // buyer_name/phone/email are masked by the RPC until acceptance (or chat for name)
   const buyerName = req.buyer_name
-    ?? (req.additional_comment ? req.additional_comment.split(" · ")[0] : null)
+    ?? (req.is_legacy && req.additional_comment ? req.additional_comment.split(" · ")[0] : null)
     ?? t("buyerFallback");
 
   const phone = req.buyer_phone ?? null;
   const email = req.buyer_email ?? null;
 
   // Legacy comment (old rows had "Name · Phone · Comment", new rows have only comment)
-  const comment = req.buyer_name
-    ? req.additional_comment                           // new row: comment only
-    : req.additional_comment?.split(" · ").slice(2).join(" · ") ?? null; // legacy: strip name+phone
+  const comment = req.is_legacy
+    ? req.additional_comment?.split(" · ").slice(2).join(" · ") ?? null // legacy: strip name+phone
+    : req.additional_comment;
 
   return (
     <div>

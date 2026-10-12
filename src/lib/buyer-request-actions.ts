@@ -21,7 +21,7 @@ export async function archiveBuyerRequests(requestIds: string[]): Promise<{ erro
     .upsert(rows, { onConflict: "buyer_id,quote_request_id" });
 
   if (error) return { error: error.message };
-  revalidatePath("/account/requests");
+  revalidatePath("/[locale]/account/requests", "page");
   return {};
 }
 
@@ -42,7 +42,7 @@ export async function deleteBuyerRequestsPermanently(requestIds: string[]): Prom
     .upsert(rows, { onConflict: "buyer_id,quote_request_id" });
 
   if (error) return { error: error.message };
-  revalidatePath("/account/requests");
+  revalidatePath("/[locale]/account/requests", "page");
   return {};
 }
 
@@ -59,6 +59,6 @@ export async function restoreBuyerRequests(requestIds: string[]): Promise<{ erro
     .in("quote_request_id", requestIds);
 
   if (error) return { error: error.message };
-  revalidatePath("/account/requests");
+  revalidatePath("/[locale]/account/requests", "page");
   return {};
 }

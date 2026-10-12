@@ -43,10 +43,7 @@ export default async function MyOffersPage() {
   const requestIds = (offers ?? []).map((o) => o.quote_request_id);
   const { data: requests } =
     requestIds.length > 0
-      ? await supabase
-          .from("quote_requests")
-          .select("id, product_name, product_photo, sku, quantity, status")
-          .in("id", requestIds)
+      ? await supabase.rpc("get_seller_quote_requests", { p_ids: requestIds })
       : { data: [] };
 
   // Look up current product names from products table to override stale Russian names

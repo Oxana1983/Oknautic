@@ -1359,7 +1359,35 @@ export type Database = {
     }
     Functions: {
       current_user_role: { Args: never; Returns: string }
+      get_seller_quote_requests: {
+        Args: { p_ids?: string[] | null }
+        Returns: {
+          id: string
+          product_id: string | null
+          sku: string
+          product_name: string
+          product_photo: string | null
+          variant_attrs: Json | null
+          brand_id: string | null
+          category_id: string | null
+          quantity: number
+          delivery_area: string
+          delivery_address: string | null
+          delivery_datetime: string
+          additional_comment: string | null
+          status: string
+          accepted_offer_id: string | null
+          created_at: string
+          updated_at: string
+          buyer_name: string | null
+          buyer_phone: string | null
+          buyer_email: string | null
+          is_legacy: boolean
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
+      is_request_routed_to_me: { Args: { p_qr_id: string }; Returns: boolean }
+      offerable_request_quantity: { Args: { p_qr_id: string }; Returns: number | null }
       is_seller: { Args: never; Returns: boolean }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }

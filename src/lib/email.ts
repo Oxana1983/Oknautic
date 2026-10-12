@@ -1,6 +1,7 @@
 "use server";
 
 import { Resend } from "resend";
+import { escapeHtml } from "@/lib/utils";
 
 const FROM = "OKnautic <noreply@oknautic.com>";
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.oknautic.com";
@@ -45,12 +46,12 @@ export async function sendNewRequestEmail(to: string, data: {
               <tr>
                 <td style="padding:20px 24px">
                   <p style="margin:0 0 4px;font-size:11px;color:#4a85c2;text-transform:uppercase;letter-spacing:1px">Товар</p>
-                  <p style="margin:0 0 16px;font-size:16px;font-weight:600;color:#0b1e35">${data.productName}</p>
+                  <p style="margin:0 0 16px;font-size:16px;font-weight:600;color:#0b1e35">${escapeHtml(data.productName)}</p>
                   <table cellpadding="0" cellspacing="0">
                     <tr>
                       <td style="padding-right:32px">
                         <p style="margin:0 0 2px;font-size:11px;color:#4a85c2">SKU</p>
-                        <p style="margin:0;font-size:13px;font-weight:600;color:#0b1e35;font-family:monospace">${data.sku}</p>
+                        <p style="margin:0;font-size:13px;font-weight:600;color:#0b1e35;font-family:monospace">${escapeHtml(data.sku)}</p>
                       </td>
                       <td>
                         <p style="margin:0 0 2px;font-size:11px;color:#4a85c2">Количество</p>
@@ -106,8 +107,8 @@ export async function sendOfferAcceptedEmail(to: string, data: {
   const link = `${BASE_URL}/account/incoming/${data.requestId}`;
 
   const contactRows = [
-    data.buyerEmail ? `<tr><td style="padding:6px 0;font-size:12px;color:#4a85c2;width:80px">Email</td><td style="padding:6px 0;font-size:13px;font-weight:600;color:#0b1e35">${data.buyerEmail}</td></tr>` : "",
-    data.buyerPhone ? `<tr><td style="padding:6px 0;font-size:12px;color:#4a85c2">Телефон</td><td style="padding:6px 0;font-size:13px;font-weight:600;color:#0b1e35">${data.buyerPhone}</td></tr>` : "",
+    data.buyerEmail ? `<tr><td style="padding:6px 0;font-size:12px;color:#4a85c2;width:80px">Email</td><td style="padding:6px 0;font-size:13px;font-weight:600;color:#0b1e35">${escapeHtml(data.buyerEmail)}</td></tr>` : "",
+    data.buyerPhone ? `<tr><td style="padding:6px 0;font-size:12px;color:#4a85c2">Телефон</td><td style="padding:6px 0;font-size:13px;font-weight:600;color:#0b1e35">${escapeHtml(data.buyerPhone)}</td></tr>` : "",
   ].join("");
 
   await resend.emails.send({
@@ -132,14 +133,14 @@ export async function sendOfferAcceptedEmail(to: string, data: {
         <!-- Body -->
         <tr>
           <td style="padding:32px">
-            <p style="margin:0 0 6px;font-size:16px;font-weight:600;color:#0b1e35">${data.productName}</p>
-            <p style="margin:0 0 24px;font-size:12px;color:#4a85c2;font-family:monospace">${data.sku}</p>
+            <p style="margin:0 0 6px;font-size:16px;font-weight:600;color:#0b1e35">${escapeHtml(data.productName)}</p>
+            <p style="margin:0 0 24px;font-size:12px;color:#4a85c2;font-family:monospace">${escapeHtml(data.sku)}</p>
 
             <p style="margin:0 0 12px;font-size:14px;font-weight:600;color:#0b1e35">Контакты покупателя:</p>
             <table style="background:#e6fafa;border-radius:12px;padding:16px 20px;margin-bottom:24px;width:100%;box-sizing:border-box" cellpadding="0" cellspacing="0">
               <tr>
                 <td>
-                  <p style="margin:0 0 12px;font-size:14px;font-weight:600;color:#073b3b">${data.buyerName}</p>
+                  <p style="margin:0 0 12px;font-size:14px;font-weight:600;color:#073b3b">${escapeHtml(data.buyerName)}</p>
                   <table cellpadding="0" cellspacing="0">
                     ${contactRows}
                   </table>

@@ -22,7 +22,7 @@ export async function archiveRequests(requestIds: string[]): Promise<{ error?: s
     .upsert(rows, { onConflict: "seller_id,quote_request_id" });
 
   if (error) return { error: error.message };
-  revalidatePath("/account/incoming");
+  revalidatePath("/[locale]/account/incoming", "page");
   return {};
 }
 
@@ -44,7 +44,7 @@ export async function deleteRequestsPermanently(requestIds: string[]): Promise<{
     .upsert(rows, { onConflict: "seller_id,quote_request_id" });
 
   if (error) return { error: error.message };
-  revalidatePath("/account/incoming");
+  revalidatePath("/[locale]/account/incoming", "page");
   return {};
 }
 
@@ -62,6 +62,6 @@ export async function restoreRequests(requestIds: string[]): Promise<{ error?: s
     .in("quote_request_id", requestIds);
 
   if (error) return { error: error.message };
-  revalidatePath("/account/incoming");
+  revalidatePath("/[locale]/account/incoming", "page");
   return {};
 }

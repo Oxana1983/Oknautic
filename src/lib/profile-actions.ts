@@ -35,8 +35,8 @@ export async function updateProfile(
     .eq("id", user.id);
 
   if (error) return { error: error.message };
-  revalidatePath("/account/profile");
-  revalidatePath("/account");
+  revalidatePath("/[locale]/account/profile", "page");
+  revalidatePath("/[locale]/account", "layout");
   return {};
 }
 

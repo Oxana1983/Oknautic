@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
+import { escapeHtml } from "@/lib/utils";
 
 const FROM = "OKnautic <noreply@oknautic.com>";
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.oknautic.com";
@@ -72,6 +73,16 @@ export async function submitContactMessage(
 
   const supabase = createAdminClient();
 
+  // The confirmation email goes to whatever address was typed in — cap it
+  // so the form can't be used to spam third parties from our domain
+  const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count: recent } = await supabase
+    .from("contact_messages")
+    .select("id", { count: "exact", head: true })
+    .eq("email", data.email.trim().toLowerCase())
+    .gte("created_at", since);
+  if ((recent ?? 0) >= 3) return { error: "too many requests" };
+
   const { data: inserted, error: dbError } = await supabase
     .from("contact_messages")
     .insert({
@@ -96,6 +107,14 @@ async function sendEmails(data: ContactFormData) {
   const resend = new Resend(process.env.RESEND_API_KEY);
   const t = tr(data.locale);
   const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
+  // HTML-escaped copies for the templates (subjects are plain text)
+  const h = {
+    name: escapeHtml(data.name),
+    email: escapeHtml(data.email),
+    phone: escapeHtml(data.phone),
+    message: escapeHtml(data.message),
+    locale: escapeHtml(data.locale ?? "ru"),
+  };
 
   if (adminEmail) {
     await resend.emails.send({
@@ -104,7 +123,7 @@ async function sendEmails(data: ContactFormData) {
       subject: t.adminSubject(data.name),
       html: `
 <!DOCTYPE html>
-<html lang="${data.locale ?? "ru"}">
+<html lang="${h.locale}">
 <head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#f5f0e8;font-family:'Inter',Arial,sans-serif">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px">
@@ -118,24 +137,24 @@ async function sendEmails(data: ContactFormData) {
           <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px">
             <tr>
               <td style="padding:4px 12px 4px 0;font-size:12px;color:#4a85c2;white-space:nowrap;width:80px">${t.fName}</td>
-              <td style="padding:4px 0;font-size:13px;color:#0b1e35;font-weight:500">${data.name}</td>
+              <td style="padding:4px 0;font-size:13px;color:#0b1e35;font-weight:500">${h.name}</td>
             </tr>
             <tr>
               <td style="padding:4px 12px 4px 0;font-size:12px;color:#4a85c2">${t.fEmail}</td>
-              <td style="padding:4px 0;font-size:13px;color:#0b1e35;font-weight:500">${data.email}</td>
+              <td style="padding:4px 0;font-size:13px;color:#0b1e35;font-weight:500">${h.email}</td>
             </tr>
             ${data.phone ? `<tr>
               <td style="padding:4px 12px 4px 0;font-size:12px;color:#4a85c2">${t.fPhone}</td>
-              <td style="padding:4px 0;font-size:13px;color:#0b1e35;font-weight:500">${data.phone}</td>
+              <td style="padding:4px 0;font-size:13px;color:#0b1e35;font-weight:500">${h.phone}</td>
             </tr>` : ""}
           </table>
           <div style="background:#edf4fb;border-radius:12px;padding:16px 20px">
             <p style="margin:0 0 6px;font-size:11px;color:#4a85c2;text-transform:uppercase;letter-spacing:1px">${t.fMessage}</p>
-            <p style="margin:0;font-size:14px;color:#0b1e35;line-height:1.6;white-space:pre-wrap">${data.message}</p>
+            <p style="margin:0;font-size:14px;color:#0b1e35;line-height:1.6;white-space:pre-wrap">${h.message}</p>
           </div>
           <p style="margin:20px 0 0">
-            <a href="mailto:${data.email}" style="display:inline-block;background:#0e9494;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:10px 24px;border-radius:10px">
-              ${t.replyBtn(data.email)}
+            <a href="mailto:${h.email}" style="display:inline-block;background:#0e9494;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:10px 24px;border-radius:10px">
+              ${t.replyBtn(h.email)}
             </a>
           </p>
         </td></tr>
@@ -153,7 +172,7 @@ async function sendEmails(data: ContactFormData) {
     subject: t.clientSubject,
     html: `
 <!DOCTYPE html>
-<html lang="${data.locale ?? "ru"}">
+<html lang="${h.locale}">
 <head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#f5f0e8;font-family:'Inter',Arial,sans-serif">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px">
@@ -164,11 +183,11 @@ async function sendEmails(data: ContactFormData) {
           <p style="margin:0;color:#ffffff;font-size:18px;font-weight:700">${t.clientTitle}</p>
         </td></tr>
         <tr><td style="padding:28px 32px">
-          <p style="margin:0 0 16px;font-size:15px;color:#0b1e35">${t.clientGreeting(data.name)}</p>
+          <p style="margin:0 0 16px;font-size:15px;color:#0b1e35">${t.clientGreeting(h.name)}</p>
           <p style="margin:0 0 16px;font-size:14px;color:#0b1e35;line-height:1.6">${t.clientBody}</p>
           <div style="background:#edf4fb;border-radius:12px;padding:16px 20px;margin-bottom:20px">
             <p style="margin:0 0 6px;font-size:11px;color:#4a85c2;text-transform:uppercase;letter-spacing:1px">${t.clientMsgLabel}</p>
-            <p style="margin:0;font-size:13px;color:#0b1e35;line-height:1.6;white-space:pre-wrap">${data.message}</p>
+            <p style="margin:0;font-size:13px;color:#0b1e35;line-height:1.6;white-space:pre-wrap">${h.message}</p>
           </div>
         </td></tr>
         <tr><td style="padding:16px 32px;border-top:1px solid #ccf4f4">

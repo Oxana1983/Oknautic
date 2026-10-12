@@ -8,8 +8,6 @@ import type { IncomingItem } from "@/components/seller/incoming-list";
 
 export const dynamic = "force-dynamic";
 
-const SELECT = "id, sku, product_id, product_name, product_photo, quantity, status, created_at, buyer_name";
-
 export default async function IncomingPage() {
   const t = await getTranslations("incoming");
   const supabase = await createClient();
@@ -49,39 +47,45 @@ export default async function IncomingPage() {
     new Set((archivedRows ?? []).filter((r) => !r.is_permanent).map((r) => r.quote_request_id))
   );
 
-  // Fetch active requests and filter client-side (avoids URL length limit with many SKUs)
+  // Sellers have no direct SELECT on quote_requests (migration 022) — the
+  // RPC applies routing and masks buyer contacts until acceptance
   const hasInventory = sellerSkus.length > 0 || sellerProductIds.length > 0;
   const sellerSkuSet = new Set(sellerSkus);
   const sellerProductIdSet = new Set(sellerProductIds);
 
-  const { data: activeReqs, error } = hasInventory
-    ? await supabase
-        .from("quote_requests")
-        .select(SELECT)
-        .eq("status", "in_progress")
-        .order("created_at", { ascending: false })
-    : { data: [], error: null };
+  const { data: routedReqs, error } = await supabase.rpc("get_seller_quote_requests");
+  const toRow = (r: NonNullable<typeof routedReqs>[number]) => ({
+    id: r.id,
+    sku: r.sku,
+    product_id: r.product_id,
+    product_name: r.product_name,
+    product_photo: r.product_photo,
+    quantity: r.quantity,
+    status: r.status,
+    created_at: r.created_at,
+    buyer_name: r.buyer_name,
+  });
 
-  const activeReqsFiltered = (activeReqs ?? []).filter(
-    (r) =>
-      !allArchivedIds.has(r.id) &&
-      (sellerSkuSet.has(r.sku) || (!!r.product_id && sellerProductIdSet.has(r.product_id)))
-  );
+  const activeReqsFiltered = hasInventory
+    ? (routedReqs ?? [])
+        .filter(
+          (r) =>
+            r.status === "in_progress" &&
+            !allArchivedIds.has(r.id) &&
+            (sellerSkuSet.has(r.sku) || (!!r.product_id && sellerProductIdSet.has(r.product_id)))
+        )
+        .map(toRow)
+    : [];
 
-  // Fetch archived requests by ID (any status)
-  const { data: archivedReqs } =
-    softArchivedIds.length > 0
-      ? await supabase
-          .from("quote_requests")
-          .select(SELECT)
-          .in("id", softArchivedIds)
-          .order("created_at", { ascending: false })
-      : { data: [] };
+  const softArchivedSet = new Set(softArchivedIds);
+  const archivedReqs = (routedReqs ?? [])
+    .filter((r) => softArchivedSet.has(r.id))
+    .map(toRow);
 
   // Offers for all visible requests
   const allIds = [
     ...activeReqsFiltered.map((r) => r.id),
-    ...(archivedReqs ?? []).map((r) => r.id),
+    ...archivedReqs.map((r) => r.id),
   ];
   const { data: myOffers } =
     allIds.length > 0
@@ -98,7 +102,7 @@ export default async function IncomingPage() {
   // Fetch current product names by SKU to override stale/localized stored names
   const allSkus = [...new Set([
     ...activeReqsFiltered.map((r) => r.sku),
-    ...(archivedReqs ?? []).map((r) => r.sku),
+    ...archivedReqs.map((r) => r.sku),
   ].filter(Boolean))];
   const { data: productNames } =
     allSkus.length > 0
@@ -134,7 +138,7 @@ export default async function IncomingPage() {
   });
 
   const activeItems = activeReqsFiltered.map((r) => toItem(r, true));
-  const archiveItems = (archivedReqs ?? []).map((r) => toItem(r, false));
+  const archiveItems = archivedReqs.map((r) => toItem(r, false));
 
   const { count: brandCatCount } = await supabase
     .from("seller_brand_categories")

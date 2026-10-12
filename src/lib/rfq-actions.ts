@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { sendNewRequestEmail, sendOfferAcceptedEmail } from "@/lib/email";
 import type { CartItem } from "@/lib/cart-context";
@@ -61,10 +62,11 @@ export async function submitRfq(
     .select("id, sku, product_name, quantity");
   if (error) return { error: error.message };
 
-  // Notify sellers whose inventory matches each new request
-  void notifyMatchingSellers(inserted ?? []);
+  // Notify sellers whose inventory matches each new request.
+  // after() keeps the serverless function alive until emails are sent
+  after(() => notifyMatchingSellers(inserted ?? []));
 
-  revalidatePath("/account/requests");
+  revalidatePath("/[locale]/account/requests", "page");
   return {};
 }
 
@@ -108,29 +110,25 @@ export async function acceptOffer(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Mark request as completed
-  const { error: reqError } = await supabase
+  // Mark request as completed. trg_on_offer_accepted marks the offer as
+  // accepted; trg_validate_accepted_offer rejects offers of other requests,
+  // withdrawn offers, and already-closed requests.
+  const { data: updated, error: reqError } = await supabase
     .from("quote_requests")
     .update({ accepted_offer_id: offerId, status: "completed" })
     .eq("id", requestId)
-    .eq("customer_id", user.id);
+    .eq("customer_id", user.id)
+    .eq("status", "in_progress")
+    .select("id");
 
   if (reqError) return { error: reqError.message };
-
-  // Mark the winning offer as accepted
-  const { error: offerError } = await supabase
-    .from("offers")
-    .update({ status: "accepted" })
-    .eq("id", offerId)
-    .eq("quote_request_id", requestId);
-
-  if (offerError) return { error: offerError.message };
+  if (!updated?.length) return { error: "Запрос уже закрыт или не найден" };
 
   // Email the winning seller
-  void notifySellerOfAcceptance(offerId, requestId);
+  after(() => notifySellerOfAcceptance(offerId, requestId));
 
-  revalidatePath(`/account/requests/${requestId}`);
-  revalidatePath("/account/offers");
+  revalidatePath("/[locale]/account/requests/[id]", "page");
+  revalidatePath("/[locale]/account/offers", "page");
   return {};
 }
 
@@ -183,7 +181,7 @@ export async function closeRequest(
 
   if (error) return { error: error.message };
 
-  revalidatePath(`/account/requests/${requestId}`);
-  revalidatePath("/account/requests");
+  revalidatePath("/[locale]/account/requests/[id]", "page");
+  revalidatePath("/[locale]/account/requests", "page");
   return {};
 }

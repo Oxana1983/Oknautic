@@ -35,24 +35,20 @@ export function SellerBell() {
     )];
 
     if (skus.length > 0 || productIds.length > 0) {
-      const orParts: string[] = [];
-      if (skus.length > 0) orParts.push(`sku.in.(${skus.map((s) => `"${s}"`).join(",")})`);
-      if (productIds.length > 0) orParts.push(`product_id.in.(${productIds.join(",")})`);
+      const skuSet = new Set(skus);
+      const productIdSet = new Set(productIds);
+      const inboxReadAt = profile?.inbox_read_at ? new Date(profile.inbox_read_at) : null;
 
-      // All matching requests
-      let query = supabase
-        .from("quote_requests")
-        .select("id, created_at")
-        .eq("status", "in_progress")
-        .or(orParts.join(","));
-
-      // Legacy baseline: skip requests older than inbox_read_at
-      if (profile?.inbox_read_at) {
-        query = query.gt("created_at", profile.inbox_read_at);
-      }
-
-      const { data: allRequests } = await query;
-      const allIds = (allRequests ?? []).map((r) => r.id);
+      // Sellers can't SELECT quote_requests directly — the RPC applies routing
+      const { data: routed } = await supabase.rpc("get_seller_quote_requests");
+      const allRequests = (routed ?? []).filter(
+        (r) =>
+          r.status === "in_progress" &&
+          (skuSet.has(r.sku) || (!!r.product_id && productIdSet.has(r.product_id))) &&
+          // Legacy baseline: skip requests older than inbox_read_at
+          (!inboxReadAt || new Date(r.created_at) > inboxReadAt)
+      );
+      const allIds = allRequests.map((r) => r.id);
 
       if (allIds.length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -87,12 +83,9 @@ export function SellerBell() {
 
     const supabase = createClient();
 
-    // New incoming requests
-    const reqChannel = supabase
-      .channel("seller-incoming")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "quote_requests" },
-        () => { void fetchCounts(); })
-      .subscribe();
+    // New incoming requests: realtime INSERT events are filtered by RLS and
+    // sellers have no SELECT on quote_requests, so poll instead
+    const poll = setInterval(() => { void fetchCounts(); }, 60_000);
 
     // Offer accepted (status UPDATE on offers table)
     const offerChannel = supabase
@@ -102,7 +95,7 @@ export function SellerBell() {
       .subscribe();
 
     return () => {
-      void supabase.removeChannel(reqChannel);
+      clearInterval(poll);
       void supabase.removeChannel(offerChannel);
     };
   }, [fetchCounts]);
