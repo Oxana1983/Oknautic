@@ -5,10 +5,11 @@ import { redirect, notFound } from "next/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
 import {
   Package, ArrowLeft, Clock, CheckCircle2, XCircle,
-  Truck, ShieldCheck, CreditCard, Banknote, Star
+  Truck, ShieldCheck, CreditCard, Banknote, Star, MapPin
 } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
 import { AcceptOfferButton, CloseRequestButton } from "@/components/account/request-actions";
+import { distanceKm, formatDistance, isRealDeliveryArea } from "@/lib/utils";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -66,10 +67,17 @@ export default async function RequestDetailPage({ params }: Props) {
     .neq("status", "withdrawn")
     .order("created_at", { ascending: true });
 
-  // In-stock offers shown first
-  const offers = (offersRaw ?? []).sort((a, b) => {
-    if (a.in_stock === b.in_stock) return 0;
-    return a.in_stock ? -1 : 1;
+  // Distance from where each offer ships to the buyer's delivery city
+  const deliveryPoint = { lat: req.delivery_lat, lng: req.delivery_lng };
+  const withDistance = (offersRaw ?? []).map((o) => ({
+    ...o,
+    distance: distanceKm({ lat: o.location_lat, lng: o.location_lng }, deliveryPoint),
+  }));
+
+  // In-stock offers first, then nearest (unknown distance last)
+  const offers = withDistance.sort((a, b) => {
+    if (a.in_stock !== b.in_stock) return a.in_stock ? -1 : 1;
+    return (a.distance ?? Infinity) - (b.distance ?? Infinity);
   });
 
   // Fetch seller company names for offers
@@ -137,6 +145,9 @@ export default async function RequestDetailPage({ params }: Props) {
               <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-navy-500">
                 <span>{t("quantity")} <b className="text-navy-800">{req.quantity}</b></span>
                 <span>{t("createdAt")} <b className="text-navy-800">{fmt(req.created_at)}</b></span>
+                {isRealDeliveryArea(req.delivery_area) && (
+                  <span className="col-span-2">{t("deliveryTo")} <b className="text-navy-800">{req.delivery_area}</b></span>
+                )}
                 {req.additional_comment && (
                   <span className="col-span-2">{t("comment")} <b className="text-navy-800">{req.additional_comment}</b></span>
                 )}
@@ -189,6 +200,15 @@ export default async function RequestDetailPage({ params }: Props) {
                         {company?.company_name ?? `${t("supplier")} ${idx + 1}`}
                       </p>
                       <p className="text-xs text-navy-400">{t("offerFrom", { date: fmtShort(offer.created_at) })}</p>
+                      {offer.location_city && (
+                        <p className="text-xs text-navy-500 mt-0.5 flex items-center gap-1">
+                          <MapPin size={11} className="text-navy-300 shrink-0" />
+                          {[offer.location_city, offer.location_country].filter(Boolean).join(", ")}
+                          {offer.distance != null && (
+                            <span className="text-navy-400">· {formatDistance(offer.distance, locale)}</span>
+                          )}
+                        </p>
+                      )}
                     </div>
                     {isAccepted && (
                       <span className="flex items-center gap-1 text-xs font-medium text-teal-700 bg-teal-100 px-2.5 py-1 rounded-full">

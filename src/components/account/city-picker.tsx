@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { MapPin, X, Loader2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 type Place = {
   display_name: string;
@@ -28,6 +28,8 @@ function flag(countryCode: string) {
 
 export function CityPicker({ value, onChange }: Props) {
   const t = useTranslations("profile");
+  // Photon has no Russian; English names read fine for ru users
+  const lang = useLocale() === "it" ? "it" : "en";
   const [query, setQuery] = useState(value ? `${value.city}, ${value.country}` : "");
   const [results, setResults] = useState<Place[]>([]);
   const [loading, setLoading] = useState(false);
@@ -53,21 +55,26 @@ export function CityPicker({ value, onChange }: Props) {
     timer.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=6&featuretype=city`,
-          { headers: { "Accept-Language": "en" } }
-        );
+        // Photon (OSM data) — unlike Nominatim, its usage policy allows
+        // search-as-you-type
+        const params = new URLSearchParams({ q, limit: "8", lang });
+        for (const tag of ["place:city", "place:town", "place:village"]) params.append("osm_tag", tag);
+        const res = await fetch(`https://photon.komoot.io/api/?${params}`);
         const data = await res.json();
-        const places: Place[] = (data as any[])
-          .filter((r: any) => r.address?.city || r.address?.town || r.address?.village || r.address?.municipality)
+        type Feature = {
+          properties: { name?: string; country?: string; countrycode?: string; state?: string };
+          geometry: { coordinates: [number, number] };
+        };
+        const places: Place[] = ((data?.features ?? []) as Feature[])
+          .filter((f) => f.properties.name)
           .slice(0, 5)
-          .map((r: any) => ({
-            display_name: r.display_name,
-            city: r.address?.city || r.address?.town || r.address?.village || r.address?.municipality || r.name,
-            country: r.address?.country ?? "",
-            country_code: r.address?.country_code ?? "",
-            lat: r.lat,
-            lon: r.lon,
+          .map((f) => ({
+            display_name: [f.properties.name, f.properties.state, f.properties.country].filter(Boolean).join(", "),
+            city: f.properties.name!,
+            country: f.properties.country ?? "",
+            country_code: (f.properties.countrycode ?? "").toLowerCase(),
+            lat: String(f.geometry.coordinates[1]),
+            lon: String(f.geometry.coordinates[0]),
           }));
         setResults(places);
         setOpen(places.length > 0);
@@ -134,7 +141,7 @@ export function CityPicker({ value, onChange }: Props) {
                 </span>
                 <div className="min-w-0">
                   <p className="font-medium text-navy-800 truncate">{place.city}</p>
-                  <p className="text-xs text-navy-400 truncate">{place.country}</p>
+                  <p className="text-xs text-navy-400 truncate">{place.display_name.split(", ").slice(1).join(", ")}</p>
                 </div>
               </button>
             </li>

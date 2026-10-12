@@ -64,6 +64,8 @@ export default async function IncomingPage() {
     status: r.status,
     created_at: r.created_at,
     buyer_name: r.buyer_name,
+    delivery_area: r.delivery_area,
+    distance_km: r.distance_km,
   });
 
   const activeReqsFiltered = hasInventory

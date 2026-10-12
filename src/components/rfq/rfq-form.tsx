@@ -6,19 +6,24 @@ import { Link } from "@/i18n/navigation";
 import {
   ShoppingCart, CheckCircle2, ArrowLeft, Trash2,
   Minus, Plus, User, Mail, Phone, MessageSquare,
-  Package, UserPlus, LogIn,
+  Package, UserPlus, LogIn, MapPin,
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { useTranslations } from "next-intl";
 import { submitRfq } from "@/lib/rfq-actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
+import { CityPicker } from "@/components/account/city-picker";
 
 type FormState = { name: string; email: string; phone: string; comment: string };
+type DeliveryCity = { city: string; country: string; lat: number; lng: number };
+type FormErrors = Partial<FormState> & { delivery?: string };
+
+export type RfqPrefill = { name: string; email: string; phone: string; delivery: DeliveryCity | null };
 type Status = "idle" | "submitting" | "success" | "success_guest";
 
 type Props = {
-  prefill: { name: string; email: string; phone: string } | null;
+  prefill: RfqPrefill | null;
   isAuthenticated: boolean;
 };
 
@@ -79,7 +84,8 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [rfqNumber, setRfqNumber] = useState("");
   const [submittedCount, setSubmittedCount] = useState(0);
-  const [errors, setErrors] = useState<Partial<FormState>>({});
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [delivery, setDelivery] = useState<DeliveryCity | null>(prefill?.delivery ?? null);
 
   useEffect(() => {
     if (prefill) {
@@ -93,11 +99,12 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
   }, [prefill]);
 
   function validate() {
-    const e: Partial<FormState> = {};
+    const e: FormErrors = {};
     if (!form.name.trim()) e.name = t("errorName");
     if (!form.email.trim()) e.email = t("errorEmail");
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = t("errorEmailInvalid");
     if (!form.phone.trim()) e.phone = t("errorPhone");
+    if (!delivery) e.delivery = t("errorDelivery");
     return e;
   }
 
@@ -108,7 +115,7 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
     setStatus("submitting");
 
     try {
-      const result = await submitRfq({ ...form, items });
+      const result = await submitRfq({ ...form, delivery, items });
 
       if (result?.requiresAuth) {
         const num = generateRfqNumber();
@@ -404,6 +411,15 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
                   error={errors.phone}
                   onChange={(v) => setForm((f) => ({ ...f, phone: v }))}
                 />
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs font-medium text-navy-600 mb-1.5">
+                    <MapPin size={12} />{t("fieldDelivery")}
+                  </label>
+                  <CityPicker value={delivery} onChange={setDelivery} />
+                  {errors.delivery
+                    ? <p className="text-xs text-red-500 mt-1">{errors.delivery}</p>
+                    : <p className="text-[11px] text-navy-400 mt-1">{t("deliveryHint")}</p>}
+                </div>
                 <Field
                   icon={<MessageSquare size={12} />}
                   label={t("fieldComment")}

@@ -129,14 +129,19 @@
     "saved": "Salvato",
     "location": "Posizione",
     "locationPlaceholder": "Inserisci città...",
-    "locationHint": "Utilizzato per il completamento automatico nelle richieste",
+    "locationHint": "Usata come città di consegna nelle richieste e per calcolare le distanze",
     "dangerZone": "Zona pericolosa",
     "deleteAccountHint": "L'eliminazione dell'account è permanente. Tutti i tuoi dati verranno rimossi: profilo, richieste, prodotti, messaggi.",
     "deleteAccount": "Elimina account",
     "deleteAccountConfirmTitle": "Eliminare l'account?",
     "deleteAccountConfirmBody": "Questa azione non può essere annullata. Tutti i tuoi dati verranno rimossi definitivamente.",
     "deleteAccountConfirmButton": "Sì, elimina",
-    "cancel": "Annulla"
+    "cancel": "Annulla",
+    "serviceRadius": "Raggio di servizio, km",
+    "serviceRadiusPlaceholder": "Nessun limite",
+    "serviceRadiusHint": "Vedrà le richieste e riceverà email solo per consegne entro questo raggio dalla sua città. Lasci vuoto per vederle tutte.",
+    "radiusInvalid": "Il raggio deve essere un numero intero da 1 a 20.000 km",
+    "radiusNeedsLocation": "Imposti la sua città per usare un raggio di servizio"
   },
   "inventory": {
     "title": "Magazzino",
@@ -268,7 +273,8 @@
     "acceptOffer": "Accetta offerta",
     "closeRequest": "Chiudi richiesta",
     "closeRequestConfirm": "Chiudere la richiesta?",
-    "yes": "Sì"
+    "yes": "Sì",
+    "deliveryTo": "Consegna:"
   },
   "incoming": {
     "title": "Richieste in Entrata",
@@ -311,7 +317,8 @@
     "createOffer": "Crea Offerta",
     "offerWithdrawnMsg": "Hai ritirato la tua offerta per questa richiesta",
     "requestClosedByBuyer": "Richiesta chiusa dall'acquirente",
-    "backToOffers": "Le mie offerte"
+    "backToOffers": "Le mie offerte",
+    "deliveryTo": "Consegna"
   },
   "offerForm": {
     "accepted": "La tua offerta è stata accettata dall'acquirente",
@@ -339,7 +346,9 @@
     "sent": "Inviato",
     "updateOffer": "Aggiorna offerta",
     "submitOffer": "Invia offerta",
-    "withdraw": "Ritira"
+    "withdraw": "Ritira",
+    "shipsFrom": "Spedizione da",
+    "shipsFromHint": "L'acquirente vedrà la città e la distanza"
   },
   "cart": {
     "title": "Richiesta Prezzi",
@@ -406,7 +415,10 @@
     "registerBtn": "Crea account",
     "loginBtn": "Accedi",
     "continueGuest": "Continua senza account →",
-    "itemsCountDetail": "{count, plural, one {{count} articolo} other {{count} articoli}}"
+    "itemsCountDetail": "{count, plural, one {{count} articolo} other {{count} articoli}}",
+    "fieldDelivery": "Città di consegna *",
+    "deliveryHint": "I venditori vedono solo la città. L'indirizzo esatto lo condividerà con il venditore scelto.",
+    "errorDelivery": "Scelga una città di consegna dall'elenco"
   },
   "how": {
     "metaTitle": "Come funziona — OKnautic",

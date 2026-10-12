@@ -15,7 +15,7 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("first_name, last_name, phone, role, city, country, lat, lng")
+    .select("first_name, last_name, phone, role, city, country, lat, lng, service_radius_km")
     .eq("id", user.id)
     .single();
 
@@ -35,6 +35,7 @@ export default async function ProfilePage() {
               country: profile?.country ?? null,
               lat: profile?.lat ?? null,
               lng: profile?.lng ?? null,
+              service_radius_km: profile?.service_radius_km ?? null,
             }}
           />
           <DeleteAccountSection />

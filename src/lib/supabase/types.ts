@@ -671,6 +671,10 @@ export type Database = {
           status: string
           updated_at: string
           warranty_months: number
+          location_city: string | null
+          location_country: string | null
+          location_lat: number | null
+          location_lng: number | null
         }
         Insert: {
           allows_pickup?: boolean
@@ -692,6 +696,10 @@ export type Database = {
           status?: string
           updated_at?: string
           warranty_months?: number
+          location_city?: string | null
+          location_country?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
         }
         Update: {
           allows_pickup?: boolean
@@ -713,6 +721,10 @@ export type Database = {
           status?: string
           updated_at?: string
           warranty_months?: number
+          location_city?: string | null
+          location_country?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
         }
         Relationships: [
           {
@@ -916,6 +928,7 @@ export type Database = {
           seller_terms_accepted_at: string | null
           terms_accepted_at: string | null
           updated_at: string
+          service_radius_km: number | null
         }
         Insert: {
           accepted_read_at?: string | null
@@ -938,6 +951,7 @@ export type Database = {
           seller_terms_accepted_at?: string | null
           terms_accepted_at?: string | null
           updated_at?: string
+          service_radius_km?: number | null
         }
         Update: {
           accepted_read_at?: string | null
@@ -960,6 +974,7 @@ export type Database = {
           seller_terms_accepted_at?: string | null
           terms_accepted_at?: string | null
           updated_at?: string
+          service_radius_km?: number | null
         }
         Relationships: []
       }
@@ -987,6 +1002,9 @@ export type Database = {
           updated_at: string
           variant_attrs: Json | null
           variant_id: string | null
+          delivery_country: string | null
+          delivery_lat: number | null
+          delivery_lng: number | null
         }
         Insert: {
           accepted_offer_id?: string | null
@@ -1011,6 +1029,9 @@ export type Database = {
           updated_at?: string
           variant_attrs?: Json | null
           variant_id?: string | null
+          delivery_country?: string | null
+          delivery_lat?: number | null
+          delivery_lng?: number | null
         }
         Update: {
           accepted_offer_id?: string | null
@@ -1035,6 +1056,9 @@ export type Database = {
           updated_at?: string
           variant_attrs?: Json | null
           variant_id?: string | null
+          delivery_country?: string | null
+          delivery_lat?: number | null
+          delivery_lng?: number | null
         }
         Relationships: [
           {
@@ -1196,6 +1220,8 @@ export type Database = {
           seller_id: string
           sku: string
           updated_at: string
+          location_lat: number | null
+          location_lng: number | null
         }
         Insert: {
           brand?: string | null
@@ -1214,6 +1240,8 @@ export type Database = {
           seller_id: string
           sku: string
           updated_at?: string
+          location_lat?: number | null
+          location_lng?: number | null
         }
         Update: {
           brand?: string | null
@@ -1232,6 +1260,8 @@ export type Database = {
           seller_id?: string
           sku?: string
           updated_at?: string
+          location_lat?: number | null
+          location_lng?: number | null
         }
         Relationships: [
           {
@@ -1375,6 +1405,8 @@ export type Database = {
           created_at: string
           delivery_address: string
           delivery_area: string
+          delivery_country: string | null
+          distance_km: number | null
           delivery_datetime: string
           id: string
           is_legacy: boolean

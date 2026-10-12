@@ -129,14 +129,19 @@
     "saved": "Saved",
     "location": "Location",
     "locationPlaceholder": "Enter city...",
-    "locationHint": "Used to autofill city in requests",
+    "locationHint": "Prefilled as the delivery city in requests and used to calculate distances",
     "dangerZone": "Danger Zone",
     "deleteAccountHint": "Deleting your account is permanent. All your data will be removed: profile, requests, products, messages.",
     "deleteAccount": "Delete Account",
     "deleteAccountConfirmTitle": "Delete account?",
     "deleteAccountConfirmBody": "This action cannot be undone. All your data will be permanently removed.",
     "deleteAccountConfirmButton": "Yes, delete",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "serviceRadius": "Service radius, km",
+    "serviceRadiusPlaceholder": "No limit",
+    "serviceRadiusHint": "You will only see requests and get emails for deliveries within this radius of your city. Leave empty to see all.",
+    "radiusInvalid": "Radius must be a whole number from 1 to 20,000 km",
+    "radiusNeedsLocation": "Set your city to use a service radius"
   },
   "inventory": {
     "title": "Inventory",
@@ -268,7 +273,8 @@
     "acceptOffer": "Accept offer",
     "closeRequest": "Close request",
     "closeRequestConfirm": "Close request?",
-    "yes": "Yes"
+    "yes": "Yes",
+    "deliveryTo": "Delivery:"
   },
   "incoming": {
     "title": "Incoming Requests",
@@ -311,7 +317,8 @@
     "createOffer": "Create Offer",
     "offerWithdrawnMsg": "You withdrew your offer for this request",
     "requestClosedByBuyer": "Request closed by buyer",
-    "backToOffers": "My Offers"
+    "backToOffers": "My Offers",
+    "deliveryTo": "Delivery"
   },
   "offerForm": {
     "accepted": "Your offer was accepted by the buyer",
@@ -339,7 +346,9 @@
     "sent": "Sent",
     "updateOffer": "Update Offer",
     "submitOffer": "Send Offer",
-    "withdraw": "Withdraw"
+    "withdraw": "Withdraw",
+    "shipsFrom": "Ships from",
+    "shipsFromHint": "The buyer sees the city and the distance to it"
   },
   "cart": {
     "title": "Price Request",
@@ -406,7 +415,10 @@
     "registerBtn": "Create account",
     "loginBtn": "Sign in",
     "continueGuest": "Continue without account →",
-    "itemsCountDetail": "{count, plural, one {{count} item} other {{count} items}}"
+    "itemsCountDetail": "{count, plural, one {{count} item} other {{count} items}}",
+    "fieldDelivery": "Delivery city *",
+    "deliveryHint": "Sellers only see the city. You share the exact address with the seller you choose.",
+    "errorDelivery": "Choose a delivery city from the list"
   },
   "how": {
     "metaTitle": "How it works — OKnautic",

@@ -12,6 +12,7 @@ type ProfileInput = {
   country?: string | null;
   lat?: number | null;
   lng?: number | null;
+  service_radius_km?: number | null;
 };
 
 export async function updateProfile(
@@ -20,6 +21,11 @@ export async function updateProfile(
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Не авторизован" };
+
+  const radius = data.service_radius_km;
+  if (radius != null && !(Number.isInteger(radius) && radius >= 1 && radius <= 20000)) {
+    return { error: "radius" };
+  }
 
   const { error } = await supabase
     .from("profiles")
@@ -31,6 +37,7 @@ export async function updateProfile(
       country: data.country ?? null,
       lat: data.lat ?? null,
       lng: data.lng ?? null,
+      service_radius_km: radius ?? null,
     })
     .eq("id", user.id);
 

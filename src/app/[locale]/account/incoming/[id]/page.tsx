@@ -6,10 +6,11 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { MarkRequestRead } from "@/components/seller/mark-request-read";
 import {
   ArrowLeft, Package, Calendar, MessageSquare,
-  CheckCircle2, Mail, Phone, Send
+  CheckCircle2, Mail, Phone, Send, MapPin
 } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
 import { OfferForm } from "@/components/seller/offer-form";
+import { formatDistance, isRealDeliveryArea } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -66,11 +67,20 @@ export default async function IncomingDetailPage({ params, searchParams }: Props
     .maybeSingle();
 
   // Try matching by product_id first, fall back to sku
-  let inventoryItem: { price: number | null; currency: string } | null = null;
+  type InventoryMatch = {
+    price: number | null;
+    currency: string;
+    location_city: string | null;
+    location_country: string | null;
+    location_lat: number | null;
+    location_lng: number | null;
+  };
+  const INVENTORY_SELECT = "price, currency, location_city, location_country, location_lat, location_lng";
+  let inventoryItem: InventoryMatch | null = null;
   if (req.product_id) {
     const { data } = await supabase
       .from("seller_inventory")
-      .select("price, currency")
+      .select(INVENTORY_SELECT)
       .eq("seller_id", user.id)
       .eq("product_id", req.product_id)
       .maybeSingle();
@@ -79,7 +89,7 @@ export default async function IncomingDetailPage({ params, searchParams }: Props
   if (!inventoryItem) {
     const { data } = await supabase
       .from("seller_inventory")
-      .select("price, currency")
+      .select(INVENTORY_SELECT)
       .eq("seller_id", user.id)
       .eq("sku", req.sku)
       .maybeSingle();
@@ -88,6 +98,24 @@ export default async function IncomingDetailPage({ params, searchParams }: Props
   // numeric from PostgreSQL may arrive as string — coerce to number
   const inventoryPrice = inventoryItem?.price != null ? Number(inventoryItem.price) : null;
   const inventoryCurrency = inventoryItem?.currency ?? null;
+
+  // Default "ships from": the stock location, else the seller's profile city
+  const { data: sellerProfile } = await supabase
+    .from("profiles")
+    .select("city, country, lat, lng")
+    .eq("id", user.id)
+    .single();
+  const defaultLocation =
+    inventoryItem?.location_city && inventoryItem.location_lat != null && inventoryItem.location_lng != null
+      ? {
+          city: inventoryItem.location_city,
+          country: inventoryItem.location_country ?? "",
+          lat: inventoryItem.location_lat,
+          lng: inventoryItem.location_lng,
+        }
+      : sellerProfile?.city && sellerProfile.lat != null && sellerProfile.lng != null
+        ? { city: sellerProfile.city, country: sellerProfile.country ?? "", lat: sellerProfile.lat, lng: sellerProfile.lng }
+        : null;
 
   const variantAttrs = req.variant_attrs as Record<string, string> | null;
   const isOpen = req.status === "in_progress";
@@ -173,6 +201,19 @@ export default async function IncomingDetailPage({ params, searchParams }: Props
                       </p>
                       <p className="text-xs text-navy-700">{fmt(req.created_at)}</p>
                     </div>
+                    {isRealDeliveryArea(req.delivery_area) && (
+                      <div>
+                        <p className="text-[11px] text-navy-400 mb-0.5 flex items-center gap-1">
+                          <MapPin size={11} className="text-navy-300" /> {t("deliveryTo")}
+                        </p>
+                        <p className="text-xs text-navy-700">
+                          {req.delivery_area}
+                          {formatDistance(req.distance_km, locale) && (
+                            <span className="text-navy-400"> · {formatDistance(req.distance_km, locale)}</span>
+                          )}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -303,6 +344,7 @@ export default async function IncomingDetailPage({ params, searchParams }: Props
                     existingOffer={existingOffer ?? null}
                     inventoryPrice={inventoryPrice}
                     inventoryCurrency={inventoryCurrency}
+                    defaultLocation={defaultLocation}
                     withdrawnMsg={t("offerWithdrawnMsg")}
                   />
                 ) : (

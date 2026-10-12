@@ -20,6 +20,7 @@ type Props = {
     country: string | null;
     lat: number | null;
     lng: number | null;
+    service_radius_km: number | null;
   };
 };
 
@@ -32,6 +33,7 @@ export function ProfileForm({ email, initialData }: Props) {
     first_name: initialData.first_name,
     last_name: initialData.last_name,
     phone: initialData.phone,
+    service_radius_km: initialData.service_radius_km?.toString() ?? "",
   });
   const [location, setLocation] = useState<Location | null>(
     initialData.city && initialData.country && initialData.lat && initialData.lng
@@ -43,10 +45,22 @@ export function ProfileForm({ email, initialData }: Props) {
   const [error, setError] = useState("");
 
   async function handleSave() {
-    setSaving(true);
     setError("");
+    const radius = form.service_radius_km.trim() ? Number(form.service_radius_km) : null;
+    if (radius != null && !(Number.isInteger(radius) && radius >= 1 && radius <= 20000)) {
+      setError(t("radiusInvalid"));
+      return;
+    }
+    if (radius != null && !location) {
+      setError(t("radiusNeedsLocation"));
+      return;
+    }
+    setSaving(true);
     const result = await updateProfile({
-      ...form,
+      first_name: form.first_name,
+      last_name: form.last_name,
+      phone: form.phone,
+      service_radius_km: radius,
       city: location?.city ?? null,
       country: location?.country ?? null,
       lat: location?.lat ?? null,
@@ -103,6 +117,20 @@ export function ProfileForm({ email, initialData }: Props) {
         <CityPicker value={location} onChange={(v) => setLocation(v)} />
         <p className="text-[11px] text-navy-400 mt-1">{t("locationHint")}</p>
       </div>
+
+      {initialData.role === "seller" && (
+        <div>
+          <label className="block text-xs font-medium text-navy-600 mb-1.5">{t("serviceRadius")}</label>
+          <input
+            value={form.service_radius_km}
+            onChange={(e) => setForm((f) => ({ ...f, service_radius_km: e.target.value.replace(/\D/g, "") }))}
+            placeholder={t("serviceRadiusPlaceholder")}
+            inputMode="numeric"
+            className={inputCls}
+          />
+          <p className="text-[11px] text-navy-400 mt-1">{t("serviceRadiusHint")}</p>
+        </div>
+      )}
 
       <div>
         <label className="block text-xs font-medium text-navy-600 mb-1.5">{t("accountType")}</label>

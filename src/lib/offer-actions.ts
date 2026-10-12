@@ -18,7 +18,18 @@ export type OfferInput = {
   payment_cash: boolean;
   payment_cashless: boolean;
   comment: string;
+  location: { city: string; country: string; lat: number; lng: number } | null;
 };
+
+function cleanLocation(l: OfferInput["location"]) {
+  if (
+    !l || typeof l.city !== "string" || !l.city.trim() || l.city.length > 120 ||
+    typeof l.country !== "string" || l.country.length > 120 ||
+    !Number.isFinite(l.lat) || Math.abs(l.lat) > 90 ||
+    !Number.isFinite(l.lng) || Math.abs(l.lng) > 180
+  ) return null;
+  return l;
+}
 
 export async function submitOffer(data: OfferInput): Promise<{ error?: string }> {
   const supabase = await createClient();
@@ -39,6 +50,8 @@ export async function submitOffer(data: OfferInput): Promise<{ error?: string }>
     return { error: `Количество не может превышать запрошенное (${req.quantity} шт.)` };
   }
 
+  const location = cleanLocation(data.location);
+
   // Explicit field list: server actions accept arbitrary objects at runtime,
   // so never spread client input into the row (e.g. status: "accepted")
   const { error } = await supabase.from("offers").upsert(
@@ -57,6 +70,11 @@ export async function submitOffer(data: OfferInput): Promise<{ error?: string }>
       payment_cash: data.payment_cash,
       payment_cashless: data.payment_cashless,
       comment: data.comment,
+      // where the item ships from — snapshot, shown to the buyer with distance
+      location_city: location?.city.trim() ?? null,
+      location_country: location?.country.trim() || null,
+      location_lat: location?.lat ?? null,
+      location_lng: location?.lng ?? null,
       // re-submitting after a withdrawal makes the offer active again
       status: "pending",
     },

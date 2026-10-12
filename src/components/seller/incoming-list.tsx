@@ -5,11 +5,12 @@ import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import {
   Package, ChevronRight, Trash2, Archive, ArchiveRestore,
-  CheckSquare, Square, MinusSquare, AlertTriangle
+  CheckSquare, Square, MinusSquare, AlertTriangle, MapPin
 } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
 import { useTranslations, useLocale } from "next-intl";
 import { archiveRequests, deleteRequestsPermanently, restoreRequests } from "@/lib/incoming-actions";
+import { formatDistance, isRealDeliveryArea } from "@/lib/utils";
 
 export type IncomingItem = {
   id: string;
@@ -20,6 +21,8 @@ export type IncomingItem = {
   status: string;
   created_at: string;
   buyer_name?: string | null;
+  delivery_area?: string | null;
+  distance_km?: number | null;
   hasOffer: boolean;
   isNew: boolean;
 };
@@ -313,7 +316,16 @@ export function IncomingList({ activeItems: initActive, archiveItems: initArchiv
                           <div className="flex items-center gap-3 mt-1 text-xs text-navy-400">
                             <span>{t("qty")} <span className="text-navy-600 font-medium">{req.quantity}</span></span>
                             {req.buyer_name && <span>{req.buyer_name}</span>}
-                            <span className="ml-auto">{fmt(req.created_at)}</span>
+                            {isRealDeliveryArea(req.delivery_area) && (
+                              <span className="inline-flex items-center gap-1 min-w-0 truncate">
+                                <MapPin size={11} className="text-navy-300 shrink-0" />
+                                {req.delivery_area}
+                                {req.distance_km != null && (
+                                  <span className="text-navy-500 font-medium">· {formatDistance(req.distance_km, locale)}</span>
+                                )}
+                              </span>
+                            )}
+                            <span className="ml-auto shrink-0">{fmt(req.created_at)}</span>
                           </div>
                         </div>
                         <ChevronRight size={15} className="text-navy-300 shrink-0" />

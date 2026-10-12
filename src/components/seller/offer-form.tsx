@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import { submitOffer, withdrawOffer } from "@/lib/offer-actions";
 import type { OfferInput } from "@/lib/offer-actions";
+import { CityPicker } from "@/components/account/city-picker";
+
+type OfferLocation = { city: string; country: string; lat: number; lng: number };
 
 type ExistingOffer = {
   id: string;
@@ -22,6 +25,10 @@ type ExistingOffer = {
   payment_cashless: boolean;
   comment: string | null;
   status: string;
+  location_city: string | null;
+  location_country: string | null;
+  location_lat: number | null;
+  location_lng: number | null;
 };
 
 type Props = {
@@ -30,6 +37,8 @@ type Props = {
   existingOffer: ExistingOffer | null;
   inventoryPrice?: number | null;
   inventoryCurrency?: string | null;
+  /** inventory item location, else seller profile location */
+  defaultLocation?: OfferLocation | null;
   withdrawnMsg: string;
 };
 
@@ -78,7 +87,7 @@ function tomorrow() {
   return d.toISOString().split("T")[0];
 }
 
-export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPrice, inventoryCurrency, withdrawnMsg }: Props) {
+export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPrice, inventoryCurrency, defaultLocation, withdrawnMsg }: Props) {
   const t = useTranslations("offerForm");
   const isAccepted = existingOffer?.status === "accepted";
   const [wasWithdrawn, setWasWithdrawn] = useState(existingOffer?.status === "withdrawn");
@@ -99,6 +108,17 @@ export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPri
     payment_cashless: existingOffer?.payment_cashless ?? true,
     comment: existingOffer?.comment ?? "",
   });
+
+  const [location, setLocation] = useState<OfferLocation | null>(
+    existingOffer?.location_city && existingOffer.location_lat != null && existingOffer.location_lng != null
+      ? {
+          city: existingOffer.location_city,
+          country: existingOffer.location_country ?? "",
+          lat: existingOffer.location_lat,
+          lng: existingOffer.location_lng,
+        }
+      : defaultLocation ?? null
+  );
 
   const [saving, setSaving] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
@@ -139,6 +159,7 @@ export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPri
       payment_cash: form.payment_cash,
       payment_cashless: form.payment_cashless,
       comment: form.comment.trim(),
+      location,
     };
     const result = await submitOffer(payload);
     setSaving(false);
@@ -317,6 +338,23 @@ export function OfferForm({ requestId, requestedQty, existingOffer, inventoryPri
           onChange={(v) => set("payment_cashless", v)}
           label={t("paymentCashless")}
         />
+      </div>
+
+      {/* Ships from */}
+      <div>
+        <label className="block text-xs font-medium text-navy-600 mb-1.5">
+          {t("shipsFrom")}
+        </label>
+        {isAccepted ? (
+          <p className="text-sm text-navy-700">
+            {location ? [location.city, location.country].filter(Boolean).join(", ") : "—"}
+          </p>
+        ) : (
+          <>
+            <CityPicker value={location} onChange={setLocation} />
+            <p className="text-[11px] text-navy-400 mt-1">{t("shipsFromHint")}</p>
+          </>
+        )}
       </div>
 
       {/* Comment */}

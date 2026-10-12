@@ -7,14 +7,26 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getLocale } from "next-intl/server";
 import { sendNewRequestEmail, sendOfferAcceptedEmail, toEmailLocale, type EmailLocale } from "@/lib/email";
 import type { CartItem } from "@/lib/cart-context";
+import { distanceKm } from "@/lib/utils";
 
 type RfqInput = {
   name: string;
   email: string;
   phone: string;
   comment: string;
+  delivery: { city: string; country: string; lat: number; lng: number } | null;
   items: CartItem[];
 };
+
+function validDelivery(d: RfqInput["delivery"]) {
+  return (
+    !!d &&
+    typeof d.city === "string" && d.city.trim().length > 0 && d.city.length <= 120 &&
+    typeof d.country === "string" && d.country.length <= 120 &&
+    Number.isFinite(d.lat) && Math.abs(d.lat) <= 90 &&
+    Number.isFinite(d.lng) && Math.abs(d.lng) <= 180
+  );
+}
 
 export async function submitRfq(
   data: RfqInput
@@ -22,6 +34,8 @@ export async function submitRfq(
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { requiresAuth: true };
+  if (!validDelivery(data.delivery)) return { error: "delivery" };
+  const delivery = data.delivery!;
 
   // Look up each product by SKU to get DB IDs for routing
   const rows = await Promise.all(
@@ -44,7 +58,11 @@ export async function submitRfq(
           ? (item.selectedVariants as Record<string, string>)
           : null,
         quantity: item.quantity,
-        delivery_area: "TBD",
+        // City-level only; the exact address is shared after acceptance
+        delivery_area: [delivery.city.trim(), delivery.country.trim()].filter(Boolean).join(", "),
+        delivery_country: delivery.country.trim() || null,
+        delivery_lat: delivery.lat,
+        delivery_lng: delivery.lng,
         delivery_address: "",
         delivery_datetime: new Date(
           Date.now() + 30 * 24 * 60 * 60 * 1000
@@ -67,7 +85,7 @@ export async function submitRfq(
   // after() keeps the serverless function alive until emails are sent.
   // Sellers get emails in their own language; the buyer's is the fallback.
   const fallbackLocale = toEmailLocale(await getLocale());
-  after(() => notifyMatchingSellers(inserted ?? [], fallbackLocale));
+  after(() => notifyMatchingSellers(inserted ?? [], delivery, fallbackLocale));
 
   revalidatePath("/[locale]/account/requests", "page");
   return {};
@@ -89,6 +107,7 @@ async function localizedProductName(admin: Admin, sku: string, locale: EmailLoca
 
 async function notifyMatchingSellers(
   requests: { id: string; sku: string; product_name: string; quantity: number }[],
+  delivery: { lat: number; lng: number },
   fallbackLocale: EmailLocale
 ) {
   if (!requests.length) return;
@@ -98,14 +117,24 @@ async function notifyMatchingSellers(
     // Find sellers who have this SKU in inventory with notifications enabled
     const { data: matches } = await admin
       .from("seller_inventory")
-      .select("seller_id, profiles!inner(email_notifications_quotes, locale)")
+      .select("seller_id, profiles!inner(email_notifications_quotes, locale, lat, lng, service_radius_km)")
       .eq("sku", req.sku)
       .eq("is_available", true)
       .gt("quantity", 0);
 
     for (const m of matches ?? []) {
-      const profile = m.profiles as { email_notifications_quotes: boolean; locale: string | null } | null;
+      const profile = m.profiles as {
+        email_notifications_quotes: boolean;
+        locale: string | null;
+        lat: number | null;
+        lng: number | null;
+        service_radius_km: number | null;
+      } | null;
       if (!profile?.email_notifications_quotes) continue;
+
+      // Same rule as is_request_routed_to_me: outside the radius → not routed
+      const km = distanceKm(profile, delivery);
+      if (profile.service_radius_km != null && km != null && km > profile.service_radius_km) continue;
 
       const { data: { user: seller } } = await admin.auth.admin.getUserById(m.seller_id);
       if (seller?.email) {

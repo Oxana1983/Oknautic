@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { geocodeCity, geocodeMany, placeKey } from "@/lib/geocode";
 
 export type InventoryRow = {
   sku: string;
@@ -213,6 +214,11 @@ export async function upsertInventoryRows(
   }
 
   // ── Step 3: upsert into seller_inventory ─────────────────────────────────
+  // Coordinates for the stock location, used for distance to buyers
+  const coords = await geocodeMany(
+    rows.map((r) => ({ city: r.location_city, country: r.location_country }))
+  );
+
   const payload = rows.map((r) => ({
     seller_id: user.id,
     product_id: skuToProductId[r.sku.trim()] ?? null,
@@ -224,6 +230,8 @@ export async function upsertInventoryRows(
     currency: r.currency ?? "EUR",
     location_city: r.location_city?.trim() || null,
     location_country: r.location_country?.trim() || null,
+    location_lat: coords.get(placeKey(r.location_city, r.location_country))?.lat ?? null,
+    location_lng: coords.get(placeKey(r.location_city, r.location_country))?.lng ?? null,
     is_new: r.is_new ?? true,
     photo_url: r.photo_url?.trim() || null,
     is_available: true,
@@ -249,9 +257,28 @@ export async function updateInventoryItem(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Re-geocode only when the location fields are part of the edit
+  const location =
+    data.location_city !== undefined
+      ? data.location_city.trim()
+        ? await geocodeCity(data.location_city, data.location_country)
+        : null
+      : undefined;
+
   const { error } = await supabase
     .from("seller_inventory")
-    .update(data)
+    .update({
+      quantity: data.quantity,
+      price: data.price,
+      currency: data.currency,
+      location_city: data.location_city,
+      location_country: data.location_country,
+      is_available: data.is_available,
+      ...(location !== undefined && {
+        location_lat: location?.lat ?? null,
+        location_lng: location?.lng ?? null,
+      }),
+    })
     .eq("id", id)
     .eq("seller_id", user.id);
 
