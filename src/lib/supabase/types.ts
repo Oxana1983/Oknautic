@@ -663,6 +663,10 @@ export type Database = {
           includes_vat: boolean
           is_new: boolean
           is_read_by_customer: boolean
+          location_city: string | null
+          location_country: string | null
+          location_lat: number | null
+          location_lng: number | null
           payment_cash: boolean
           payment_cashless: boolean
           price_per_unit: number
@@ -671,10 +675,6 @@ export type Database = {
           status: string
           updated_at: string
           warranty_months: number
-          location_city: string | null
-          location_country: string | null
-          location_lat: number | null
-          location_lng: number | null
         }
         Insert: {
           allows_pickup?: boolean
@@ -688,6 +688,10 @@ export type Database = {
           includes_vat?: boolean
           is_new?: boolean
           is_read_by_customer?: boolean
+          location_city?: string | null
+          location_country?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
           payment_cash?: boolean
           payment_cashless?: boolean
           price_per_unit: number
@@ -696,10 +700,6 @@ export type Database = {
           status?: string
           updated_at?: string
           warranty_months?: number
-          location_city?: string | null
-          location_country?: string | null
-          location_lat?: number | null
-          location_lng?: number | null
         }
         Update: {
           allows_pickup?: boolean
@@ -713,6 +713,10 @@ export type Database = {
           includes_vat?: boolean
           is_new?: boolean
           is_read_by_customer?: boolean
+          location_city?: string | null
+          location_country?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
           payment_cash?: boolean
           payment_cashless?: boolean
           price_per_unit?: number
@@ -721,10 +725,6 @@ export type Database = {
           status?: string
           updated_at?: string
           warranty_months?: number
-          location_city?: string | null
-          location_country?: string | null
-          location_lat?: number | null
-          location_lng?: number | null
         }
         Relationships: [
           {
@@ -926,9 +926,9 @@ export type Database = {
           phone: string | null
           role: string
           seller_terms_accepted_at: string | null
+          service_radius_km: number | null
           terms_accepted_at: string | null
           updated_at: string
-          service_radius_km: number | null
         }
         Insert: {
           accepted_read_at?: string | null
@@ -949,9 +949,9 @@ export type Database = {
           phone?: string | null
           role?: string
           seller_terms_accepted_at?: string | null
+          service_radius_km?: number | null
           terms_accepted_at?: string | null
           updated_at?: string
-          service_radius_km?: number | null
         }
         Update: {
           accepted_read_at?: string | null
@@ -972,9 +972,9 @@ export type Database = {
           phone?: string | null
           role?: string
           seller_terms_accepted_at?: string | null
+          service_radius_km?: number | null
           terms_accepted_at?: string | null
           updated_at?: string
-          service_radius_km?: number | null
         }
         Relationships: []
       }
@@ -991,7 +991,10 @@ export type Database = {
           customer_id: string
           delivery_address: string | null
           delivery_area: string
+          delivery_country: string | null
           delivery_datetime: string
+          delivery_lat: number | null
+          delivery_lng: number | null
           id: string
           product_id: string | null
           product_name: string
@@ -1002,9 +1005,6 @@ export type Database = {
           updated_at: string
           variant_attrs: Json | null
           variant_id: string | null
-          delivery_country: string | null
-          delivery_lat: number | null
-          delivery_lng: number | null
         }
         Insert: {
           accepted_offer_id?: string | null
@@ -1018,7 +1018,10 @@ export type Database = {
           customer_id: string
           delivery_address?: string | null
           delivery_area: string
+          delivery_country?: string | null
           delivery_datetime: string
+          delivery_lat?: number | null
+          delivery_lng?: number | null
           id?: string
           product_id?: string | null
           product_name: string
@@ -1029,9 +1032,6 @@ export type Database = {
           updated_at?: string
           variant_attrs?: Json | null
           variant_id?: string | null
-          delivery_country?: string | null
-          delivery_lat?: number | null
-          delivery_lng?: number | null
         }
         Update: {
           accepted_offer_id?: string | null
@@ -1045,7 +1045,10 @@ export type Database = {
           customer_id?: string
           delivery_address?: string | null
           delivery_area?: string
+          delivery_country?: string | null
           delivery_datetime?: string
+          delivery_lat?: number | null
+          delivery_lng?: number | null
           id?: string
           product_id?: string | null
           product_name?: string
@@ -1056,9 +1059,6 @@ export type Database = {
           updated_at?: string
           variant_attrs?: Json | null
           variant_id?: string | null
-          delivery_country?: string | null
-          delivery_lat?: number | null
-          delivery_lng?: number | null
         }
         Relationships: [
           {
@@ -1212,6 +1212,8 @@ export type Database = {
           is_new: boolean
           location_city: string | null
           location_country: string | null
+          location_lat: number | null
+          location_lng: number | null
           photo_url: string | null
           price: number | null
           product_id: string | null
@@ -1220,8 +1222,6 @@ export type Database = {
           seller_id: string
           sku: string
           updated_at: string
-          location_lat: number | null
-          location_lng: number | null
         }
         Insert: {
           brand?: string | null
@@ -1232,6 +1232,8 @@ export type Database = {
           is_new?: boolean
           location_city?: string | null
           location_country?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
           photo_url?: string | null
           price?: number | null
           product_id?: string | null
@@ -1240,8 +1242,6 @@ export type Database = {
           seller_id: string
           sku: string
           updated_at?: string
-          location_lat?: number | null
-          location_lng?: number | null
         }
         Update: {
           brand?: string | null
@@ -1252,6 +1252,8 @@ export type Database = {
           is_new?: boolean
           location_city?: string | null
           location_country?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
           photo_url?: string | null
           price?: number | null
           product_id?: string | null
@@ -1260,8 +1262,6 @@ export type Database = {
           seller_id?: string
           sku?: string
           updated_at?: string
-          location_lat?: number | null
-          location_lng?: number | null
         }
         Relationships: [
           {
@@ -1392,6 +1392,10 @@ export type Database = {
     }
     Functions: {
       current_user_role: { Args: never; Returns: string }
+      distance_km: {
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number }
+        Returns: number
+      }
       get_seller_quote_requests: {
         Args: { p_ids?: string[] }
         Returns: {
@@ -1405,9 +1409,9 @@ export type Database = {
           created_at: string
           delivery_address: string
           delivery_area: string
-          delivery_country: string | null
-          distance_km: number | null
+          delivery_country: string
           delivery_datetime: string
+          distance_km: number
           id: string
           is_legacy: boolean
           product_id: string

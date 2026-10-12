@@ -418,7 +418,9 @@
     "itemsCountDetail": "{count, plural, one {{count} item} other {{count} items}}",
     "fieldDelivery": "Delivery city *",
     "deliveryHint": "Sellers only see the city. You share the exact address with the seller you choose.",
-    "errorDelivery": "Choose a delivery city from the list"
+    "errorDelivery": "Choose a delivery city from the list",
+    "authRequiredTitle": "Sign in to send your request",
+    "authRequiredDesc": "Requests are saved to your account, where you receive sellers' offers. Your cart is kept — you'll come back here after signing in."
   },
   "how": {
     "metaTitle": "How it works — OKnautic",

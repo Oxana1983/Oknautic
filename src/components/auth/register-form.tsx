@@ -23,6 +23,7 @@ export function RegisterForm() {
   const [firstName, setFirstName] = useState(nameParts[0] ?? "");
   const [lastName, setLastName] = useState(nameParts.slice(1).join(" ") ?? "");
   const [email, setEmail] = useState(searchParams.get("email") ?? "");
+  const next = searchParams.get("next") ?? "";
 
   const [state, action, isPending] = useActionState(signUp, null);
 
@@ -57,6 +58,7 @@ export function RegisterForm() {
       )}
 
       <form action={action} className="space-y-4">
+        <input type="hidden" name="next" value={next} />
         {/* Role picker */}
         <div>
           <p className="text-xs font-medium text-navy-600 mb-2">{t("accountType")}</p>

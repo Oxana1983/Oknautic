@@ -1,9 +1,20 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 
 type AuthState = { error: string } | null;
+
+// Back to where the user came from (e.g. /rfq/new with a full cart), in the
+// current language. Only same-origin paths; "//evil.com" falls back to home.
+async function redirectAfterAuth(formData: FormData): Promise<never> {
+  const next = formData.get("next");
+  const path = typeof next === "string" && /^\/(?![/\\])/.test(next) ? next : "/";
+  if (/^\/(ru|en|it)(\/|$)/.test(path)) redirect(path);
+  const locale = await getLocale();
+  redirect(path === "/" ? `/${locale}` : `/${locale}${path}`);
+}
 
 export async function signIn(
   _prev: AuthState,
@@ -15,7 +26,7 @@ export async function signIn(
     password: formData.get("password") as string,
   });
   if (error) return { error: error.message };
-  redirect("/");
+  return redirectAfterAuth(formData);
 }
 
 export async function signUp(
@@ -68,7 +79,7 @@ export async function signUp(
     }).eq("id", userId).is("terms_accepted_at", null);
   }
 
-  redirect("/");
+  return redirectAfterAuth(formData);
 }
 
 export async function signOut() {

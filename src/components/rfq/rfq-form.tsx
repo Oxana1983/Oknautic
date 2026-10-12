@@ -20,7 +20,7 @@ type DeliveryCity = { city: string; country: string; lat: number; lng: number };
 type FormErrors = Partial<FormState> & { delivery?: string };
 
 export type RfqPrefill = { name: string; email: string; phone: string; delivery: DeliveryCity | null };
-type Status = "idle" | "submitting" | "success" | "success_guest";
+type Status = "idle" | "submitting" | "success";
 
 type Props = {
   prefill: RfqPrefill | null;
@@ -85,6 +85,8 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
   const [rfqNumber, setRfqNumber] = useState("");
   const [submittedCount, setSubmittedCount] = useState(0);
   const [errors, setErrors] = useState<FormErrors>({});
+  // Guests can't submit: requests are saved to the buyer's account
+  const [needsAuth, setNeedsAuth] = useState(!isAuthenticated);
   const [delivery, setDelivery] = useState<DeliveryCity | null>(prefill?.delivery ?? null);
 
   useEffect(() => {
@@ -109,6 +111,7 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
   }
 
   async function handleSubmit() {
+    if (needsAuth) return;
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
@@ -117,12 +120,10 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
     try {
       const result = await submitRfq({ ...form, delivery, items });
 
+      // Session expired since the page loaded — ask to sign in; cart is kept
       if (result?.requiresAuth) {
-        const num = generateRfqNumber();
-        setRfqNumber(num);
-        setSubmittedCount(itemCount);
-        setStatus("success_guest");
-        clearCart();
+        setNeedsAuth(true);
+        setStatus("idle");
         return;
       }
 
@@ -197,68 +198,6 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
     );
   }
 
-  // Success guest — request not saved, offer registration
-  if (status === "success_guest") {
-    return (
-      <div className="max-w-xl mx-auto px-4 py-16 flex flex-col items-center gap-6 text-center">
-        <div className="w-20 h-20 rounded-full bg-teal-50 flex items-center justify-center">
-          <CheckCircle2 size={40} className="text-teal-500" />
-        </div>
-        <div>
-          <h1 className="font-display text-2xl font-bold text-navy-900 mb-2">{t("guestSuccessTitle")}</h1>
-          <p className="text-sm text-navy-500">
-            {t("guestSuccessDesc", { count: submittedCount })}
-          </p>
-        </div>
-
-        <Card className="w-full text-left">
-          <CardBody className="py-4 px-5 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-navy-500">{t("guestRequestNum")}</span>
-              <span className="font-mono text-sm font-bold text-navy-800">{rfqNumber}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-navy-500">{t("guestContact")}</span>
-              <span className="text-sm text-navy-700">{form.email}</span>
-            </div>
-          </CardBody>
-        </Card>
-
-        {/* Register prompt */}
-        <div className="w-full rounded-2xl border border-teal-200 bg-teal-50 p-5 text-left">
-          <div className="flex items-start gap-3 mb-4">
-            <div className="w-9 h-9 rounded-xl bg-teal-100 flex items-center justify-center shrink-0">
-              <UserPlus size={18} className="text-teal-600" />
-            </div>
-            <div>
-              <p className="font-display font-semibold text-navy-800 text-sm">{t("registerTitle")}</p>
-              <p className="text-xs text-navy-500 mt-0.5 leading-relaxed">
-                {t("registerDesc")}
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="primary" size="sm" asChild className="flex-1">
-              <Link href={`/register?name=${encodeURIComponent(form.name)}&email=${encodeURIComponent(form.email)}&next=/rfq/new`}>
-                <UserPlus size={14} />
-                {t("registerBtn")}
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" asChild className="flex-1">
-              <Link href="/login?next=/rfq/new">
-                <LogIn size={14} />
-                {t("loginBtn")}
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/catalog">{t("continueGuest")}</Link>
-        </Button>
-      </div>
-    );
-  }
 
   // Form
   return (
@@ -438,15 +377,36 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
                   their offer. Please do not include unnecessary personal or sensitive information in your request.
                 </div>
 
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="lg"
-                  className="w-full"
-                  loading={status === "submitting"}
-                >
-                  {status === "submitting" ? t("submitting") : t("submit")}
-                </Button>
+                {needsAuth ? (
+                  <div className="rounded-2xl border border-teal-200 bg-teal-50 p-4">
+                    <p className="font-display font-semibold text-navy-800 text-sm">{t("authRequiredTitle")}</p>
+                    <p className="text-xs text-navy-500 mt-0.5 mb-3 leading-relaxed">{t("authRequiredDesc")}</p>
+                    <div className="flex gap-2">
+                      <Button variant="primary" size="sm" asChild className="flex-1">
+                        <Link href={`/register?name=${encodeURIComponent(form.name)}&email=${encodeURIComponent(form.email)}&next=/rfq/new`}>
+                          <UserPlus size={14} />
+                          {t("registerBtn")}
+                        </Link>
+                      </Button>
+                      <Button variant="outline" size="sm" asChild className="flex-1">
+                        <Link href="/login?next=/rfq/new">
+                          <LogIn size={14} />
+                          {t("loginBtn")}
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    className="w-full"
+                    loading={status === "submitting"}
+                  >
+                    {status === "submitting" ? t("submitting") : t("submit")}
+                  </Button>
+                )}
 
                 <p className="text-[11px] text-navy-400 text-center leading-relaxed">
                   {t("termsPrefix")}{" "}
@@ -468,16 +428,6 @@ export function RfqForm({ prefill, isAuthenticated }: Props) {
             ))}
           </div>
 
-          {/* Not logged in hint */}
-          {!isAuthenticated && (
-            <div className="mt-3 p-3 rounded-xl bg-white border border-navy-100 flex items-center gap-2.5">
-              <UserPlus size={16} className="text-navy-300 shrink-0" />
-              <p className="text-xs text-navy-500 leading-snug">
-                <Link href="/login?next=/rfq/new" className="text-teal-600 font-medium hover:underline">{t("loginHintLink")}</Link>
-                {" "}{t("loginHint")}
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </div>

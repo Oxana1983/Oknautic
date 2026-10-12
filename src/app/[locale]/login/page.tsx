@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { Mail, Lock, AlertCircle } from "lucide-react";
 import { OKnauticLogo } from "@/components/ui/logo";
@@ -14,6 +15,7 @@ const inputCls =
 export default function LoginPage() {
   const t = useTranslations("auth");
   const [state, action, isPending] = useActionState(signIn, null);
+  const next = useSearchParams().get("next") ?? "";
 
   return (
     <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center px-4 py-12">
@@ -36,6 +38,7 @@ export default function LoginPage() {
           )}
 
           <form action={action} className="space-y-4">
+            <input type="hidden" name="next" value={next} />
             <div>
               <label htmlFor="email" className="flex items-center gap-1.5 text-xs font-medium text-navy-600 mb-1.5">
                 <Mail size={12} />Email
@@ -85,7 +88,7 @@ export default function LoginPage() {
 
         <p className="text-center text-sm text-navy-500 mt-6">
           {t("noAccount")}{" "}
-          <Link href="/register" className="text-teal-600 hover:text-teal-700 font-medium">
+          <Link href={next ? `/register?next=${encodeURIComponent(next)}` : "/register"} className="text-teal-600 hover:text-teal-700 font-medium">
             {t("registerLink")}
           </Link>
         </p>

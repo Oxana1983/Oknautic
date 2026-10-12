@@ -418,7 +418,9 @@
     "itemsCountDetail": "{count, plural, one {{count} articolo} other {{count} articoli}}",
     "fieldDelivery": "Città di consegna *",
     "deliveryHint": "I venditori vedono solo la città. L'indirizzo esatto lo condividerà con il venditore scelto.",
-    "errorDelivery": "Scelga una città di consegna dall'elenco"
+    "errorDelivery": "Scelga una città di consegna dall'elenco",
+    "authRequiredTitle": "Acceda per inviare la richiesta",
+    "authRequiredDesc": "Le richieste vengono salvate nel suo account, dove riceverà le offerte dei venditori. Il carrello resta salvato: dopo l'accesso tornerà qui."
   },
   "how": {
     "metaTitle": "Come funziona — OKnautic",
